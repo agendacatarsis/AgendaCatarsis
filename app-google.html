@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Entrar con Google · Agenda Catarsis</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#ede1cb">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ede1cb;--card:#f8f2e6;--ink:#1f1b16;--teal:#6b5a45;--tint:#e3d4b8;--mut:#574d41;--line:#d6c7aa;--red:#b8392b;--amb:#8a5200;--grn:#256b41;--btn:#1f1b16;--btnink:#f8f2e6;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--card:#282420;--ink:#f1e7d3;--teal:#d2bb94;--tint:#3a3328;--mut:#c4b9a6;--line:#443c30;--amb:#e0a84a;--grn:#5cc08a;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16}}
+:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Barlow,system-ui,sans-serif;padding:20px 16px 40px;font-size:15px}
+.lbox{max-width:420px;margin:36px auto 0;background:var(--card);border:1px solid var(--line);border-radius:28px;padding:26px 22px;display:grid;gap:14px;text-align:center}
+.logo{height:72px;margin:0 auto}
+h1{font:700 30px 'Barlow Condensed',sans-serif;margin:0;line-height:1.05}
+p{margin:0;font-size:14.5px;line-height:1.4}
+.mut{color:var(--mut)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;background:var(--btn);color:var(--btnink);border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:500;cursor:pointer;text-decoration:none}
+.btn:disabled{opacity:.6;cursor:progress}
+.ok{color:var(--grn);font-weight:500}
+.err{color:var(--red);font-size:14px;min-height:20px}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+</style></head><body>
+<main class="lbox">
+<img class="logo" src="icon-192.png" alt="Catarsis">
+<h1>Entrar con Google</h1>
+<p class="mut" id="intro">Elige tu cuenta de Google para entrar a la app Agenda Catarsis.</p>
+<div id="paso1"><button class="btn" id="go" type="button">Continuar con Google</button></div>
+<div id="paso2" hidden style="display:grid;gap:12px"><p class="ok">✓ Listo, entraste como <b id="em"></b>.</p><a class="btn" id="volver" href="#">Volver a la app</a><p class="mut" style="font-size:13px">Si la app no se abre sola, toca el botón.</p></div>
+<p class="err" id="err" role="alert"></p>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+function authMsg(e){const c=e&&e.code?String(e.code):'',h=location.hostname||'tu página';switch(c){
+  case 'auth/popup-closed-by-user':case 'auth/cancelled-popup-request':case 'auth/user-cancelled':return '';
+  case 'auth/popup-blocked':return 'El navegador bloqueó la ventana de Google. Permite ventanas emergentes para esta página o entra con tu correo.';
+  case 'auth/unauthorized-domain':return 'Firebase todavía no autoriza '+h+'. En Firebase, entra a Authentication → Configuración → Dominios autorizados y agrega '+h+'.';
+  case 'auth/operation-not-allowed':case 'auth/configuration-not-found':return 'Este método de inicio de sesión no está activado. En Firebase, entra a Authentication → Método de acceso y activa Google o Correo electrónico/contraseña.';
+  case 'auth/operation-not-supported-in-this-environment':return 'Para iniciar sesión, abre la página desde su dirección de GitHub Pages, no como archivo.';
+  case 'auth/account-exists-with-different-credential':return 'Ese correo ya tiene una cuenta con contraseña. Entra con tu correo y contraseña.';
+  case 'auth/invalid-credential':case 'auth/invalid-login-credentials':case 'auth/wrong-password':case 'auth/user-not-found':return 'El correo o la contraseña no coinciden. Si no la recuerdas, toca «Olvidé mi contraseña».';
+  case 'auth/user-disabled':return 'Esta cuenta está desactivada.';
+  case 'auth/invalid-email':case 'auth/missing-email':return 'Revisa el correo; no parece válido.';
+  case 'auth/missing-password':return 'Escribe tu contraseña.';
+  case 'auth/too-many-requests':return 'Demasiados intentos seguidos. Espera unos minutos y vuelve a intentarlo.';
+  case 'auth/network-request-failed':return 'No hay conexión a internet. Revisa tu conexión y vuelve a intentarlo.';
+  case 'auth/invalid-api-key':case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':return 'Los datos de firebase-config.js no son válidos. Vuelve a copiarlos desde la configuración de tu proyecto en Firebase.';
+  default:return 'No se pudo iniciar sesión'+(c?' ('+c+')':'')+'. Vuelve a intentarlo.'}}
+
+const S=new URLSearchParams(location.search).get('s')||'';
+function fail(m){$('err').textContent=m}
+(function(){
+  if(!/^[a-f0-9]{32}$/.test(S)){$('paso1').hidden=true;$('intro').hidden=true;fail('Abre esta página desde el botón «Continuar con Google» de la app Agenda Catarsis.');return}
+  if(!window.firebase){fail('No se pudo descargar Firebase. Revisa tu conexión y recarga la página.');$('go').disabled=true;return}
+  if(!window.FIREBASE_CONFIG){fail('Falta el archivo firebase-config.js.');$('go').disabled=true;return}
+  firebase.initializeApp(window.FIREBASE_CONFIG);
+  const auth=firebase.auth();try{auth.useDeviceLanguage()}catch(_){}
+  $('go').addEventListener('click',async()=>{
+    fail('');$('go').disabled=true;
+    try{
+      const p=new firebase.auth.GoogleAuthProvider();try{p.setCustomParameters({prompt:'select_account'})}catch(_){}
+      const r=await auth.signInWithPopup(p);
+      const tok=r&&r.credential&&r.credential.idToken;
+      if(!tok)throw{code:'sin-token'};
+      const url='intent://login?s='+S+'&t='+encodeURIComponent(tok)+'#Intent;scheme=catarsis;package=cl.catarsis.agenda;end';
+      $('volver').href=url;$('em').textContent=(r.user&&r.user.email)||'tu cuenta';
+      $('paso1').hidden=true;$('intro').hidden=true;$('paso2').hidden=false;
+      setTimeout(()=>{try{location.href=url}catch(_){}},300);
+    }catch(e){$('go').disabled=false;fail(e&&e.code==='sin-token'?'Google no entregó los datos de inicio de sesión. Vuelve a intentarlo.':authMsg(e))}
+  });
+})();
+</script></body></html>

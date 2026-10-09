@@ -92,6 +92,7 @@ a.lnk{color:var(--ink)}
 <p class="lnote" id="lFile" hidden>Estás abriendo la página como archivo. Para iniciar sesión, ábrela desde su dirección de GitHub Pages (https://tu-usuario.github.io/…).</p>
 <div id="lCfg" hidden><p class="err" id="lCfgMsg" role="alert" style="margin:0 0 12px"></p><button type="button" class="btn" style="width:100%" onclick="location.reload()">Volver a intentar</button></div>
 <div id="lMain" class="lmain">
+<p class="lnote" id="lAppNote" hidden>Para entrar con Google desde la app, instala la versión nueva de la app. Mientras tanto, entra con tu correo y contraseña (si no tienes, escribe tu correo y toca «Olvidé mi contraseña»).</p>
 <button type="button" class="lgo" id="lGoogle">Continuar con Google</button>
 <div class="or" role="separator"><span>o con tu correo</span></div>
 <form id="loginForm" novalidate>
@@ -233,6 +234,7 @@ function draw(){
   ${cls.length?cls.map((o,i)=>`<div class="frow"><span>${i+1}. <b>${esc(o.nm||'Sin nombre')}</b><div class="mut">${o.n} visita${o.n==1?'':'s'} · última: ${fmtS(o.last)}${o.ph?' · <a class="lnk" href="https://wa.me/'+(String(o.ph).replace(/\D/g,'').length===9?'56':'')+String(o.ph).replace(/\D/g,'')+'" target="_blank" rel="noopener">WhatsApp</a>':''}</div></span><b>${money(o.t)}</b></div>`).join(''):'<div class="mut">Aún no hay visitas registradas.</div>'}</div>`;
 }
 function csvMonth(){
+  if(/CatarsisApp/.test(navigator.userAgent)){toast('Para descargar el Excel, abre el balance en Chrome');return}
   if(!gotD||!gotF){toast('Aún cargando los datos');return}
   const cell=v=>{v=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(v)&&isNaN(Number(v)))v="'"+v;return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   const R=resumen(month),rows=[];
@@ -298,8 +300,24 @@ function setupLogin(auth){
   const g=id=>document.getElementById(id),em=g('lEmail'),pw=g('lPass');
   const st=(busy,err,info)=>{document.querySelectorAll('#lMain button,#lMain input').forEach(x=>x.disabled=!!busy);g('loginErr').textContent=err||'';g('loginInfo').textContent=info||''};
   if(location.protocol==='file:')g('lFile').hidden=false;
+  // App Android: Google no permite iniciar sesión dentro de la app, así que se abre Chrome y vuelve con el resultado
+  const APP=/CatarsisApp/.test(navigator.userAgent),PUENTE=APP&&!!window.CatarsisApp&&typeof window.CatarsisApp.abrir==='function';
+  if(APP&&!PUENTE){g('lGoogle').hidden=true;const o=document.querySelector('#lMain .or');if(o)o.hidden=true;g('lAppNote').hidden=false}
+  window.catarsisGoogleListo=async()=>{
+    if(!PUENTE)return;let raw='';try{raw=window.CatarsisApp.tomar()||''}catch(_){}
+    if(!raw)return;
+    const q=new URLSearchParams(raw),t=q.get('t')||'',s=q.get('s')||'';let ok='';try{ok=localStorage.getItem('catarsis-gstate')||''}catch(_){}
+    if(!t||!s||s!==ok){st(false,'No se pudo completar el inicio con Google. Vuelve a intentarlo.');return}
+    try{localStorage.removeItem('catarsis-gstate')}catch(_){}
+    st(true);try{await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(t));st(false)}catch(e){st(false,authMsg(e))}};
+  if(PUENTE)setTimeout(()=>window.catarsisGoogleListo(),0);
   try{auth.useDeviceLanguage()}catch(_){}
-  g('lGoogle').addEventListener('click',async()=>{st(true);
+  g('lGoogle').addEventListener('click',async()=>{
+    if(PUENTE){const s=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');
+      try{localStorage.setItem('catarsis-gstate',s)}catch(_){}
+      st(false,'','Se abrió Chrome para que elijas tu cuenta de Google. Cuando termines, toca «Volver a la app».');
+      try{window.CatarsisApp.abrir(new URL('app-google.html?s='+s,location.href).href)}catch(_){st(false,'No se pudo abrir Chrome.')}return}
+    st(true);
     try{const p=new firebase.auth.GoogleAuthProvider();try{p.setCustomParameters({prompt:'select_account'})}catch(_){}await auth.signInWithPopup(p);st(false)}catch(e){st(false,authMsg(e))}});
   g('loginForm').addEventListener('submit',async e=>{e.preventDefault();const m=em.value.trim();
     if(!m){st(false,'Escribe tu correo.');em.focus();return}if(!pw.value){st(false,'Escribe tu contraseña.');pw.focus();return}
