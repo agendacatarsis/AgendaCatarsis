@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Balance Catarsis</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#ede1cb">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ede1cb;--card:#f8f2e6;--ink:#1f1b16;--teal:#6b5a45;--tint:#e3d4b8;--mut:#574d41;--line:#d6c7aa;--red:#b8392b;--amb:#8a5200;--grn:#256b41;--btn:#1f1b16;--btnink:#f8f2e6;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--card:#282420;--ink:#f1e7d3;--teal:#d2bb94;--tint:#3a3328;--mut:#c4b9a6;--line:#443c30;--amb:#e0a84a;--grn:#5cc08a;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16}}
+:root{color-scheme:light dark;--red:#9c2a1e}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--red:#ff8f80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Barlow,system-ui,sans-serif;padding:20px 16px 48px;max-width:760px;margin:auto;font-size:15px}
+h1,h2,h3,.cond{font-family:'Barlow Condensed',sans-serif;font-weight:700;margin:0}
+h1{font-size:clamp(28px,6.5vw,40px);line-height:1}
+.mut{color:var(--mut)}
+button,input,select{font:inherit;color:var(--ink)}
+input{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:100%;font-size:15px;min-height:46px}
+::placeholder{color:var(--mut);opacity:1}
+.btn{background:var(--btn);color:var(--btnink);border:0;border-radius:14px;padding:12px 16px;min-height:46px;font-size:15px;font-weight:500;cursor:pointer}
+.pill{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:7px 14px;min-height:40px;font-size:14px;cursor:pointer}
+.x{flex:0 0 44px;height:44px;border:1px solid var(--line);background:var(--card);border-radius:14px;color:var(--red);font-size:17px;cursor:pointer}
+.back{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);text-decoration:none;font-size:15px;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:0 14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.sub{color:var(--teal);font-size:21px;font-weight:600;margin:6px 0 0}
+.box{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:16px;margin-top:14px}
+.dnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 4px}
+.dnav b{font:700 24px 'Barlow Condensed',sans-serif}
+.nav{width:44px;height:48px;border:1px solid var(--line);background:var(--card);border-radius:14px;font-size:22px;cursor:pointer}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+@media(min-width:620px){.fgrid.f4{grid-template-columns:repeat(4,1fr)}}
+.fc{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.fc small{display:block;color:var(--mut);font-size:13px}
+.fc b{display:block;font:700 24px 'Barlow Condensed',sans-serif;letter-spacing:.2px}
+.fc.pos b{color:var(--grn)}.fc.neg b{color:var(--red)}
+.fh{font:700 19px 'Barlow Condensed',sans-serif;margin:0 0 4px;letter-spacing:.3px}
+.frow{display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:9px 2px;font-size:14.5px}
+.frow:last-child{border-bottom:0}.frow .mut{font-size:13px}
+.err{color:var(--red);min-height:20px;font-size:14px;margin:6px 0}
+.row{display:flex;gap:10px;margin:10px 0}.row>*{flex:1;min-width:0}
+label.f{display:block;font-size:13px;color:var(--mut);margin:0 0 5px 4px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:40}
+.modal[hidden]{display:none}
+.mbox{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;max-width:380px;width:100%;text-align:center}
+#login{display:none}#gate{display:none;max-width:380px;margin:60px auto 0;text-align:center}
+body.locked>*:not(#login){display:none!important}body.locked #login{display:block}
+body.denied>*:not(#gate):not(#toastBox){display:none!important}body.denied #gate{display:block}
+#toastBox{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--btn);color:var(--btnink);padding:11px 18px;border-radius:14px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+#toastBox.on{opacity:1}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:100%;font-size:15px;min-height:46px}
+option{background:var(--card);color:var(--ink)}
+.dl{display:block;font-size:12.5px;margin-top:2px;color:var(--mut)}
+.dl.pos{color:var(--grn)}.dl.neg{color:var(--red)}
+.bar{height:9px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--teal);border-radius:6px}
+.bar.g i{background:var(--grn)}
+.big{font:700 30px 'Barlow Condensed',sans-serif}
+.tag{display:inline-block;font-size:11.5px;border:1px solid var(--line);border-radius:8px;padding:1px 6px;color:var(--mut);margin-left:6px}
+.chk{display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:14px}.chk input{width:auto;min-height:0}
+.sep{border:0;border-top:1px solid var(--line);margin:18px 0}
+a.lnk{color:var(--ink)}
+
+/* --- inicio de sesión --- */
+#login .lbox{max-width:420px;margin:36px auto 0;background:var(--card);border:1px solid var(--line);border-radius:28px;padding:26px 22px;display:grid;gap:14px;text-align:left}
+#login .lhead{display:grid;gap:6px;justify-items:center;text-align:center}
+#login .logo{height:72px;margin:0}
+#login h2{font:700 30px 'Barlow Condensed',sans-serif;margin:0;line-height:1.05}
+#login p{margin:0;font-size:14.5px}
+#login form{display:grid}
+#login input{width:100%;margin:0}
+#login label.f{display:block;font-size:13px;color:var(--mut);margin:0 0 5px 4px}
+#login .btn{min-height:48px;font-size:15.5px}
+.lmain{display:grid;gap:14px}
+.lgo{width:100%;min-height:48px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:14px;font:inherit;font-size:15.5px;font-weight:500;cursor:pointer}
+.or{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.linfo{color:var(--grn);font-size:14px;font-weight:500;margin:0 0 8px}.linfo:empty{display:none}
+.llinks{display:flex;justify-content:center}
+.linkish{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;min-height:44px;padding:0 8px}
+.lnote{background:var(--tint);border-radius:14px;padding:10px 12px;font-size:13.5px}
+#login [hidden]{display:none!important}
+#login button:disabled,#login input:disabled{opacity:.6;cursor:progress}
+
+.deny{background:var(--card);border:2px solid var(--red);border-radius:20px;padding:14px 16px;margin-top:16px;font-size:14.5px;line-height:1.4}
+.deny code{display:block;margin:8px 0 2px;user-select:all;background:var(--tint);padding:8px 10px;border-radius:10px;word-break:break-all;font-size:13.5px}
+.deny .row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}.deny .pill{min-height:42px}
+</style></head><body class="locked">
+<div id="login"><div class="lbox">
+<div class="lhead"><img class="logo" id="loginLogo" alt="Catarsis" src="icon-192.png"><h2>Balance Catarsis</h2><p class="mut">Entra para ver tus finanzas. Solo la cuenta administradora puede verlas.</p></div>
+<p class="lnote" id="lFile" hidden>Estás abriendo la página como archivo. Para iniciar sesión, ábrela desde su dirección de GitHub Pages (https://tu-usuario.github.io/…).</p>
+<div id="lCfg" hidden><p class="err" id="lCfgMsg" role="alert" style="margin:0 0 12px"></p><button type="button" class="btn" style="width:100%" onclick="location.reload()">Volver a intentar</button></div>
+<div id="lMain" class="lmain">
+<button type="button" class="lgo" id="lGoogle">Continuar con Google</button>
+<div class="or" role="separator"><span>o con tu correo</span></div>
+<form id="loginForm" novalidate>
+<label class="f" for="lEmail">Correo</label><input id="lEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@gmail.com">
+<label class="f" for="lPass" style="margin-top:10px">Contraseña</label><input id="lPass" type="password" autocomplete="current-password">
+<div class="err" id="loginErr" role="alert"></div><div class="linfo" id="loginInfo" role="status"></div>
+<button class="btn" style="width:100%" type="submit">Entrar</button></form>
+<div class="llinks"><button type="button" class="linkish" id="lReset">Olvidé mi contraseña</button></div>
+</div></div></div>
+<div id="gate" class="box"><h1>Sin acceso</h1><p class="mut">El balance es solo para la administradora.</p><div id="gateInfo" class="deny" style="text-align:left"></div><div class="row" style="justify-content:center;flex-wrap:wrap"><a class="back" href="panelcatarsis.html">‹ Volver a la agenda</a><button class="pill" id="gateOut">Salir y entrar con otra cuenta</button></div></div>
+<div class="top"><div><h1>Balance</h1><div class="sub">Catarsis Estética y Bienestar</div></div><a class="back" href="panelcatarsis.html">‹ Agenda</a></div>
+<div class="dnav"><button class="nav" data-m="-1" aria-label="Mes anterior">‹</button><b id="mesT"></b><button class="nav" data-m="1" aria-label="Mes siguiente">›</button></div>
+<button class="pill" id="csvBtn" style="width:100%;margin:6px 0 2px">⬇ Descargar este mes en Excel (CSV)</button>
+<div id="body"><div class="mut" style="margin-top:20px">Cargando…</div></div>
+<div class="box"><h2 style="font-size:24px">Registrar</h2>
+<div class="fh" style="margin-top:12px">Gasto</div>
+<div class="row"><div><label class="f" for="gF">Fecha</label><input type="date" id="gF"></div><div><label class="f" for="gM">Monto ($)</label><input type="number" id="gM" min="0" step="500" inputmode="numeric"></div></div>
+<label class="f" for="gK">Categoría</label><select id="gK"><option>Insumos</option><option>Arriendo</option><option>Publicidad</option><option>Servicios básicos</option><option>Sueldos</option><option>Otros</option></select>
+<label class="f" for="gC" style="margin-top:10px">Detalle</label><input id="gC" maxlength="80" placeholder="Ej. Aceites, arriendo cabina, toallas" autocomplete="off">
+<label class="chk"><input type="checkbox" id="gFijo"> Se repite todos los meses (gasto fijo, ej. arriendo)</label>
+<div class="err" id="gErr" role="alert"></div>
+<button class="btn" style="width:100%" id="addG">Agregar gasto</button>
+<hr class="sep">
+<div class="fh">Giftcard vendida</div>
+<div class="row"><div><label class="f" for="hF">Fecha</label><input type="date" id="hF"></div><div><label class="f" for="hM">Monto ($)</label><input type="number" id="hM" min="0" step="500" inputmode="numeric"></div></div>
+<label class="f" for="hC">Detalle (opcional)</label><input id="hC" maxlength="80" placeholder="Ej. Para María, regalo de Pedro" autocomplete="off">
+<div class="err" id="hErr" role="alert"></div>
+<button class="btn" style="width:100%" id="addH">Registrar giftcard vendida</button>
+<hr class="sep">
+<div class="fh">Meta mensual</div>
+<label class="f" for="metaI">Monto que quieres cobrar cada mes ($)</label><input type="number" id="metaI" min="0" step="10000" inputmode="numeric" placeholder="Ej. 1500000">
+<div class="err" id="metaErr" role="alert"></div>
+<button class="btn" style="width:100%" id="saveMeta">Guardar meta</button></div>
+<div class="mut" id="sync" style="margin-top:20px;font-size:14px"></div>
+<button class="pill" id="outBtn" style="margin-top:8px" hidden>Cerrar sesión</button>
+<div id="confModal" class="modal" hidden role="alertdialog" aria-modal="true" aria-labelledby="confTitle"><div class="mbox">
+<h3 id="confTitle" style="font-size:22px;margin:0 0 6px">¿Eliminar?</h3><p id="confMsg" class="mut" style="margin:0 0 16px"></p>
+<div class="row"><button class="pill" id="confNo">Cancelar</button><button class="btn" id="confYes" style="background:#b8392b;color:#fff">Sí, continuar</button></div></div></div>
+<div id="toastBox" role="status" aria-live="polite"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+// La configuración de Firebase está en el archivo firebase-config.js (misma carpeta)
+const FIREBASE_CONFIG=(c=>c&&typeof c==='object'&&['apiKey','authDomain','projectId','appId'].every(k=>typeof c[k]==='string'&&c[k].trim()&&!/PEGA_AQUI/i.test(c[k]))?c:null)(window.FIREBASE_CONFIG);
+const APPCHECK_KEY=window.APPCHECK_KEY||'';
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIA=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>{n=Number(n||0);return (n<0?'-':'')+'$'+Math.abs(n).toLocaleString('es-CL')};
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fmtD=s=>{const d=new Date(s+'T12:00');return DIA[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()]};
+const fmtS=s=>{const [y,m,d]=s.split('-');return d+'/'+m+'/'+y};
+const mName=m=>{const [y,n]=m.split('-').map(Number);return MES[n-1]+' '+y};
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const shiftM=(m,k)=>{const [y,n]=m.split('-').map(Number),d=new Date(y,n-1+k,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+const today=new Date();today.setHours(12,0,0,0);
+let month=ymd(today).slice(0,7),D={appts:[],cfg:{},services:[],gastos:[]},F={gastos:{},saldos:{},fijos:{},gifts:{},meta:0},gotD=false,gotF=false,db=null,confFn=null,toastT=null;
+const FIN=()=>db.collection('masajes').doc('finanzas');
+function toast(m){$('toastBox').textContent=m;$('toastBox').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toastBox').classList.remove('on'),2400)}
+function ask(t,m,fn){$('confTitle').textContent=t;$('confMsg').textContent=m;confFn=fn;$('confModal').hidden=false}
+const real=a=>a.e!=='bloqueado'&&a.e!=='disponible'&&!a.bq;
+const abOf=a=>Math.min(+a.v||0,+(D.cfg||{}).abono||0);
+const saldoOk=a=>!!(a.sp||F.saldos[a.id]);
+const cobrado=a=>a.gc||!real(a)||a.p!=='pagado'?0:(saldoOk(a)?(+a.v||0):abOf(a));
+const porCobrar=a=>a.gc||!real(a)||a.p!=='pagado'||saldoOk(a)?0:Math.max(0,(+a.v||0)-abOf(a));
+const sum=(L,f)=>L.reduce((t,x)=>t+f(x),0);
+const gifts=()=>Object.entries(F.gifts).map(([k,g])=>({...g,id:k}));
+const fijosOn=m=>Object.entries(F.fijos).filter(([k,f])=>f.desde<=m&&(!f.hasta||f.hasta>=m)).map(([k,f])=>({...f,id:k}));
+const gastosDe=m=>{
+  const mp=new Map();(D.gastos||[]).forEach(g=>mp.set(String(g.id),g));Object.entries(F.gastos).forEach(([k,g])=>mp.set(k,{...g,id:k}));
+  const one=[...mp.values()].filter(g=>g.d.slice(0,7)===m);
+  const fx=fijosOn(m).map(f=>({id:'fx'+f.id,d:m+'-'+String(Math.min(28,Math.max(1,+f.dia||1))).padStart(2,'0'),m:f.m,c:f.c,k:f.k,fijo:true}));
+  return one.concat(fx)};
+function resumen(m){
+  const A=(D.appts||[]).filter(real).filter(a=>a.d.slice(0,7)===m);
+  const svc=sum(A,cobrado),gf=sum(gifts().filter(g=>g.d.slice(0,7)===m),g=>+g.m||0),gas=sum(gastosDe(m),g=>+g.m||0);
+  return{A,svc,gf,ing:svc+gf,gas,net:svc+gf-gas};
+}
+function delta(cur,prev,label){
+  if(!prev)return `<span class="dl">${cur?'Sin datos de '+label:''}</span>`;
+  const p=Math.round((cur-prev)/Math.abs(prev)*100);
+  if(p===0)return `<span class="dl">= igual que ${label}</span>`;
+  return `<span class="dl ${p>0?'pos':'neg'}">${p>0?'▲':'▼'} ${Math.abs(p)}% vs. ${label}</span>`}
+function draw(){
+  if(!gotD||!gotF)return;
+  $('mesT').textContent=cap(mName(month));
+  const A=(D.appts||[]).filter(real),R=resumen(month),P=resumen(shiftM(month,-1)),G=gastosDe(month),pl=MES[+shiftM(month,-1).split('-')[1]-1];
+  const mon=new Date(today);mon.setDate(today.getDate()-((today.getDay()+6)%7));const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const t0=ymd(today),w0=ymd(mon),w1=ymd(sun),GF=gifts();
+  const hoy=sum(A.filter(a=>a.d===t0),cobrado)+sum(GF.filter(g=>g.d===t0),g=>+g.m||0);
+  const sem=sum(A.filter(a=>a.d>=w0&&a.d<=w1),cobrado)+sum(GF.filter(g=>g.d>=w0&&g.d<=w1),g=>+g.m||0);
+  const xc=sum(R.A,porCobrar),abPend=sum(R.A.filter(a=>!a.gc&&a.p!=='pagado'),abOf),gcs=R.A.filter(a=>a.gc);
+  const card=(l,v,c='',extra='')=>`<div class="fc ${c}"><small>${l}</small><b>${money(v)}</b>${extra}</div>`;
+  // ingresos por categoría
+  const porCat={};R.A.forEach(a=>{const sv=(D.services||[]).find(x=>x.n===a.s),c=a.gc?'Giftcards (canje)':(sv&&sv.c)||'Otros';(porCat[c]=porCat[c]||{n:0,t:0});porCat[c].n++;porCat[c].t+=cobrado(a)});
+  // servicios más vendidos
+  const sv={};R.A.forEach(a=>{const k=a.s||'Sin servicio';(sv[k]=sv[k]||{n:0,t:0});sv[k].n++;sv[k].t+=cobrado(a)});
+  const top=Object.entries(sv).sort((x,y)=>y[1].n-x[1].n||y[1].t-x[1].t).slice(0,5),maxN=top.length?top[0][1].n:1;
+  // gastos por categoría
+  const gk={};G.forEach(g=>{const k=g.k||'Otros';gk[k]=(gk[k]||0)+(+g.m||0)});const gkE=Object.entries(gk).sort((x,y)=>y[1]-x[1]);
+  // saldos
+  const deb=A.filter(a=>porCobrar(a)>0&&a.d<=t0).sort((x,y)=>x.d.localeCompare(y.d));
+  // giftcards
+  const gMes=GF.filter(g=>g.d.slice(0,7)===month).sort((x,y)=>y.d.localeCompare(x.d));
+  const gPend=Math.max(0,sum(GF,g=>+g.m||0)-sum(A.filter(a=>a.gc),a=>+a.v||0));
+  // clientas
+  const cl={};A.filter(a=>a.p==='pagado'||a.e==='confirmada').forEach(a=>{
+    const ph=String(a.f||'').replace(/\D/g,'').slice(-9),k=ph||String(a.c||'').trim().toLowerCase();if(!k)return;
+    const o=cl[k]=cl[k]||{n:0,t:0,last:'',nm:'',ph:''};o.n++;o.t+=cobrado(a);if(a.d>=o.last){o.last=a.d;o.nm=a.c||o.nm;o.ph=a.f||o.ph}if(!o.nm)o.nm=a.c||''});
+  const cls=Object.values(cl).sort((x,y)=>y.n-x.n||y.t-x.t).slice(0,8);
+  const meta=+F.meta||0,pc=meta?Math.min(100,Math.round(R.ing/meta*100)):0;
+  $('body').innerHTML=`<div class="fgrid">${card('Cobrado hoy',hoy)}${card('Cobrado esta semana',sem)}</div>
+  <div class="box"><div class="fh">Resumen del mes</div>
+  <div class="fgrid f4">${card('Cobrado',R.ing,'',delta(R.ing,P.ing,pl))}${card('Gastos',R.gas)}${card('Ganancia neta',R.net,R.net>=0?'pos':'neg',delta(R.net,P.net,pl))}${card('Saldos por cobrar',xc)}</div>
+  <div class="mut" style="font-size:13px">Servicios: ${money(R.svc)} · Giftcards vendidas: ${money(R.gf)}. Abonos aún pendientes de transferir: ${money(abPend)}. Las giftcards canjeadas no suman al cobrar la cita (ya se pagaron al comprarlas)${gcs.length?': '+gcs.length+' este mes por '+money(sum(gcs,a=>+a.v||0)):''}.</div></div>
+  <div class="box"><div class="fh">Meta del mes</div>
+  ${meta?`<div class="big">${pc}%</div><div class="mut" style="font-size:14px">${money(R.ing)} de ${money(meta)} · ${R.ing>=meta?'¡Meta cumplida! 🎉':'faltan '+money(meta-R.ing)}</div><div class="bar g" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pc}" aria-label="Avance de la meta"><i style="width:${pc}%"></i></div>`:'<div class="mut">Aún no defines una meta. Puedes hacerlo en «Registrar» más abajo.</div>'}</div>
+  <div class="box"><div class="fh">Servicios más vendidos</div>
+  ${top.length?top.map(([n,o],i)=>`<div style="margin:9px 0"><div class="frow" style="border:0;padding:0"><span>${i+1}. ${esc(n)}</span><b>${o.n} ${o.n==1?'vez':'veces'}</b></div><div class="mut" style="font-size:13px">Cobrado: ${money(o.t)}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round(o.n/maxN*100)}%"></i></div></div>`).join(''):'<div class="mut">Sin citas este mes.</div>'}</div>
+  <div class="box"><div class="fh">Ingresos por categoría</div>
+  ${Object.keys(porCat).length?Object.entries(porCat).map(([c,o])=>`<div class="frow"><span>${esc(c)}<div class="mut">${o.n} cita${o.n==1?'':'s'}</div></span><b>${money(o.t)}</b></div>`).join(''):'<div class="mut">Sin citas este mes.</div>'}</div>
+  <div class="box"><div class="fh">Saldos por cobrar</div><div class="mut" style="font-size:13px;margin-bottom:4px">Citas de hoy o ya realizadas con abono pagado y saldo pendiente. Para registrarlas como pagadas, usa el botón «Pagado» en la agenda.</div>
+  ${deb.length?deb.map(a=>`<div class="frow"><span><b>${esc(a.c||'Sin nombre')}</b><div class="mut">${fmtD(a.d)} · ${esc(a.s)} · debe ${money(porCobrar(a))}</div></span></div>`).join(''):'<div class="mut">No hay saldos pendientes.</div>'}</div>
+  <div class="box"><div class="fh">Gastos por categoría</div>
+  ${gkE.length?gkE.map(([k,v])=>`<div style="margin:9px 0"><div class="frow" style="border:0;padding:0"><span>${esc(k)}</span><b>${money(v)} <span class="mut" style="font-weight:400;font-size:13px">· ${Math.round(v/R.gas*100)}%</span></b></div><div class="bar" aria-hidden="true"><i style="width:${Math.round(v/R.gas*100)}%"></i></div></div>`).join(''):'<div class="mut">Sin gastos este mes.</div>'}</div>
+  <div class="box"><div class="fh">Gastos del mes</div>
+  ${G.length?G.slice().sort((x,y)=>y.d.localeCompare(x.d)).map(g=>`<div class="frow"><span>${esc(g.c||'Gasto')}${g.fijo?'<span class="tag">Fijo</span>':''}<div class="mut">${esc(g.k||'Otros')} · ${fmtD(g.d)}</div></span><span style="display:flex;gap:8px;align-items:center"><b>${money(g.m)}</b>${g.fijo?'':`<button class="x" data-xg="${esc(g.id)}" aria-label="Eliminar gasto">✕</button>`}</span></div>`).join(''):'<div class="mut">Sin gastos registrados.</div>'}</div>
+  <div class="box"><div class="fh">Gastos fijos mensuales</div><div class="mut" style="font-size:13px;margin-bottom:4px">Se cuentan solos cada mes. Quitar uno solo afecta de este mes en adelante.</div>
+  ${fijosOn(month).length?fijosOn(month).map(f=>`<div class="frow"><span>${esc(f.c||'Gasto fijo')}<div class="mut">${esc(f.k||'Otros')} · desde ${mName(f.desde)}</div></span><span style="display:flex;gap:8px;align-items:center"><b>${money(f.m)}</b><button class="pill" data-xf="${esc(f.id)}">Quitar</button></span></div>`).join(''):'<div class="mut">No hay gastos fijos este mes.</div>'}</div>
+  <div class="box"><div class="fh">Giftcards</div>
+  <div class="fgrid">${card('Vendidas este mes',R.gf)}${card('Saldo por canjear',gPend)}</div>
+  <div class="mut" style="font-size:13px">Saldo por canjear = total vendido menos lo agendado con giftcard. Si vendiste giftcards antes de empezar a registrarlas aquí, este saldo puede verse menor al real.</div>
+  ${gMes.map(g=>`<div class="frow"><span>${esc(g.c||'Giftcard')}<div class="mut">${fmtD(g.d)}</div></span><span style="display:flex;gap:8px;align-items:center"><b>${money(g.m)}</b><button class="x" data-xh="${esc(g.id)}" aria-label="Eliminar giftcard">✕</button></span></div>`).join('')}</div>
+  <div class="box"><div class="fh">Clientas frecuentes</div><div class="mut" style="font-size:13px;margin-bottom:4px">Con citas confirmadas o con abono pagado, de todos los meses.</div>
+  ${cls.length?cls.map((o,i)=>`<div class="frow"><span>${i+1}. <b>${esc(o.nm||'Sin nombre')}</b><div class="mut">${o.n} visita${o.n==1?'':'s'} · última: ${fmtS(o.last)}${o.ph?' · <a class="lnk" href="https://wa.me/'+(String(o.ph).replace(/\D/g,'').length===9?'56':'')+String(o.ph).replace(/\D/g,'')+'" target="_blank" rel="noopener">WhatsApp</a>':''}</div></span><b>${money(o.t)}</b></div>`).join(''):'<div class="mut">Aún no hay visitas registradas.</div>'}</div>`;
+}
+function csvMonth(){
+  if(!gotD||!gotF){toast('Aún cargando los datos');return}
+  const cell=v=>{v=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(v)&&isNaN(Number(v)))v="'"+v;return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const R=resumen(month),rows=[];
+  R.A.forEach(a=>rows.push({o:a.d+' '+(a.t||''),r:['Cita',a.d,a.t||'',a.c||'',a.f||'',a.s||'',(((D.services||[]).find(x=>x.n===a.s)||{}).c)||'Otros',+a.v||0,cobrado(a),'',porCobrar(a),a.e+' · '+(a.gc?'giftcard':a.sp||F.saldos[a.id]?'pagado completo':a.p==='pagado'?'abono pagado':'abono pendiente')]}));
+  gifts().filter(g=>g.d.slice(0,7)===month).forEach(g=>rows.push({o:g.d+' ~',r:['Giftcard vendida',g.d,'','','',g.c||'Giftcard','Giftcards',+g.m||0,+g.m||0,'','','']}));
+  gastosDe(month).forEach(g=>rows.push({o:g.d+' ~~',r:['Gasto'+(g.fijo?' fijo':''),g.d,'','','',g.c||'Gasto',g.k||'Otros',+g.m||0,'',+g.m||0,'','']}));
+  rows.sort((x,y)=>x.o<y.o?-1:x.o>y.o?1:0);
+  const H=['Tipo','Fecha','Hora','Cliente','Teléfono','Detalle o servicio','Categoría','Valor','Ingreso','Egreso','Saldo por cobrar','Estado'];
+  const out=[H].concat(rows.map(x=>x.r));
+  out.push([],['Total ingresos','','','','','','','',R.ing],['Total egresos','','','','','','','','',R.gas],['Ganancia neta','','','','','','','',R.net]);
+  const txt='\ufeff'+out.map(r=>r.map(cell).join(';')).join('\r\n');
+  const u=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
+  a.href=u;a.download='balance-catarsis-'+month+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);
+  toast('Archivo descargado ✓');
+}
+const werr=e=>{toast(e.code==='permission-denied'?'Sin permiso para guardar. Revisa las reglas de Firestore.':'No se pudo guardar ('+(e.code||'error')+')')};
+const del=f=>FIN().update({[f]:firebase.firestore.FieldValue.delete()}).catch(werr);
+document.addEventListener('click',e=>{
+  const g=k=>e.target.closest('['+k+']');let el;
+  if(el=g('data-m')){month=shiftM(month,+el.dataset.m);draw()}
+  else if(e.target.id==='csvBtn')csvMonth();
+  else if(e.target.id==='addG'){const m=+$('gM').value,d=$('gF').value;if(!d||!(m>0)){$('gErr').textContent='Ingresa fecha y un monto mayor a 0.';return}$('gErr').textContent='';
+    const fj=$('gFijo').checked,id=(fj?'f':'g')+Date.now(),k=$('gK').value,c=$('gC').value.trim();
+    const w=fj?{fijos:{[id]:{desde:d.slice(0,7),dia:+d.slice(8,10),m,c,k}}}:{gastos:{[id]:{d,m,c,k}}};
+    FIN().set(w,{merge:true}).then(()=>{$('gC').value='';$('gM').value='';$('gFijo').checked=false;toast(fj?'Gasto fijo agregado ✓':'Gasto agregado ✓')}).catch(werr)}
+  else if(e.target.id==='addH'){const m=+$('hM').value,d=$('hF').value;if(!d||!(m>0)){$('hErr').textContent='Ingresa fecha y un monto mayor a 0.';return}$('hErr').textContent='';
+    FIN().set({gifts:{['h'+Date.now()]:{d,m,c:$('hC').value.trim()}}},{merge:true}).then(()=>{$('hC').value='';$('hM').value='';toast('Giftcard registrada ✓')}).catch(werr)}
+  else if(e.target.id==='saveMeta'){const v=Math.round(+$('metaI').value);if(!(v>=0)||$('metaI').value===''){$('metaErr').textContent='Ingresa un monto válido.';return}$('metaErr').textContent='';
+    FIN().set({meta:v},{merge:true}).then(()=>toast(v?'Meta guardada ✓':'Meta quitada')).catch(werr)}
+  else if(el=g('data-xg')){const id=el.dataset.xg,x=gastosDe(month).find(q=>String(q.id)===id);if(!x)return;
+    ask('Eliminar gasto',`¿Seguro que quieres eliminar "${x.c||'Gasto'}" por ${money(x.m)}?`,()=>{
+      if(F.gastos[id])del('gastos.'+id);
+      else{D.gastos=(D.gastos||[]).filter(q=>String(q.id)!==id);db.collection('masajes').doc('datos').set({gastos:D.gastos},{merge:true}).then(draw).catch(werr)}})}
+  else if(el=g('data-xh')){const id=el.dataset.xh,x=F.gifts[id];if(!x)return;ask('Eliminar giftcard',`¿Seguro que quieres eliminar la giftcard de ${money(x.m)} (${fmtD(x.d)})?`,()=>del('gifts.'+id))}
+  else if(el=g('data-xf')){const id=el.dataset.xf.replace(/^fx/,''),f=F.fijos[id];if(!f)return;const hasta=shiftM(month,-1);
+    ask('Quitar gasto fijo',`¿Dejar de contar "${f.c||'Gasto fijo'}" desde ${mName(month)}? Los meses anteriores no cambian.`,()=>{
+      if(hasta<f.desde)del('fijos.'+id);else FIN().set({fijos:{[id]:{hasta}}},{merge:true}).then(()=>toast('Gasto fijo actualizado ✓')).catch(werr)})}
+  else if(e.target.id==='gateCopy'){const v=$('gateUid').textContent;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('UID copiado ✓'),()=>toast('Mantén presionado el UID para copiarlo'))}
+  else if(e.target.id==='gateOut')$('outBtn').click();
+  else if(e.target.id==='confYes'){const f=confFn;$('confModal').hidden=true;if(f)f()}
+  else if(e.target.id==='confNo'||e.target.id==='confModal')$('confModal').hidden=true;
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('confModal').hidden=true});
+$('gF').value=$('hF').value=ymd(today);
+/* ---------- inicio de sesión ---------- */
+function authMsg(e){const c=e&&e.code?String(e.code):'',h=location.hostname||'tu página';switch(c){
+  case 'auth/popup-closed-by-user':case 'auth/cancelled-popup-request':case 'auth/user-cancelled':return '';
+  case 'auth/popup-blocked':return 'El navegador bloqueó la ventana de Google. Permite ventanas emergentes para esta página o entra con tu correo.';
+  case 'auth/unauthorized-domain':return 'Firebase todavía no autoriza '+h+'. En Firebase, entra a Authentication → Configuración → Dominios autorizados y agrega '+h+'.';
+  case 'auth/operation-not-allowed':case 'auth/configuration-not-found':return 'Este método de inicio de sesión no está activado. En Firebase, entra a Authentication → Método de acceso y activa Google o Correo electrónico/contraseña.';
+  case 'auth/operation-not-supported-in-this-environment':return 'Para iniciar sesión, abre la página desde su dirección de GitHub Pages, no como archivo.';
+  case 'auth/account-exists-with-different-credential':return 'Ese correo ya tiene una cuenta con contraseña. Entra con tu correo y contraseña.';
+  case 'auth/invalid-credential':case 'auth/invalid-login-credentials':case 'auth/wrong-password':case 'auth/user-not-found':return 'El correo o la contraseña no coinciden. Si no la recuerdas, toca «Olvidé mi contraseña».';
+  case 'auth/user-disabled':return 'Esta cuenta está desactivada.';
+  case 'auth/invalid-email':case 'auth/missing-email':return 'Revisa el correo; no parece válido.';
+  case 'auth/missing-password':return 'Escribe tu contraseña.';
+  case 'auth/too-many-requests':return 'Demasiados intentos seguidos. Espera unos minutos y vuelve a intentarlo.';
+  case 'auth/network-request-failed':return 'No hay conexión a internet. Revisa tu conexión y vuelve a intentarlo.';
+  case 'auth/invalid-api-key':case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':return 'Los datos de firebase-config.js no son válidos. Vuelve a copiarlos desde la configuración de tu proyecto en Firebase.';
+  default:return 'No se pudo iniciar sesión'+(c?' ('+c+')':'')+'. Vuelve a intentarlo.'}}
+function loginFail(msg){const g=id=>document.getElementById(id);g('lMain').hidden=true;g('lCfg').hidden=false;g('lCfgMsg').textContent=msg}
+function setupLogin(auth){
+  const g=id=>document.getElementById(id),em=g('lEmail'),pw=g('lPass');
+  const st=(busy,err,info)=>{document.querySelectorAll('#lMain button,#lMain input').forEach(x=>x.disabled=!!busy);g('loginErr').textContent=err||'';g('loginInfo').textContent=info||''};
+  if(location.protocol==='file:')g('lFile').hidden=false;
+  try{auth.useDeviceLanguage()}catch(_){}
+  g('lGoogle').addEventListener('click',async()=>{st(true);
+    try{const p=new firebase.auth.GoogleAuthProvider();try{p.setCustomParameters({prompt:'select_account'})}catch(_){}await auth.signInWithPopup(p);st(false)}catch(e){st(false,authMsg(e))}});
+  g('loginForm').addEventListener('submit',async e=>{e.preventDefault();const m=em.value.trim();
+    if(!m){st(false,'Escribe tu correo.');em.focus();return}if(!pw.value){st(false,'Escribe tu contraseña.');pw.focus();return}
+    st(true);try{await auth.signInWithEmailAndPassword(m,pw.value);pw.value='';st(false)}catch(err){st(false,authMsg(err))}});
+  g('lReset').addEventListener('click',async()=>{const m=em.value.trim();
+    if(!m){st(false,'Escribe tu correo arriba y vuelve a tocar «Olvidé mi contraseña».');em.focus();return}
+    st(true);try{await auth.sendPasswordResetEmail(m);st(false,'','Si '+m+' tiene una cuenta, te llegará un correo para crear una contraseña nueva. Revisa también la carpeta de spam.')}catch(e){st(false,authMsg(e))}});
+}
+const FAIL_SDK='No se pudo descargar Firebase. Revisa tu conexión a internet y vuelve a intentarlo.';
+const FAIL_CFG='Falta el archivo firebase-config.js o sus datos no son válidos. Súbelo a la misma carpeta de GitHub que esta página.';
+(function init(){
+  if(!window.firebase){loginFail(FAIL_SDK);return}
+  if(!FIREBASE_CONFIG){loginFail(FAIL_CFG);return}
+  firebase.initializeApp(FIREBASE_CONFIG);
+  if(APPCHECK_KEY&&firebase.appCheck)firebase.appCheck().activate(APPCHECK_KEY,true);
+  const auth=firebase.auth();db=firebase.firestore();
+  setupLogin(auth);
+  $('outBtn').addEventListener('click',async()=>{await auth.signOut();location.reload()});
+  let u1=null,u2=null;
+  auth.onAuthStateChanged(async u=>{
+    if(u1){u1();u1=null}if(u2){u2();u2=null}gotD=gotF=false;
+    if(!u){document.body.classList.remove('denied');document.body.classList.add('locked');$('outBtn').hidden=true;return}
+    document.body.classList.remove('locked');$('outBtn').hidden=false;
+    try{await db.collection('masajes').doc('ping').set({t:Date.now()})}catch(e){if(e.code==='permission-denied'){$('gateInfo').innerHTML=`Entraste como <b>${esc(u.email||'(sin correo)')}</b>. Si es tu cuenta de administradora, agrega este UID a la lista de <b>owner()</b> en las reglas de Firestore y toca Publicar:<code id="gateUid">${esc(u.uid)}</code><div class="row"><button class="pill" id="gateCopy">Copiar UID</button></div>`;document.body.classList.add('denied');return}}
+    document.body.classList.remove('denied');
+    u1=db.collection('masajes').doc('datos').onSnapshot(s=>{if(s.exists){const d=s.data();D={appts:d.appts||[],cfg:d.cfg||{},services:d.services||[],gastos:d.gastos||[]}}gotD=true;draw();$('sync').textContent='Sincronizado en la nube ✓'},e=>{$('sync').textContent=e.code==='permission-denied'?'Esta cuenta no tiene permiso para ver los datos.':'Sin conexión ('+(e.code||'error')+')'});
+    u2=db.collection('masajes').doc('finanzas').onSnapshot(s=>{const d=s.exists?s.data():{};F={gastos:d.gastos||{},saldos:d.saldos||{},fijos:d.fijos||{},gifts:d.gifts||{},meta:+d.meta||0};if(document.activeElement!==$('metaI'))$('metaI').value=F.meta||'';gotF=true;draw()},e=>{$('sync').textContent='No se pudo leer los gastos ('+(e.code||'error')+'). Revisa las reglas de Firestore.'});
+  });
+})();
+</script></body></html>
