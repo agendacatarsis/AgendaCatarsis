@@ -202,7 +202,7 @@ function card(){
   const tabs=cats.length>1?`<div class="tabs cats" style="margin:14px 0 0">${cats.map(c=>`<button data-cat="${esc(c)}" class="${c===cn?'on':''} ${c===PROMO||c===DUO?'promo':''}">${c===PROMO?'★ ':c===DUO?'👥 ':''}${esc(c)}</button>`).join('')}</div>`:'';
   return `<aside class="card"><div class="who"><img class="logo" alt="Catarsis" src="${LOGO}"><div><b>Catarsis Osorno</b><span>${esc(curTh().n)}</span><span class="acc">${esc(curTh().r||'')}</span></div></div>
   ${step===1&&TH().length>1?`<label class="f" for="th">Terapeuta</label><select id="th">${TH().map(t=>`<option value="${esc(t.id)}" ${t.id===tid?'selected':''}>${esc(t.n)}</option>`).join('')}</select>`:''}${step===1?tabs+(duo?duoCtl(sv):`<label class="f" for="svc">Servicio</label><select id="svc">${sel}</select>${sv&&sv.promo?'<p class="pnote">★ Precio especial de promoción</p>':''}${sv&&!sv.promo&&/^evaluaci/i.test(sv.n)?'<p class="pnote">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas por la evaluación se descuenta del tratamiento.</p>':''}`):''}
-  ${selT!==null&&sv&&sv.duo?`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd><dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`:selT!==null&&sv?`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd><dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd><dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd></dl>`:`<p class="mut" style="margin:14px 0 0">Elige un día y una hora para ver el detalle.</p>`}</aside>`;
+  ${sv&&sv.w?`<dl><dt>Servicio</dt><dd>${esc(sv.n)}</dd><dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}</dd></dl>`:selT!==null&&sv&&sv.duo?`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd><dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`:selT!==null&&sv?`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd><dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd><dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd></dl>`:`<p class="mut" style="margin:14px 0 0">Elige un día y una hora para ver el detalle.</p>`}</aside>`;
 }
 function duoCtl(sv){
   const L=DL(),gr={};L.forEach((x,i)=>{(gr[x.g||'']=gr[x.g||'']||[]).push(i)});
@@ -219,9 +219,17 @@ function render(){
   if(step===2)return view2($('app'));
   view3($('app'));
 }
+// Servicios que se piden por WhatsApp (ej. evaluación de acrocordones): sin horas; la hora se agenda desde el panel
+function waView(sv){
+  const nm=sv.n.charAt(0).toLowerCase()+sv.n.slice(1),txt=encodeURIComponent(`Hola, me gustaría agendar una ${nm}. ¿Qué horarios tienen disponibles?`);
+  return `<section><div class="card"><h3>Agenda tu ${esc(nm)} por WhatsApp</h3>
+  <p class="mut" style="margin:0">Para este servicio coordinamos la hora contigo por mensaje. Escríbenos y te agendamos en el horario que más te acomode.</p>
+  ${WA()?`<a class="cta" href="https://wa.me/${WA()}?text=${txt}" target="_blank" rel="noopener">💬 Enviar mensaje para agendar</a>`:'<p class="mut">Escríbenos por WhatsApp o Instagram para agendar.</p>'}</div></section>`;
+}
 function view1(app){
   const sv=svc();
   if(!sv){app.innerHTML='<div class="card" style="max-width:520px;margin:auto"><h3>Reservas no disponibles por ahora</h3></div>';return}
+  if(sv.w){app.innerHTML=`<div class="grid">${card()}${waView(sv)}</div>`;return}
   const keys=Object.keys(avail);
   if(!keys.length){app.innerHTML=`<div class="grid">${card()}<div class="card"><h3>No hay horas disponibles por ahora</h3><p class="mut">Prueba con otro servicio o vuelve más tarde.</p>${WA()?`<a class="cta" href="https://wa.me/${WA()}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>`:''}</div></div>`;return}
   const wEnd=addD(week,6),lastD=addD(t0,HORIZON-1);let days='';
@@ -293,7 +301,7 @@ document.addEventListener('change',e=>{if(e.target.id==='th'){tid=e.target.value
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='form')return;e.preventDefault();
   const n=$('nom').value.trim(),t=$('tel').value.trim(),sv=svc(),er=$('err');
-  if(!sv||selT===null){step=1;render();return}
+  if(!sv||sv.w||selT===null){step=1;render();return}
   if(n.length<2){er.textContent='Escribe tu nombre.';return}
   if(t.replace(/\D/g,'').length<8){er.textContent='Escribe un teléfono válido.';return}
   const mail=MAIL_ON?$('mail').value.trim():'';
