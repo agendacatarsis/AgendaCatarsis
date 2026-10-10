@@ -293,9 +293,10 @@ input[type=checkbox]{min-height:0;width:auto}
 <div id="duoModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="duoTitle">
  <div class="mbox">
   <div class="mhead"><h3 id="duoTitle">Descuentos dúo</h3><button type="button" class="x" data-duoclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <p class="mut" style="font-size:14px;margin:6px 0 4px">En la sección <b>Masajes dúo</b> de tu página de reservas, dos personas eligen un masaje cada una y se atienden <b>al mismo tiempo</b>. Aquí defines el descuento que tiene cada masaje cuando se reserva en dúo. Deja 0 si no tiene descuento.</p>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">En la sección <b>Masajes dúo</b> de tu página de reservas, dos personas eligen un masaje cada una y se atienden <b>al mismo tiempo</b>. Todos los masajes dúo duran lo mismo. Aquí defines el descuento que tiene cada masaje cuando se reserva en dúo. Deja 0 si no tiene descuento.</p>
   <label class="duosw"><input type="checkbox" id="duoShow"> Mostrar «Masajes dúo» en la página de reservas</label>
-  <label class="f" for="duoAbIn">Abono masajes dúo ($, se descuenta del total)</label><input type="number" inputmode="numeric" id="duoAbIn" min="0" step="1000">
+  <div class="row"><div><label class="f" for="duoAbIn">Abono dúo ($)</label><input type="number" inputmode="numeric" id="duoAbIn" min="0" step="1000"></div><div><label class="f" for="duoMinIn">Duración dúo (min)</label><input type="number" inputmode="numeric" id="duoMinIn" min="5" max="480" step="5"></div></div>
+  <div class="mut" style="font-size:12.5px;margin:4px 0 0 4px">El abono se descuenta del total. La duración es la misma para cualquier par de masajes.</div>
   <div id="duoList"></div>
   <div class="err" id="duoErr" role="alert"></div>
   <button class="btn" style="width:100%" type="button" data-duosave>Guardar descuentos</button>
@@ -330,7 +331,7 @@ function migrate(){
   if(!S.services||!S.services.length||S.services.some(x=>!x.c))S.services=DEF.map(x=>({...x}));
   S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:''},S.cfg||{});
   S.cfg.promos=Array.isArray(S.cfg.promos)?S.cfg.promos:[];
-  S.cfg.duo=Object.assign({on:true,ab:20000,d:{}},S.cfg.duo||{});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};
+  S.cfg.duo=Object.assign({on:true,ab:20000,m:50,d:{}},S.cfg.duo||{});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};
   if(S.cfg.abono>0&&S.cfg.abono<=100)S.cfg.abono=10000;
   S.cfg.horario=Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},S.cfg.horario||{});
   S.appts.forEach(a=>{a.k=a.k.replace('Mi sucursal','Catarsis Osorno').replace('Terapeuta 1','Daniela Velásquez');a.e=a.e||'reservada';a.p=a.p||'pendiente';a.v=a.v||0;a.f=a.f||''});
@@ -594,21 +595,22 @@ function savePromo(){
 // --- masajes dúo (dos personas al mismo tiempo) ---
 const esDuo=a=>String((a&&a.s)||'').startsWith('Dúo: ');
 const duoAbono=()=>{const a=+((S.cfg.duo||{}).ab);return a>=0?a:20000};
+const duoMin=()=>{const m=Math.round(+((S.cfg.duo||{}).m));return m>=5&&m<=480?m:50};
 const duoLista=()=>{const m=S.services.filter(x=>/maso|masaj/i.test(x.c||''));return m.length?m:S.services.filter(x=>/masaj/i.test(x.n||''))};
 const duoDesc=x=>{const d=Math.round(+(((S.cfg.duo||{}).d||{})[x.n])||0);return Math.max(0,Math.min(+x.v||0,d))};
-const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
+const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),m:duoMin(),l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
 // Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de index.html
 const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
 const duoSvc=n=>{if(!String(n||'').startsWith('Dúo: '))return null;const L=duoLista();
-  for(const a of L)for(const b of L)if(duoCode(a.n,b.n)===n)return{n:'Dúo: '+a.n+' + '+b.n,m:Math.max(+a.m,+b.m),v:(+a.v-duoDesc(a))+(+b.v-duoDesc(b))};return null};
+  for(const a of L)for(const b of L)if(duoCode(a.n,b.n)===n)return{n:'Dúo: '+a.n+' + '+b.n,m:duoMin(),v:(+a.v-duoDesc(a))+(+b.v-duoDesc(b))};return null};
 const duoTxt=(x,d)=>d>+x.v?'El descuento supera el valor':d>0?`En dúo: <b>${money(x.v-d)}</b>`:'Sin descuento';
 function openDuo(){
   const L=duoLista(),D=S.cfg.duo,gr={};
   L.forEach((x,i)=>{(gr[x.g||'']=gr[x.g||'']||[]).push(i)});
-  duoShow.checked=!!D.on;duoAbIn.value=duoAbono();
+  duoShow.checked=!!D.on;duoAbIn.value=duoAbono();duoMinIn.value=duoMin();
   duoList.innerHTML=L.length?Object.entries(gr).map(([g,ix])=>(g?`<div class="pgrp">${esc(g)}</div>`:'')+ix.map(i=>{const x=L[i],d=duoDesc(x);
-    return `<div class="prow duorow ${d?'on':''}"><span class="pn">${esc(x.n)}<small>Normal: ${x.m} min · ${money(x.v)}</small><small class="dp">${duoTxt(x,d)}</small></span><label>Descuento ($)<input type="number" inputmode="numeric" min="0" step="500" data-dd="${i}" value="${d}"></label></div>`}).join('')).join('')
+    return `<div class="prow duorow ${d?'on':''}"><span class="pn">${esc(x.n)}<small>Valor normal: ${money(x.v)}</small><small class="dp">${duoTxt(x,d)}</small></span><label>Descuento ($)<input type="number" inputmode="numeric" min="0" step="500" data-dd="${i}" value="${d}"></label></div>`}).join('')).join('')
     :'<p class="mut">No hay masajes en tu lista de servicios. Agrega servicios en la categoría «Masoterapia».</p>';
   duoErr.textContent='';duoModal.hidden=false;
 }
@@ -621,8 +623,10 @@ function saveDuo(){
     if(v>0)d[x.n]=v});
   const ab=duoAbIn.value.trim()===''?NaN:Math.round(+duoAbIn.value);
   if(!bad&&!(ab>=0))bad='Escribe el abono para masajes dúo (puede ser 0).';
+  const dm=Math.round(+duoMinIn.value);
+  if(!bad&&!(dm>=5&&dm<=480))bad='La duración de los masajes dúo debe estar entre 5 y 480 minutos.';
   if(bad){duoErr.textContent=bad;return}
-  S.cfg.duo={on:duoShow.checked,ab,d};duoModal.hidden=true;render();
+  S.cfg.duo={on:duoShow.checked,ab,m:dm,d};duoModal.hidden=true;render();
   const n=Object.keys(d).length;
   showToast(S.cfg.duo.on?`Descuentos dúo guardados ✓${n?` · ${n} masaje${n==1?'':'s'} con descuento`:''}`:'Masajes dúo ocultos en la página de reservas');
 }
@@ -763,7 +767,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='svc'){fill();return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
-  else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'){return}
+  else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}
   else if(t.id==='time'){timeX.classList.toggle('hide',time.value!=='__otra');if(time.value==='__otra')timeX.focus();return}
   else if(t.id==='dur'){fillTimes();return}
   else if(t.id==='gift'||t.id==='timeX'||t.id==='price'||t.id==='estado'){return}
