@@ -163,6 +163,7 @@ const saldoOk=a=>!!(a.sp||F.saldos[a.id]);
 const cobrado=a=>a.gc||!real(a)||a.p!=='pagado'?0:(saldoOk(a)?(+a.v||0):abOf(a));
 const porCobrar=a=>a.gc||!real(a)||a.p!=='pagado'||saldoOk(a)?0:Math.max(0,(+a.v||0)-abOf(a));
 const sum=(L,f)=>L.reduce((t,x)=>t+f(x),0);
+const catDe=a=>String(a.s||'').startsWith('Promo: ')?'Promociones':(((D.services||[]).find(x=>x.n===a.s)||{}).c)||'Otros';
 const gifts=()=>Object.entries(F.gifts).map(([k,g])=>({...g,id:k}));
 const fijosOn=m=>Object.entries(F.fijos).filter(([k,f])=>f.desde<=m&&(!f.hasta||f.hasta>=m)).map(([k,f])=>({...f,id:k}));
 const gastosDe=m=>{
@@ -191,7 +192,7 @@ function draw(){
   const xc=sum(R.A,porCobrar),abPend=sum(R.A.filter(a=>!a.gc&&a.p!=='pagado'),abOf),gcs=R.A.filter(a=>a.gc);
   const card=(l,v,c='',extra='')=>`<div class="fc ${c}"><small>${l}</small><b>${money(v)}</b>${extra}</div>`;
   // ingresos por categoría
-  const porCat={};R.A.forEach(a=>{const sv=(D.services||[]).find(x=>x.n===a.s),c=a.gc?'Giftcards (canje)':(sv&&sv.c)||'Otros';(porCat[c]=porCat[c]||{n:0,t:0});porCat[c].n++;porCat[c].t+=cobrado(a)});
+  const porCat={};R.A.forEach(a=>{const c=a.gc?'Giftcards (canje)':catDe(a);(porCat[c]=porCat[c]||{n:0,t:0});porCat[c].n++;porCat[c].t+=cobrado(a)});
   // servicios más vendidos
   const sv={};R.A.forEach(a=>{const k=a.s||'Sin servicio';(sv[k]=sv[k]||{n:0,t:0});sv[k].n++;sv[k].t+=cobrado(a)});
   const top=Object.entries(sv).sort((x,y)=>y[1].n-x[1].n||y[1].t-x[1].t).slice(0,5),maxN=top.length?top[0][1].n:1;
@@ -238,7 +239,7 @@ function csvMonth(){
   if(!gotD||!gotF){toast('Aún cargando los datos');return}
   const cell=v=>{v=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(v)&&isNaN(Number(v)))v="'"+v;return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   const R=resumen(month),rows=[];
-  R.A.forEach(a=>rows.push({o:a.d+' '+(a.t||''),r:['Cita',a.d,a.t||'',a.c||'',a.f||'',a.s||'',(((D.services||[]).find(x=>x.n===a.s)||{}).c)||'Otros',+a.v||0,cobrado(a),'',porCobrar(a),a.e+' · '+(a.gc?'giftcard':a.sp||F.saldos[a.id]?'pagado completo':a.p==='pagado'?'abono pagado':'abono pendiente')]}));
+  R.A.forEach(a=>rows.push({o:a.d+' '+(a.t||''),r:['Cita',a.d,a.t||'',a.c||'',a.f||'',a.s||'',catDe(a),+a.v||0,cobrado(a),'',porCobrar(a),a.e+' · '+(a.gc?'giftcard':a.sp||F.saldos[a.id]?'pagado completo':a.p==='pagado'?'abono pagado':'abono pendiente')]}));
   gifts().filter(g=>g.d.slice(0,7)===month).forEach(g=>rows.push({o:g.d+' ~',r:['Giftcard vendida',g.d,'','','',g.c||'Giftcard','Giftcards',+g.m||0,+g.m||0,'','','']}));
   gastosDe(month).forEach(g=>rows.push({o:g.d+' ~~',r:['Gasto'+(g.fijo?' fijo':''),g.d,'','','',g.c||'Gasto',g.k||'Otros',+g.m||0,'',+g.m||0,'','']}));
   rows.sort((x,y)=>x.o<y.o?-1:x.o>y.o?1:0);
