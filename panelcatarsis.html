@@ -468,7 +468,8 @@ const waMsg=a=>{
   const L=['Hola'+(a.c?' '+a.c:'')+', te escribimos de Catarsis Estética y Bienestar.',''];
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
   L.push('• Servicio: '+a.s+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),'• Valor: '+money(a.v));
-  if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
+  if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
+  else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
   else if(!conf){L.push('','Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);L.push('','Después envíanos el comprobante por este chat.')}
   L.push('','📍 Cochrane 450, Osorno','Cómo llegar: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('Cochrane 450, Osorno'));
   return wa(a.f)+'?text='+encodeURIComponent(L.join('\n'));
