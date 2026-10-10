@@ -193,6 +193,13 @@ input[type=checkbox]{min-height:0;width:auto}
 .prow .pin{display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .prow.on .pin{display:grid}
 .prow .pin label{font-size:12px;color:var(--mut);display:block}
+/* --- editar horario de una cita --- */
+.hrbtn{white-space:nowrap;font-size:13px}
+.ro .hrbtn{display:none!important}
+.hrq{display:flex;gap:8px;margin:10px 0 0}.hrq .pill{flex:1}
+.hrinfo{font-size:14px;margin:10px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint)}
+.hrinfo:empty{display:none}
+.hrwarn{color:var(--amb);font-size:13px;margin-top:4px}
 /* --- servicios solo panel --- */
 .defhint{font-size:13px;line-height:1.4;margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint);color:var(--ink)}
 .defhint[hidden]{display:none}
@@ -295,6 +302,19 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="btn" style="width:100%" type="button" data-promosave>Guardar promoción</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-promoclear>Quitar todas las promociones</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-promoclose>Cancelar</button>
+ </div>
+</div>
+<div id="horaModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="horaTitle">
+ <div class="mbox" style="max-width:440px">
+  <div class="mhead"><h3 id="horaTitle">Editar horario</h3><button type="button" class="x" data-horaclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" id="horaWho" style="font-size:14px;margin:4px 0 6px"></p>
+  <div class="row"><div><label class="f" for="hrIni">Inicio</label><input type="time" id="hrIni" step="300"></div><div><label class="f" for="hrFin">Término</label><input type="time" id="hrFin" step="300"></div></div>
+  <label class="f" for="hrDur">Duración del servicio (min)</label><input type="number" id="hrDur" min="5" max="480" step="5" inputmode="numeric">
+  <div class="hrq"><button type="button" class="pill" data-hrq="-15">− 15 min</button><button type="button" class="pill" data-hrq="15">+ 15 min</button></div>
+  <div class="hrinfo" id="hrInfo"></div>
+  <div class="err" id="hrErr" role="alert"></div>
+  <button class="btn" style="width:100%;margin-top:6px" type="button" data-horasave>Guardar horario</button>
+  <button class="pill" style="width:100%;margin-top:8px" type="button" data-horaclose>Cancelar</button>
  </div>
 </div>
 <div id="duoModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="duoTitle">
@@ -601,6 +621,25 @@ function savePromo(){
   S.cfg.promos=out;promoModal.hidden=true;render();
   showToast(out.length?`Promoción guardada ✓ · ${out.length} servicio${out.length==1?'':'s'}`:'Promociones quitadas');
 }
+// --- editar horario (inicio, término y duración) de una cita ---
+let horaId=null;
+function openHora(id){const a=S.appts.find(x=>x.id==id);if(!a)return;horaId=a.id;
+  horaWho.innerHTML=`<b>${esc(a.bq||a.e==='bloqueado'?'Horario bloqueado':a.c||'Sin nombre')}</b>${a.s&&a.e!=='bloqueado'?' · '+esc(a.s):''}<br>${fmtD(a.d).replace(/^./,c=>c.toUpperCase())}`;
+  hrIni.value=a.t;hrDur.value=+a.m||30;hrFin.value=hm(toMin(a.t)+(+a.m||30));hrErr.textContent='';horaInfo();horaModal.hidden=false;hrDur.focus()}
+function horaInfo(){const a=S.appts.find(x=>x.id==horaId),s=toMin(hrIni.value),d=Math.round(+hrDur.value);
+  if(!a||!hrIni.value||!(d>0)){hrInfo.innerHTML='';return}
+  const cr=S.appts.filter(x=>x!==a&&x.k===a.k&&x.d===a.d&&x.e!=='disponible'&&toMin(x.t)<s+d&&s<toMin(x.t)+(+x.m||0));
+  hrInfo.innerHTML=`${hm(s)} a ${hm(s+d)} · <b>${d} minutos</b>`+(cr.length?`<div class="hrwarn">⚠ Se cruza con: ${cr.map(x=>esc(x.t+' '+(x.bq||x.e==='bloqueado'?'horario bloqueado':x.c||x.s||''))).join(', ')}</div>`:'')}
+function saveHora(){const a=S.appts.find(x=>x.id==horaId);if(!a){horaModal.hidden=true;return}
+  const s=toMin(hrIni.value),d=Math.round(+hrDur.value);
+  if(!hrIni.value||!(s>=0)){hrErr.textContent='Elige la hora de inicio.';return}
+  if(!(d>=5&&d<=480)){hrErr.textContent='La duración debe estar entre 5 y 480 minutos.';return}
+  if(s+d>24*60){hrErr.textContent='El servicio debe terminar antes de medianoche.';return}
+  a.t=hm(s);a.m=d;horaModal.hidden=true;horaId=null;render();showToast(`Horario actualizado ✓ · ${hm(s)} a ${hm(s+d)} (${d} min)`)}
+document.addEventListener('input',e=>{const id=e.target.id;
+  if(id==='hrIni'||id==='hrDur'){const d=Math.round(+hrDur.value);if(hrIni.value&&d>0)hrFin.value=hm(toMin(hrIni.value)+d)}
+  else if(id==='hrFin'){if(hrIni.value&&hrFin.value){const d=toMin(hrFin.value)-toMin(hrIni.value);if(d>0)hrDur.value=d}}
+  else return;hrErr.textContent='';horaInfo()});
 // --- masajes dúo (dos personas al mismo tiempo) ---
 const esDuo=a=>String((a&&a.s)||'').startsWith('Dúo: ');
 const duoAbono=()=>{const a=+((S.cfg.duo||{}).ab);return a>=0?a:20000};
@@ -701,7 +740,7 @@ function render(){
   const pend=L.filter(a=>!['disponible','bloqueado'].includes(a.e)&&a.p==='pendiente').length;
   dayInfo.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} agendada${L.length==1?'':'s'}`+(pend?` · ${pend} abono${pend==1?'':'s'} pendiente${pend==1?'':'s'}`:''):'Sin horas agendadas.';
   viewbar.innerHTML=`<button data-view="lista" class="${dayView==='lista'?'on':''}">Lista</button><button data-view="linea" class="${dayView==='linea'?'on':''}">Línea de tiempo</button>`;
-  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} · ${money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
+  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
   slots.innerHTML=slotsHtml();blkDay.textContent=fmtD(sel);fillTimes();
   save();
 }
@@ -716,6 +755,11 @@ document.addEventListener('click',e=>{
   else if(el=g('data-full')){const a=S.appts.find(x=>x.id==el.dataset.full);if(a){a.p='pagado';a.sp=1;a.e='confirmada';showToast('Pago completo registrado ✓')}}
   else if(el=g('data-undo')){const a=S.appts.find(x=>x.id==el.dataset.undo);if(a){if(a.sp){delete a.sp}else a.p='pendiente';showToast('Pago deshecho')}}
   else if(el=g('data-ok')){const a=S.appts.find(x=>x.id==el.dataset.ok);if(a){a.p='pagado';a.e='confirmada';showToast('Abono marcado como pagado ✓')}}
+  else if(el=g('data-hora')){if(!readOnly)openHora(el.dataset.hora);return}
+  else if(el=g('data-horaclose')){horaModal.hidden=true;horaId=null;return}
+  else if(e.target.id==='horaModal'){horaModal.hidden=true;horaId=null;return}
+  else if(el=g('data-horasave')){saveHora();return}
+  else if(el=g('data-hrq')){const d=Math.min(480,Math.max(5,Math.round(+hrDur.value||0)+ +el.dataset.hrq));hrDur.value=d;if(hrIni.value)hrFin.value=hm(toMin(hrIni.value)+d);hrErr.textContent='';horaInfo();return}
   else if(el=g('data-copy')){copyLink();return}
   else if(el=g('data-copyuid')){const v=(document.getElementById('denyUid')||{}).textContent||'';(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>showToast('UID copiado ✓'),()=>showToast('Mantén presionado el UID para copiarlo'));return}
   else if(el=g('data-logout')){outBtn.click();return}
@@ -774,7 +818,7 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
