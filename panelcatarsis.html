@@ -193,6 +193,10 @@ input[type=checkbox]{min-height:0;width:auto}
 .prow .pin{display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .prow.on .pin{display:grid}
 .prow .pin label{font-size:12px;color:var(--mut);display:block}
+/* --- servicios solo panel --- */
+.defhint{font-size:13px;line-height:1.4;margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint);color:var(--ink)}
+.defhint[hidden]{display:none}
+.sotag{display:inline-block;font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:0 6px;margin-left:6px;color:var(--mut);vertical-align:1px}
 /* --- masajes dúo --- */
 .prow.duorow{display:grid;grid-template-columns:1fr 116px;gap:10px;align-items:center}
 .duorow label{font-size:12px;color:var(--mut);display:block}
@@ -238,6 +242,7 @@ input[type=checkbox]{min-height:0;width:auto}
   <div class="row r3"><div><label class="f" for="time">Hora</label><select id="time" aria-describedby="timeHint"></select><input type="time" id="timeX" class="hide" aria-label="Otra hora" style="margin-top:6px"></div>
     <div><label class="f" for="dur">Duración (min)</label><input type="number" id="dur" min="5" step="5"></div>
     <div><label class="f" for="price">Valor ($)</label><input type="number" id="price" min="0" step="500"></div></div>
+  <div class="defhint" id="defHint" hidden></div>
   <div class="row r2"><input id="client" placeholder="Nombre del cliente" aria-label="Nombre del cliente"><input id="phone" type="tel" placeholder="Teléfono (ej. 9 1234 5678)" aria-label="Teléfono"></div>
   <label class="f" for="gift">¿Corresponde a una giftcard?</label>
   <select id="gift"><option value="0">No</option><option value="1">Sí, es una giftcard</option></select>
@@ -261,6 +266,8 @@ input[type=checkbox]{min-height:0;width:auto}
   <label class="f" for="nsN">Nombre del servicio</label><input id="nsN" maxlength="70" placeholder="Ej. Masaje relajante" autocomplete="off">
   <div class="row"><div><label class="f" for="nsC">Categoría</label><input id="nsC" list="catsDL" autocomplete="off"></div><div><label class="f" for="nsG">Grupo (opcional)</label><input id="nsG" list="grpDL" autocomplete="off" placeholder="Ej. Masajes localizados"></div></div>
   <div class="row"><div><label class="f" for="nsM">Duración (min)</label><input id="nsM" type="number" min="5" step="5"></div><div><label class="f" for="nsV">Valor ($)</label><input id="nsV" type="number" min="0" step="500"></div></div>
+  <label class="duosw" style="margin:4px 0 2px;font-size:14px"><input type="checkbox" id="nsP"> Solo se agenda desde el panel (no aparece en la página de reservas)</label>
+  <div class="mut" style="font-size:12.5px;margin:0 0 6px 32px">Si además el valor es 0, la duración y el valor se escriben al agendar la hora (por ejemplo, después de una evaluación).</div>
   <datalist id="catsDL"></datalist><datalist id="grpDL"></datalist>
   <div class="err" id="nsErr" role="alert"></div>
   <button class="btn" style="width:100%" type="submit" id="svcSubmit">Guardar servicio</button>
@@ -316,7 +323,7 @@ input[type=checkbox]{min-height:0;width:auto}
 const FIREBASE_CONFIG=(c=>c&&typeof c==='object'&&['apiKey','authDomain','projectId','appId'].every(k=>typeof c[k]==='string'&&c[k].trim()&&!/PEGA_AQUI/i.test(c[k]))?c:null)(window.FIREBASE_CONFIG);
 const APPCHECK_KEY=window.APPCHECK_KEY||'';
 const KEY='masajes-v1',ROL='Cosmetóloga y Masoterapeuta';
-const DEF=[{"n":"Masaje Relajante Cuerpo Completo","m":50,"v":26000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Mixto Cuerpo Completo (relajación + descontracturante)","m":50,"v":28000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Descontracturante Cuerpo Completo","m":50,"v":30000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Descontracturante + Ventosas Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje con Piedras Calientes Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje con Cannabis Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje para Embarazadas Cuerpo Completo","m":50,"v":30000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje para Fibromialgia Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Relajante de Espalda","m":30,"v":20000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Descontracturante de Espalda","m":30,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Cérvico-Craneal","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Cráneo-Facial","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Facial para Bruxismo","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje para Piernas Cansadas","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Podal","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Abdominal / Colon","m":40,"v":27000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Drenaje Linfático Manual Cuerpo Completo","m":60,"v":40000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Drenaje Linfático de Piernas","m":40,"v":30000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Drenaje Linfático Rostro","m":40,"v":25000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Limpieza Facial Profunda Purificante","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Men – Limpieza Profunda Masculina","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Piel Joven – Control de Impurezas","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Limpieza Profunda + Fototerapia LED","m":60,"v":38000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Premium Reafirmante & Anti-Age","m":60,"v":45000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Glow + Dermaplaning","m":60,"v":50000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Limpieza Profunda de Espalda","m":60,"v":38000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Dermaplaning Glow Express","m":30,"v":25000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Extracción de Milium (1)","m":15,"v":5000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Extracción de Milium (2 – 3)","m":15,"v":10000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Extracción de Milium (4 – 5)","m":15,"v":15000,"c":"Limpiezas faciales","g":"Extracción de milium"}];
+const DEF=[{"n":"Masaje Relajante Cuerpo Completo","m":50,"v":26000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Mixto Cuerpo Completo (relajación + descontracturante)","m":50,"v":28000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Descontracturante Cuerpo Completo","m":50,"v":30000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Descontracturante + Ventosas Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje con Piedras Calientes Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje con Cannabis Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje para Embarazadas Cuerpo Completo","m":50,"v":30000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje para Fibromialgia Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Relajante de Espalda","m":30,"v":20000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Descontracturante de Espalda","m":30,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Cérvico-Craneal","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Cráneo-Facial","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Facial para Bruxismo","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje para Piernas Cansadas","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Podal","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Abdominal / Colon","m":40,"v":27000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Drenaje Linfático Manual Cuerpo Completo","m":60,"v":40000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Drenaje Linfático de Piernas","m":40,"v":30000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Drenaje Linfático Rostro","m":40,"v":25000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Limpieza Facial Profunda Purificante","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Men – Limpieza Profunda Masculina","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Piel Joven – Control de Impurezas","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Limpieza Profunda + Fototerapia LED","m":60,"v":38000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Premium Reafirmante & Anti-Age","m":60,"v":45000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Glow + Dermaplaning","m":60,"v":50000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Limpieza Profunda de Espalda","m":60,"v":38000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Dermaplaning Glow Express","m":30,"v":25000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Extracción de Milium (1)","m":15,"v":5000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Extracción de Milium (2 – 3)","m":15,"v":10000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Extracción de Milium (4 – 5)","m":15,"v":15000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Evaluación de acrocordones","m":15,"v":5000,"c":"Acrocordones","g":""},{"n":"Tratamiento de acrocordones","m":30,"v":0,"c":"Acrocordones","g":"","p":1}];
 const iso=d=>d.toISOString().slice(0,10);
 const today=new Date();today.setHours(12,0,0,0);
 const mon=new Date(today);mon.setDate(today.getDate()-((today.getDay()+6)%7));
@@ -331,6 +338,7 @@ function migrate(){
   if(!S.services||!S.services.length||S.services.some(x=>!x.c))S.services=DEF.map(x=>({...x}));
   S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:''},S.cfg||{});
   S.cfg.promos=Array.isArray(S.cfg.promos)?S.cfg.promos:[];
+  if(!S.cfg.acro){S.cfg.acro=1;needPush=true;if(!S.services.some(x=>/acrocord/i.test(x.n||'')))S.services.push({'n':'Evaluación de acrocordones','m':15,'v':5000,'c':'Acrocordones','g':''},{'n':'Tratamiento de acrocordones','m':30,'v':0,'c':'Acrocordones','g':'','p':1})}
   S.cfg.duo=Object.assign({on:true,ab:20000,m:50,d:{}},S.cfg.duo||{});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};
   if(S.cfg.abono>0&&S.cfg.abono<=100)S.cfg.abono=10000;
   S.cfg.horario=Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},S.cfg.horario||{});
@@ -366,7 +374,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||''})),promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||''})),promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;pubP=db.collection('publico').doc('agenda').set(doc).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Editar → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -389,7 +397,7 @@ function openSvc(i){
   svcTitle.textContent=ed?'Editar servicio':'Nuevo servicio';svcSubmit.textContent=ed?'Guardar cambios':'Guardar servicio';
   catsDL.innerHTML=catList().map(c=>`<option value="${esc(c)}">`).join('');
   grpDL.innerHTML=[...new Set(S.services.map(x=>x.g).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('');
-  nsN.value=ed?x.n:'';nsC.value=ed?(x.c||''):(catList().includes(cat.value)?cat.value:'Masoterapia');nsG.value=ed?(x.g||''):'';nsM.value=ed?x.m:60;nsV.value=ed?x.v:'';nsErr.textContent='';
+  nsN.value=ed?x.n:'';nsC.value=ed?(x.c||''):(catList().includes(cat.value)?cat.value:'Masoterapia');nsG.value=ed?(x.g||''):'';nsM.value=ed?x.m:60;nsV.value=ed?x.v:'';nsP.checked=!!(ed&&x.p);nsErr.textContent='';
   svcModal.hidden=false;nsN.focus();
 }
 function saveSvc(e){
@@ -400,7 +408,7 @@ function saveSvc(e){
   if(!(m>=5)){nsErr.textContent='La duración debe ser de al menos 5 minutos.';return}
   if(nsV.value===''||!(v>=0)){nsErr.textContent='Escribe el valor del servicio.';return}
   if(S.services.some((x,i)=>i!==editSvc&&x.n.toLowerCase()===n.toLowerCase())){nsErr.textContent='Ya existe un servicio con ese nombre.';return}
-  const it={n,m,v,c,g};
+  const it={n,m,v,c,g,...(nsP.checked?{p:1}:{})};
   if(editSvc>=0){const on=S.services[editSvc].n,dd=S.cfg.duo&&S.cfg.duo.d;if(on!==n&&dd&&on in dd){dd[n]=dd[on];delete dd[on]}S.services[editSvc]=it}
   else{
     let idx=-1;S.services.forEach((x,i)=>{if(x.c===c&&(x.g||'')===g)idx=i});
@@ -425,7 +433,8 @@ function blockAll(on){
   if(on)slotTimes().forEach(t=>{const st=slotState(t);if(!st.busy&&!st.blk)toggleSlot(t)});
   else S.appts=S.appts.filter(a=>!(a.bq&&a.d===sel&&a.k===key()));
 }
-function afterSync(){if(!gotMain||!gotRes)return;processReservas();syncPublic()}
+var needPush=false; // migraciones (ej. categoría Acrocordones) que deben guardarse en la nube
+function afterSync(){if(!gotMain||!gotRes)return;if(needPush&&ref&&!readOnly){needPush=false;push()}processReservas();syncPublic()}
 let unsub=null;
 const lock=on=>document.body.classList.toggle('locked',on);
 /* ---------- inicio de sesión ---------- */
@@ -568,7 +577,7 @@ function setTime(t){if(![...time.options].some(o=>o.value===t)){const o=new Opti
 function fillTimes(){
   const prev=getTime(),L=freeTimes();
   time.innerHTML=L.map(t=>`<option value="${t}">${t}</option>`).join('')+`<option value="__otra">Otra hora…</option>`;
-  timeHint.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} libre${L.length==1?'':'s'} el ${fmtD(sel)} para ${+dur.value||''} min.`:'No quedan horas libres este día con esa duración. Usa "Otra hora…".';
+  timeHint.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} libre${L.length==1?'':'s'} el ${fmtD(sel)} para ${+dur.value||+(S.services[svc.value]||{}).m||30} min.`:'No quedan horas libres este día con esa duración. Usa "Otra hora…".';
   if(prev&&[...time.options].some(o=>o.value===prev))time.value=prev;else{time.selectedIndex=0;timeX.classList.toggle('hide',time.value!=='__otra')}
 }
 // --- promociones ---
@@ -576,7 +585,7 @@ const promoSvc=n=>{if(!String(n||'').startsWith('Promo: '))return null;const p=(
 const promoCuenta=()=>{const n=promoList.querySelectorAll('[data-pk]:checked').length;promoCount.textContent=n?`${n} servicio${n==1?'':'s'} en promoción`:'Ningún servicio seleccionado'};
 function openPromo(){
   const P=new Map((S.cfg.promos||[]).map(p=>[p.n,p])),cats={};
-  S.services.forEach((x,i)=>{const c=x.c||'Otros',g=x.g||'';cats[c]=cats[c]||{};(cats[c][g]=cats[c][g]||[]).push(i)});
+  S.services.forEach((x,i)=>{if(x.p)return;const c=x.c||'Otros',g=x.g||'';cats[c]=cats[c]||{};(cats[c][g]=cats[c][g]||[]).push(i)});
   promoList.innerHTML=Object.entries(cats).map(([c,gs])=>`<div class="pcat">${esc(c)}</div>`+Object.entries(gs).map(([g,ix])=>(g&&g!==c?`<div class="pgrp">${esc(g)}</div>`:'')+ix.map(i=>{const x=S.services[i],p=P.get(x.n);
     return `<div class="prow ${p?'on':''}"><label class="pk"><input type="checkbox" data-pk="${i}" ${p?'checked':''}><span class="pn">${esc(x.n)}<small>Normal: ${x.m} min · ${money(x.v)}</small></span></label><div class="pin"><label>Duración promo (min)<input type="number" inputmode="numeric" min="5" max="480" step="5" data-pm="${i}" value="${p?p.m:x.m}"></label><label>Valor promo ($)<input type="number" inputmode="numeric" min="0" step="500" data-pv="${i}" value="${p?p.v:x.v}"></label></div></div>`}).join('')).join('')).join('');
   promoErr.textContent='';promoCuenta();promoModal.hidden=false;
@@ -633,7 +642,12 @@ function saveDuo(){
 document.addEventListener('input',e=>{const t=e.target;if(!t.dataset||t.dataset.dd===undefined)return;
   const x=duoLista()[+t.dataset.dd],row=t.closest('.prow');if(!x||!row)return;
   const d=Math.max(0,Math.round(+t.value||0)),o=row.querySelector('.dp');o.innerHTML=duoTxt(x,d);o.classList.toggle('bad',d>+x.v);row.classList.toggle('on',d>0)});
-const fill=()=>{const s=S.services[svc.value]||S.services[0];dur.value=s.m;price.value=s.v;fillTimes()};
+// Servicios "solo panel" con valor 0: la duración y el valor se escriben al agendar (ej. tratamiento de acrocordones tras la evaluación)
+const aDef=s=>!!(s&&s.p&&!(+s.v>0));
+const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
+function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
+  return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
+const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 function render(){
   edBtn.textContent=editing?'Cerrar':'Editar';
@@ -647,7 +661,7 @@ function render(){
 ;
     pane.servicios=''
     +`<div class="lbl">Servicios</div><button class="btn" style="width:100%;margin-bottom:8px" data-svcopen>＋ Nuevo servicio</button>`
-    +S.services.map((s,i)=>`<div class="svcard"><div class="svi"><b>${esc(s.n)}</b><div class="mut">${esc(s.c||'Otros')}${s.g?' · '+esc(s.g):''}</div><div class="svm">${s.m} min · ${money(s.v)}</div></div><div class="sva"><button class="pill" data-svcedit="${i}">Editar</button><button class="x" data-xs="${i}" aria-label="Eliminar servicio ${esc(s.n)}">✕</button></div></div>`).join('')
+    +S.services.map((s,i)=>`<div class="svcard"><div class="svi"><b>${esc(s.n)}</b><div class="mut">${esc(s.c||'Otros')}${s.g?' · '+esc(s.g):''}</div><div class="svm">${aDef(s)?'Duración y valor según evaluación':s.m+' min · '+money(s.v)}${s.p?' <span class="sotag">Solo panel</span>':''}</div></div><div class="sva"><button class="pill" data-svcedit="${i}">Editar</button><button class="x" data-xs="${i}" aria-label="Eliminar servicio ${esc(s.n)}">✕</button></div></div>`).join('')
 ;
     pane.reservas=''
     +`<div class="lbl">Reservas online</div><div class="mut" style="font-size:13px;margin-bottom:6px">Link para tus clientas: <b style="user-select:all;word-break:break-all">${esc(new URL('./',location.href).href)}</b></div>
@@ -671,7 +685,7 @@ function render(){
   const cats=[...new Set(S.services.map(x=>x.c||'Otros'))],cc=cats.includes(cat.value)?cat.value:cats[0];
   cat.innerHTML=cats.map(c=>`<option ${c===cc?'selected':''}>${esc(c)}</option>`).join('');
   const prev=svc.value,first=!svc.options.length,gr={};
-  S.services.forEach((x,i)=>{if((x.c||'Otros')!==cc)return;(gr[x.g||'']=gr[x.g||'']||[]).push(`<option value="${i}">${esc(x.n)} · ${x.m} min · ${money(x.v)}</option>`)});
+  S.services.forEach((x,i)=>{if((x.c||'Otros')!==cc)return;(gr[x.g||'']=gr[x.g||'']||[]).push(`<option value="${i}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+money(x.v)}</option>`)});
   svc.innerHTML=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
   if([...svc.options].some(o=>o.value===prev))svc.value=prev;else{svc.selectedIndex=0;fill()}
   if(first)fill();
@@ -753,6 +767,7 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='ab'){const v=nb.value.trim();if(v)S.branches.push(v)}
   else if(e.target.id==='addAppt'){
     const tv=getTime();if(!tv)return;const s=S.services[svc.value]||S.services[0];
+    if(aDef(s)&&!(+dur.value>=5&&+price.value>0)){defHint.innerHTML=defHintTxt(s,1);defHint.hidden=false;(+dur.value>=5?price:dur).focus();return}
     S.appts.push({id:Date.now(),k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:s.n,v:+price.value||0,e:estado.value,p:'pendiente',...(gift.value==='1'?{gc:1}:{})});
     client.value='';phone.value='';gift.value='0'}
   else return;
