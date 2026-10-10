@@ -158,12 +158,12 @@ const FIN=()=>db.collection('masajes').doc('finanzas');
 function toast(m){$('toastBox').textContent=m;$('toastBox').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toastBox').classList.remove('on'),2400)}
 function ask(t,m,fn){$('confTitle').textContent=t;$('confMsg').textContent=m;confFn=fn;$('confModal').hidden=false}
 const real=a=>a.e!=='bloqueado'&&a.e!=='disponible'&&!a.bq;
-const abOf=a=>Math.min(+a.v||0,+(D.cfg||{}).abono||0);
+const abOf=a=>Math.min(+a.v||0,String(a.s||'').startsWith('Dúo: ')?(x=>x>=0?x:20000)(+(((D.cfg||{}).duo||{}).ab)):(+(D.cfg||{}).abono||0));
 const saldoOk=a=>!!(a.sp||F.saldos[a.id]);
 const cobrado=a=>a.gc||!real(a)||a.p!=='pagado'?0:(saldoOk(a)?(+a.v||0):abOf(a));
 const porCobrar=a=>a.gc||!real(a)||a.p!=='pagado'||saldoOk(a)?0:Math.max(0,(+a.v||0)-abOf(a));
 const sum=(L,f)=>L.reduce((t,x)=>t+f(x),0);
-const catDe=a=>String(a.s||'').startsWith('Promo: ')?'Promociones':(((D.services||[]).find(x=>x.n===a.s)||{}).c)||'Otros';
+const catDe=a=>{const s=String(a.s||'');return s.startsWith('Promo: ')?'Promociones':s.startsWith('Dúo: ')?'Masajes dúo':(((D.services||[]).find(x=>x.n===a.s)||{}).c)||'Otros'};
 const gifts=()=>Object.entries(F.gifts).map(([k,g])=>({...g,id:k}));
 const fijosOn=m=>Object.entries(F.fijos).filter(([k,f])=>f.desde<=m&&(!f.hasta||f.hasta>=m)).map(([k,f])=>({...f,id:k}));
 const gastosDe=m=>{

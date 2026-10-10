@@ -193,6 +193,14 @@ input[type=checkbox]{min-height:0;width:auto}
 .prow .pin{display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .prow.on .pin{display:grid}
 .prow .pin label{font-size:12px;color:var(--mut);display:block}
+/* --- masajes dúo --- */
+.prow.duorow{display:grid;grid-template-columns:1fr 116px;gap:10px;align-items:center}
+.duorow label{font-size:12px;color:var(--mut);display:block}
+.duorow input{margin-top:3px}
+.duorow .dp b{color:var(--ink)}
+.duorow .dp.bad{color:var(--red)}
+.duosw{display:flex;gap:10px;align-items:center;font-size:14.5px;margin:12px 0 10px;cursor:pointer}
+.duosw input{width:22px;height:22px;min-height:0;flex:none;margin:0;accent-color:var(--teal)}
 .prow .pin input{min-height:42px;padding:8px 10px;margin-top:3px}
 </style></head><body>
 <div id="login"><div class="lbox">
@@ -282,6 +290,18 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-promoclose>Cancelar</button>
  </div>
 </div>
+<div id="duoModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="duoTitle">
+ <div class="mbox">
+  <div class="mhead"><h3 id="duoTitle">Descuentos dúo</h3><button type="button" class="x" data-duoclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">En la sección <b>Masajes dúo</b> de tu página de reservas, dos personas eligen un masaje cada una y se atienden <b>al mismo tiempo</b>. Aquí defines el descuento que tiene cada masaje cuando se reserva en dúo. Deja 0 si no tiene descuento.</p>
+  <label class="duosw"><input type="checkbox" id="duoShow"> Mostrar «Masajes dúo» en la página de reservas</label>
+  <label class="f" for="duoAbIn">Abono masajes dúo ($, se descuenta del total)</label><input type="number" inputmode="numeric" id="duoAbIn" min="0" step="1000">
+  <div id="duoList"></div>
+  <div class="err" id="duoErr" role="alert"></div>
+  <button class="btn" style="width:100%" type="button" data-duosave>Guardar descuentos</button>
+  <button class="pill" style="width:100%;margin-top:8px" type="button" data-duoclose>Cancelar</button>
+ </div>
+</div>
 <div id="toastBox" role="status" aria-live="polite"></div>
 <div class="mut" id="sync" style="margin-top:28px;font-size:14px"></div>
 <div class="mut" id="pubInfo" style="font-size:14px;margin-top:4px"></div>
@@ -310,6 +330,7 @@ function migrate(){
   if(!S.services||!S.services.length||S.services.some(x=>!x.c))S.services=DEF.map(x=>({...x}));
   S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:''},S.cfg||{});
   S.cfg.promos=Array.isArray(S.cfg.promos)?S.cfg.promos:[];
+  S.cfg.duo=Object.assign({on:true,ab:20000,d:{}},S.cfg.duo||{});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};
   if(S.cfg.abono>0&&S.cfg.abono<=100)S.cfg.abono=10000;
   S.cfg.horario=Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},S.cfg.horario||{});
   S.appts.forEach(a=>{a.k=a.k.replace('Mi sucursal','Catarsis Osorno').replace('Terapeuta 1','Daniela Velásquez');a.e=a.e||'reservada';a.p=a.p||'pendiente';a.v=a.v||0;a.f=a.f||''});
@@ -330,7 +351,7 @@ function processReservas(){
   const db=firebase.firestore();let ch=false;const items=reservas;reservas=[];
   items.forEach((r,i)=>{
     if(!r.d||!r.t||S.appts.some(x=>x.rid===r.id))return;
-    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s);
+    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s);
     S.appts.push({id:Date.now()+i,rid:r.id,k:S.branches[0]+'|'+S.thers[0],d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1});ch=true;
   });
   if(ch)render();
@@ -344,7 +365,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||''})),promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),ocupado:oc};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||''})),promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;pubP=db.collection('publico').doc('agenda').set(doc).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Editar → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -379,7 +400,7 @@ function saveSvc(e){
   if(nsV.value===''||!(v>=0)){nsErr.textContent='Escribe el valor del servicio.';return}
   if(S.services.some((x,i)=>i!==editSvc&&x.n.toLowerCase()===n.toLowerCase())){nsErr.textContent='Ya existe un servicio con ese nombre.';return}
   const it={n,m,v,c,g};
-  if(editSvc>=0)S.services[editSvc]=it;
+  if(editSvc>=0){const on=S.services[editSvc].n,dd=S.cfg.duo&&S.cfg.duo.d;if(on!==n&&dd&&on in dd){dd[n]=dd[on];delete dd[on]}S.services[editSvc]=it}
   else{
     let idx=-1;S.services.forEach((x,i)=>{if(x.c===c&&(x.g||'')===g)idx=i});
     if(idx<0)S.services.forEach((x,i)=>{if(x.c===c)idx=i});
@@ -491,10 +512,10 @@ const end=(t,m)=>{const [h,n]=t.split(':').map(Number);const x=h*60+n+m;return S
 const wa=p=>{let d=p.replace(/\D/g,'');if(d.length===9)d='56'+d;return 'https://wa.me/'+d};
 const opt=(arr,v)=>arr.map(([k,l])=>`<option value="${k}" ${k===v?'selected':''}>${l}</option>`).join('');
 const waMsg=a=>{
-  const A=+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
+  const du=esDuo(a),A=du?duoAbono():+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
   const L=['Hola'+(a.c?' '+a.c:'')+', te escribimos de Catarsis Estética y Bienestar.',''];
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
-  L.push('• Servicio: '+a.s+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),'• Valor: '+money(a.v));
+  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),'• Valor: '+money(a.v));
   if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
   else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
   else if(!conf){L.push('','Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);L.push('','Después envíanos el comprobante por este chat.')}
@@ -570,6 +591,44 @@ function savePromo(){
   S.cfg.promos=out;promoModal.hidden=true;render();
   showToast(out.length?`Promoción guardada ✓ · ${out.length} servicio${out.length==1?'':'s'}`:'Promociones quitadas');
 }
+// --- masajes dúo (dos personas al mismo tiempo) ---
+const esDuo=a=>String((a&&a.s)||'').startsWith('Dúo: ');
+const duoAbono=()=>{const a=+((S.cfg.duo||{}).ab);return a>=0?a:20000};
+const duoLista=()=>{const m=S.services.filter(x=>/maso|masaj/i.test(x.c||''));return m.length?m:S.services.filter(x=>/masaj/i.test(x.n||''))};
+const duoDesc=x=>{const d=Math.round(+(((S.cfg.duo||{}).d||{})[x.n])||0);return Math.max(0,Math.min(+x.v||0,d))};
+const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
+// Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de index.html
+const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
+const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
+const duoSvc=n=>{if(!String(n||'').startsWith('Dúo: '))return null;const L=duoLista();
+  for(const a of L)for(const b of L)if(duoCode(a.n,b.n)===n)return{n:'Dúo: '+a.n+' + '+b.n,m:Math.max(+a.m,+b.m),v:(+a.v-duoDesc(a))+(+b.v-duoDesc(b))};return null};
+const duoTxt=(x,d)=>d>+x.v?'El descuento supera el valor':d>0?`En dúo: <b>${money(x.v-d)}</b>`:'Sin descuento';
+function openDuo(){
+  const L=duoLista(),D=S.cfg.duo,gr={};
+  L.forEach((x,i)=>{(gr[x.g||'']=gr[x.g||'']||[]).push(i)});
+  duoShow.checked=!!D.on;duoAbIn.value=duoAbono();
+  duoList.innerHTML=L.length?Object.entries(gr).map(([g,ix])=>(g?`<div class="pgrp">${esc(g)}</div>`:'')+ix.map(i=>{const x=L[i],d=duoDesc(x);
+    return `<div class="prow duorow ${d?'on':''}"><span class="pn">${esc(x.n)}<small>Normal: ${x.m} min · ${money(x.v)}</small><small class="dp">${duoTxt(x,d)}</small></span><label>Descuento ($)<input type="number" inputmode="numeric" min="0" step="500" data-dd="${i}" value="${d}"></label></div>`}).join('')).join('')
+    :'<p class="mut">No hay masajes en tu lista de servicios. Agrega servicios en la categoría «Masoterapia».</p>';
+  duoErr.textContent='';duoModal.hidden=false;
+}
+function saveDuo(){
+  const L=duoLista(),d={};let bad='';
+  duoList.querySelectorAll('[data-dd]').forEach(inp=>{if(bad)return;const x=L[+inp.dataset.dd];if(!x)return;
+    const v=inp.value.trim()===''?0:Math.round(+inp.value);
+    if(!(v>=0)){bad=`Revisa el descuento de "${x.n}".`;return}
+    if(v>+x.v){bad=`El descuento de "${x.n}" no puede ser mayor que su valor (${money(x.v)}).`;return}
+    if(v>0)d[x.n]=v});
+  const ab=duoAbIn.value.trim()===''?NaN:Math.round(+duoAbIn.value);
+  if(!bad&&!(ab>=0))bad='Escribe el abono para masajes dúo (puede ser 0).';
+  if(bad){duoErr.textContent=bad;return}
+  S.cfg.duo={on:duoShow.checked,ab,d};duoModal.hidden=true;render();
+  const n=Object.keys(d).length;
+  showToast(S.cfg.duo.on?`Descuentos dúo guardados ✓${n?` · ${n} masaje${n==1?'':'s'} con descuento`:''}`:'Masajes dúo ocultos en la página de reservas');
+}
+document.addEventListener('input',e=>{const t=e.target;if(!t.dataset||t.dataset.dd===undefined)return;
+  const x=duoLista()[+t.dataset.dd],row=t.closest('.prow');if(!x||!row)return;
+  const d=Math.max(0,Math.round(+t.value||0)),o=row.querySelector('.dp');o.innerHTML=duoTxt(x,d);o.classList.toggle('bad',d>+x.v);row.classList.toggle('on',d>0)});
 const fill=()=>{const s=S.services[svc.value]||S.services[0];dur.value=s.m;price.value=s.v;fillTimes()};
 
 function render(){
@@ -598,7 +657,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
+    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length)):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
   }
   const single=S.branches.length===1&&S.thers.length===1;
   who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
@@ -659,6 +718,10 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
+  else if(el=g('data-duoopen')){if(!readOnly)openDuo();return}
+  else if(el=g('data-duoclose')){duoModal.hidden=true;return}
+  else if(e.target.id==='duoModal'){duoModal.hidden=true;return}
+  else if(el=g('data-duosave')){saveDuo();return}
   else if(el=g('data-svcopen')){openSvc(-1);return}
   else if(el=g('data-svcedit')){openSvc(+el.dataset.svcedit);return}
   else if(el=g('data-svcclose')){svcModal.hidden=true;return}
@@ -692,7 +755,7 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
@@ -700,12 +763,13 @@ document.addEventListener('change',e=>{
   else if(t.id==='svc'){fill();return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
+  else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'){return}
   else if(t.id==='time'){timeX.classList.toggle('hide',time.value!=='__otra');if(time.value==='__otra')timeX.focus();return}
   else if(t.id==='dur'){fillTimes();return}
   else if(t.id==='gift'||t.id==='timeX'||t.id==='price'||t.id==='estado'){return}
   else if(d.b!==undefined){const o=S.branches[+d.b];S.branches[+d.b]=t.value;S.appts.forEach(a=>{const [b,r]=a.k.split('|');if(b===o)a.k=t.value+'|'+r})}
   else if(d.t!==undefined){const o=S.thers[+d.t];S.thers[+d.t]=t.value;S.appts.forEach(a=>{const [b,r]=a.k.split('|');if(r===o)a.k=b+'|'+t.value})}
-  else if(d.sv!==undefined){S.services[+d.sv][d.f]=['n','c','g'].includes(d.f)?t.value:(+t.value||0);svc.innerHTML=''}
+  else if(d.sv!==undefined){const dd=S.cfg.duo&&S.cfg.duo.d,on=S.services[+d.sv].n;if(d.f==='n'&&dd&&on in dd){dd[t.value]=dd[on];delete dd[on]}S.services[+d.sv][d.f]=['n','c','g'].includes(d.f)?t.value:(+t.value||0);svc.innerHTML=''}
   else if(d.dia!==undefined){const v=+d.dia,a=S.cfg.horario.dias;S.cfg.horario.dias=t.checked?[...new Set([...a,v])]:a.filter(x=>x!==v)}
   else if(d.h!==undefined){S.cfg.horario[d.h]=(d.h==='paso'||d.h==='adv')?(+t.value||0):t.value}
   else if(d.c!==undefined){let v=d.c==='abono'||d.c==='plazoMin'?(+t.value||0):t.value;if(d.c==='wa'){v=String(v).replace(/\D/g,'');if(v.length===9)v='56'+v}S.cfg[d.c]=v}
