@@ -39,11 +39,14 @@ function gcImagen(dat){
       if(x.measureText(t).width>w){while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);t=t.trimEnd()+'…'}
       x.fillStyle='#3b2f26';x.textBaseline='middle';x.fillText(t,x0*k,(cy+1)*k)};
     put(dat.para,127,306,233.5);put(dat.de,377,569,233.5);put(dat.vale,163,569,283.5);put(dat.hasta,203,569,333.5);
+    if(dat.n){x.font=`600 ${12.5*k}px ${fam}`;try{x.letterSpacing=(1.6*k)+'px'}catch(_){}x.fillStyle='#86672b';x.textAlign='center';x.textBaseline='middle';x.fillText('N° '+dat.n,332*k,195*k);x.textAlign='left';try{x.letterSpacing='0px'}catch(_){}}
     return c});
 }
-const gcTexto=d=>`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}! Vale por: ${d.vale}. Válida hasta el ${d.hasta}. 📍 Lord Cochrane 450, Osorno.`;
+const gcTexto=d=>[`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}!`,`Vale por: ${d.vale}`,`Válida hasta el ${d.hasta}`,...(d.n?[`🔢 Número de tu giftcard: ${d.n}`,'',`📅 Reserva tu hora aquí: elige la categoría «Giftcard» e ingresa tu número.`,d.link]:[]),'',`📍 Lord Cochrane 450, Osorno`].join('\n');
 
-const P=new URLSearchParams(location.search),dat={para:P.get('para')||'',de:P.get('de')||'',vale:P.get('vale')||'',hasta:P.get('hasta')||''};
+const P=new URLSearchParams(location.search),dat={para:P.get('para')||'',de:P.get('de')||'',vale:P.get('vale')||'',hasta:P.get('hasta')||'',n:P.get('n')||''};
+// link de reservas con la categoría Giftcard (misma carpeta que esta página)
+dat.link=dat.n?new URL('./',location.href).href+'?giftcard='+encodeURIComponent(dat.para).replace(/%20/g,'+'):'';
 const $=id=>document.getElementById(id);let blob=null;
 if(!dat.vale&&!dat.para){$('sub').textContent='Esta página genera la giftcard desde la agenda de Catarsis.'}
 else gcImagen(dat).then(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))).then(b=>{blob=b;const u=URL.createObjectURL(b);$('img').src=u;$('img').hidden=false;$('dl').href=u;$('dl').hidden=false;

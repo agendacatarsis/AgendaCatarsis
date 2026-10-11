@@ -425,7 +425,7 @@ input[type=checkbox]{min-height:0;width:auto}
 <div id="gcModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="gcTitle">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="gcTitle">Vender giftcard</h3><button type="button" class="x" data-gcclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Al registrarla puedes enviar la imagen de la giftcard por WhatsApp. Tiene 30 días para usarse: para cobrarla, en Agregar hora elige la categoría «Giftcard».</p>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Cada giftcard recibe un <b>número único</b> y al registrarla puedes enviar la imagen por WhatsApp junto con el link para reservar: la persona elige la categoría «Giftcard», verifica su número y agenda su hora. Tiene 30 días para usarse; también puedes cobrarla en Agregar hora → categoría «Giftcard».</p>
   <label class="f" for="gcSvc">Servicio de regalo (opcional)</label><select id="gcSvc"></select>
   <div class="row"><div><label class="f" for="gcM">Monto ($)</label><input type="number" id="gcM" min="0" step="1000" inputmode="numeric"></div><div><label class="f" for="gcF">Fecha de venta</label><input type="date" id="gcF"></div></div>
   <div class="row"><div><label class="f" for="gcDe">Comprada por</label><input id="gcDe" maxlength="40" placeholder="Ej. Pedro" autocomplete="off"></div><div><label class="f" for="gcPara">Para</label><input id="gcPara" maxlength="40" placeholder="Ej. María" autocomplete="off"></div></div>
@@ -516,17 +516,26 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} if(re
 const pubErr=e=>{pubInfo.textContent='No se pudo publicar el horario ('+(e.code||'error')+'). Revisa las reglas de Firestore.'};
 const toMin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 function processReservas(){
-  const db=firebase.firestore();let ch=false;const items=reservas;reservas=[];
+  const db=firebase.firestore();let ch=false,aviso='';const items=reservas,later=[];reservas=[];
   items.forEach((r,i)=>{
     if(!r.d||!r.t||S.appts.some(x=>x.rid===r.id))return;
+    const gr=gcDeRes(r.s);
+    if(gr&&!gotFin){later.push(r);return} // espera a cargar las giftcards
+    const nid=Date.now()+i,k0=S.branches[0]+'|'+S.thers[0];
+    if(gr){const sv=gr.sv,ok=!!(gr.g&&!gr.g.usada);
+      // reserva hecha con giftcard desde la página de reservas: queda pagada con la giftcard
+      S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?+sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:ok?(sv?sv.n:gr.nm):String(r.s||'').slice(0,80),v:ok?(+gr.g.m||0):(sv?+sv.v:0),o:1,...(ok?{e:'confirmada',p:'pagado',sp:1,gc:1,gid:gr.g.id}:{e:'reservada',p:'pendiente'})});
+      if(!ok)aviso=`Reserva online con la giftcard N° ${fmtN(gr.n)}, que ${gr.g?'ya fue cobrada':'no está registrada'}: revísala`;ch=true;return}
     const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s);
-    const nid=Date.now()+i;
-    S.appts.push({id:nid,rid:r.id,k:S.branches[0]+'|'+S.thers[0],d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1,...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{})});ch=true;
+    S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1,...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{})});ch=true;
   });
+  reservas=later;
   if(ch)render();
-  if(!items.length)return;
+  if(aviso)showToast(aviso);
+  const hechas=items.filter(r=>!later.includes(r));
+  if(!hechas.length)return;
   Promise.all([pushP,pubP]).then(([ok])=>{if(ok===false)return;
-    items.forEach(r=>{
+    hechas.forEach(r=>{
       db.collection('bloques').where('r','==',r.id).get().then(q=>q.forEach(d=>d.ref.delete())).catch(()=>{});
       db.collection('reservas').doc(r.id).delete().catch(()=>{});
     })});
@@ -534,9 +543,9 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
-  if(j!==lastCfg){lastCfg=j;pubP=db.collection('publico').doc('agenda').set(doc).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Editar → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
+  if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Editar → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
 }
 const nd=f=>{const d=String(f||'').replace(/\D/g,'');return d.length>9?d.slice(-9):d};
@@ -663,7 +672,8 @@ function initDB(){
     db.collection('masajes').doc('ping').set({t:Date.now()}).then(()=>{readOnly=false;document.body.classList.remove('ro')}).catch(e=>{if(e.code==='permission-denied'){readOnly=true;document.body.classList.add('ro');if(!deniedRead)sync.textContent='Modo solo lectura ✓'}});
     gotMain=false;gotRes=false;firstPub=true;lastPub={};lastCfg='';firstPend=true;lastPend=new Set();
     unsubR=db.collection('reservas').onSnapshot(q=>{reservas=q.docs.map(d=>({id:d.id,...d.data()}));gotRes=true;afterSync()},()=>{});
-    unsubF=db.collection('masajes').doc('finanzas').onSnapshot(s=>{GIFTS=(s.exists&&s.data().gifts)||{};gcUpd()},()=>{});
+    gotFin=false;gcIntentos=new Set();
+    unsubF=db.collection('masajes').doc('finanzas').onSnapshot(s=>{GIFTS=(s.exists&&s.data().gifts)||{};gotFin=true;gcUpd();afterSync();gcAsegurarTodas()},()=>{gotFin=true;afterSync()});
     unsub=ref.onSnapshot(s=>{
       if(s.metadata.hasPendingWrites)return;
       if(s.exists){const d=s.data();S.branches=d.branches||S.branches;S.thers=d.thers||S.thers;S.services=d.services||S.services;S.cfg=d.cfg||S.cfg;S.appts=d.appts||[];
@@ -1110,18 +1120,44 @@ document.addEventListener('click',e=>{
 });
 svcForm.addEventListener('submit',saveSvc);
 // --- giftcards: cobrar (categoría «Giftcard» en Agregar hora). Vencen 30 días después de la venta ---
-var GIFTS={},unsubF=null,gcSel=null;
+var GIFTS={},unsubF=null,gcSel=null,gotFin=false,gcIntentos=new Set();
 const GCC='Giftcard',GC_DIAS=30;
 const gcVence=d=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+GC_DIAS);return iso(x)};
 const diasHasta=d=>Math.round((new Date(d+'T12:00')-new Date(iso(today)+'T12:00'))/864e5);
 function gcLista(){const us=new Set(S.appts.filter(a=>a.gid).map(a=>a.gid));
   return Object.entries(GIFTS||{}).filter(([,g])=>g&&g.d).map(([id,g])=>{const vence=gcVence(g.d);return{id,...g,vence,quedan:diasHasta(vence),usada:us.has(id)}}).sort((a,b)=>a.vence.localeCompare(b.vence))}
 const gcEstado=g=>g.usada?'Cobrada':g.quedan<0?`Vencida hace ${-g.quedan} día${g.quedan==-1?'':'s'}`:g.quedan===0?'Vence hoy':`Quedan ${g.quedan} día${g.quedan==1?'':'s'}`;
+// Número único de 8 dígitos. En publico/agenda (lectura pública) cada giftcard va cifrada con su número:
+// sin el número no se puede leer a quién va dirigida ni ubicarla (PBKDF2 + AES-GCM, igual que en index.html).
+const fmtN=n=>{n=String(n||'').replace(/\D/g,'');return n.length===8?n.slice(0,4)+'-'+n.slice(4):n};
+const GC_SAL='catarsis-giftcard-v1',GC_IT=150000;
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u)));
+async function gcKdf(num){const te=new TextEncoder(),base=await crypto.subtle.importKey('raw',te.encode(num),'PBKDF2',false,['deriveBits']);
+  const b=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:te.encode(GC_SAL),iterations:GC_IT},base,320));
+  return{k:Array.from(b.slice(0,8),x=>x.toString(16).padStart(2,'0')).join(''),key:await crypto.subtle.importKey('raw',b.slice(8,40),'AES-GCM',false,['encrypt','decrypt'])}}
+async function gcCifra(num,dat){const{k,key}=await gcKdf(num),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(dat)));return{k,i:b64(iv),c:b64(ct)}}
+function gcNuevoNum(){const us=new Set(Object.values(GIFTS||{}).map(g=>g&&g.n).filter(Boolean));let n;do{n=String(10000000+crypto.getRandomValues(new Uint32Array(1))[0]%90000000)}while(us.has(n));return n}
+const gcPubDat=g=>({p:g.para||'',s:g.s||'',m:+g.m||0,h:gcVence(g.d)});
+const gcPub=()=>{const o={};gcLista().forEach(g=>{if(g.x&&g.x.k&&g.x.c&&g.quedan>=-30)o[g.x.k]={i:g.x.i,c:g.x.c,...(g.usada?{u:1}:{})}});return o};
+const GC_RX=/^Giftcard (\d{4})-?(\d{4}) · (.+)$/;
+function gcDeRes(s){const m=GC_RX.exec(String(s||''));if(!m)return null;const n=m[1]+m[2],nm=m[3];
+  return{n,nm,sv:S.services.find(x=>x.n===nm||cortoL(x.n,56)===nm)||null,g:gcLista().find(x=>x.n===n)||null}}
+// Asigna número (y la entrada cifrada) a una giftcard que aún no lo tiene
+async function gcAsegura(id){const g=GIFTS[id];if(!g)return null;if(g.n&&g.x&&g.x.k)return g;
+  const n=g.n||gcNuevoNum();let x=null;try{x=await gcCifra(n,gcPubDat(g))}catch(e){}
+  const upd={n,...(x?{x}:{})};Object.assign(g,upd);
+  if(!readOnly)await FINref().set({gifts:{[id]:upd}},{merge:true}).catch(()=>{});
+  return g}
+let gcAseg=false;
+async function gcAsegurarTodas(){if(gcAseg||readOnly||!firebase.auth().currentUser)return;
+  const L=gcLista().filter(g=>!g.usada&&g.quedan>=0&&!(g.n&&g.x&&g.x.k)&&!gcIntentos.has(g.id));if(!L.length)return;
+  gcAseg=true;try{for(const g of L){gcIntentos.add(g.id);await gcAsegura(g.id)}}finally{gcAseg=false}}
 function gcUpd(full){
   const on=cat.value===GCC;gcBox.hidden=!on;if(!on){gcSel=null;return}
   const L=gcLista().filter(g=>!g.usada).sort((a,b)=>(a.quedan<0)-(b.quedan<0)||a.vence.localeCompare(b.vence));if(gcSel&&!L.some(g=>g.id===gcSel))gcSel=null;
   const vig=L.filter(g=>g.quedan>=0).length;gcCnt.textContent=L.length?`${vig} vigente${vig==1?'':'s'}${L.length>vig?` · ${L.length-vig} vencida${L.length-vig==1?'':'s'}`:''}`:'';
-  gcList.innerHTML=L.map(g=>`<button type="button" role="radio" aria-checked="${g.id===gcSel}" class="mcli ${g.id===gcSel?'on':''} ${g.quedan<0?'venc':''}" data-gcsel="${esc(g.id)}"><b>${esc(g.para?'Para '+g.para:(g.c||'Giftcard'))}</b><small>${esc([g.de?'De '+g.de:'','vendida el '+fmtD(g.d)].filter(Boolean).join(' · '))}</small><span>${esc(g.s||'Monto libre')} · ${money(g.m)}</span><span class="mq">${gcEstado(g)} · vence el ${fmtD(g.vence)}</span><div class="mbar"><i style="width:${Math.max(0,Math.min(100,Math.round(g.quedan/GC_DIAS*100)))}%"></i></div></button>`).join('')
+  gcList.innerHTML=L.map(g=>`<button type="button" role="radio" aria-checked="${g.id===gcSel}" class="mcli ${g.id===gcSel?'on':''} ${g.quedan<0?'venc':''}" data-gcsel="${esc(g.id)}"><b>${esc(g.para?'Para '+g.para:(g.c||'Giftcard'))}</b><small>${esc([g.de?'De '+g.de:'','vendida el '+fmtD(g.d)].filter(Boolean).join(' · '))}</small><span>${g.n?'N° '+fmtN(g.n)+' · ':''}${esc(g.s||'Monto libre')} · ${money(g.m)}</span><span class="mq">${gcEstado(g)} · vence el ${fmtD(g.vence)}</span><div class="mbar"><i style="width:${Math.max(0,Math.min(100,Math.round(g.quedan/GC_DIAS*100)))}%"></i></div></button>`).join('')
     ||'<p class="mut" style="font-size:13px;margin:6px 2px 0">No hay giftcards por cobrar. Regístralas con «🎁 Vender giftcard».</p>';
   if(!full)return;const g=gcSel&&L.find(x=>x.id===gcSel);if(g)price.value=g.m;
 }
@@ -1138,18 +1174,21 @@ function gcImagen(dat){
       if(x.measureText(t).width>w){while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);t=t.trimEnd()+'…'}
       x.fillStyle='#3b2f26';x.textBaseline='middle';x.fillText(t,x0*k,(cy+1)*k)};
     put(dat.para,127,306,233.5);put(dat.de,377,569,233.5);put(dat.vale,163,569,283.5);put(dat.hasta,203,569,333.5);
+    if(dat.n){x.font=`600 ${12.5*k}px ${fam}`;try{x.letterSpacing=(1.6*k)+'px'}catch(_){}x.fillStyle='#86672b';x.textAlign='center';x.textBaseline='middle';x.fillText('N° '+dat.n,332*k,195*k);x.textAlign='left';try{x.letterSpacing='0px'}catch(_){}}
     return c});
 }
-const gcTexto=d=>`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}! Vale por: ${d.vale}. Válida hasta el ${d.hasta}. 📍 Lord Cochrane 450, Osorno.`;
+const gcTexto=d=>[`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}!`,`Vale por: ${d.vale}`,`Válida hasta el ${d.hasta}`,...(d.n?[`🔢 Número de tu giftcard: ${d.n}`,'',`📅 Reserva tu hora aquí: elige la categoría «Giftcard» e ingresa tu número.`,d.link]:[]),'',`📍 Lord Cochrane 450, Osorno`].join('\n');
 // Vista previa y envío por WhatsApp (en el celular abre el menú «Compartir»; en la app abre Chrome para compartir)
 let gpBlob=null,gpDat=null;
 const fLarga=d=>{const x=new Date(d+'T12:00');return x.getDate()+' de '+MES[x.getMonth()]+' de '+x.getFullYear()};
-const gcDatos=g=>({para:g.para||'',de:g.de||'',vale:g.s||(money(g.m)+' en servicios'),hasta:fLarga(gcVence(g.d))});
+const gcLink=p=>LINK()+'?giftcard='+encodeURIComponent(p||'').replace(/%20/g,'+');
+const gcDatos=g=>({para:g.para||'',de:g.de||'',vale:g.s||(money(g.m)+' en servicios'),hasta:fLarga(gcVence(g.d)),n:fmtN(g.n),link:g.n?gcLink(g.para):''});
 const enApp=()=>!!(window.CatarsisApp&&window.CatarsisApp.abrir);
-function gcUrl(d){const q=new URLSearchParams();Object.entries(d).forEach(([k,v])=>{if(v)q.set(k,v)});return new URL('giftcard.html?'+q.toString(),location.href).href}
-function openGp(g){gpDat=gcDatos(g);gpBlob=null;gpImg.hidden=true;gpErr.textContent='';gpSub.textContent='Preparando la imagen…';gpDl.hidden=enApp();gpModal.hidden=false;
-  gcImagen(gpDat).then(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))).then(b=>{gpBlob=b;const u=URL.createObjectURL(b);gpImg.src=u;gpImg.hidden=false;gpDl.href=u;
-    gpSub.textContent=`Para ${gpDat.para||'—'} · de ${gpDat.de||'—'} · válida hasta el ${gpDat.hasta}.`})
+function gcUrl(d){const q=new URLSearchParams();['para','de','vale','hasta','n'].forEach(k=>{if(d[k])q.set(k,d[k])});return new URL('giftcard.html?'+q.toString(),location.href).href}
+function openGp(g){gpDat=null;gpBlob=null;gpImg.hidden=true;gpErr.textContent='';gpSub.textContent='Preparando la imagen…';gpDl.hidden=enApp();gpModal.hidden=false;
+  const listo=g.n||!g.id?Promise.resolve(g):gcAsegura(g.id).then(x=>Object.assign({},g,x?{n:x.n}:{}));
+  listo.then(g2=>{gpDat=gcDatos(g2);return gcImagen(gpDat)}).then(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))).then(b=>{gpBlob=b;const u=URL.createObjectURL(b);gpImg.src=u;gpImg.hidden=false;gpDl.href=u;
+    gpSub.textContent=`${gpDat.n?'N° '+gpDat.n+' · ':''}Para ${gpDat.para||'—'} · de ${gpDat.de||'—'} · válida hasta el ${gpDat.hasta}.`})
   .catch(()=>{gpSub.textContent='No se pudo crear la imagen: revisa que el archivo giftcard-plantilla.jpg esté subido a GitHub.'})}
 async function gpShare(){if(!gpDat)return;gpErr.textContent='';
   if(gpBlob){const f=new File([gpBlob],'giftcard-catarsis.jpg',{type:'image/jpeg'});
@@ -1162,22 +1201,25 @@ const hoyIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMont
 function gcMesDraw(){const mes=(gcF.value||hoyIso()).slice(0,7);gcMes.innerHTML='<div class="mut">Cargando ventas del mes…</div>';
   FINref().get().then(s=>{GIFTS=(s.exists&&s.data().gifts)||GIFTS;const g=gcLista().filter(x=>String(x.d||'').slice(0,7)===mes).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
     const tot=g.reduce((a,x)=>a+(+x.m||0),0);
-    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${fmtD(x.d)} · ${gcEstado(x)}</small></span><span style="display:flex;align-items:center;gap:8px"><b>${money(x.m)}</b><button type="button" class="pill" data-gcsend="${esc(x.id)}" aria-label="Enviar giftcard por WhatsApp" style="padding:6px 10px;min-height:36px">📲</button></span></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
+    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${x.n?'N° '+fmtN(x.n)+' · ':''}${fmtD(x.d)} · ${gcEstado(x)}</small></span><span style="display:flex;align-items:center;gap:8px"><b>${money(x.m)}</b><button type="button" class="pill" data-gcsend="${esc(x.id)}" aria-label="Enviar giftcard por WhatsApp" style="padding:6px 10px;min-height:36px">📲</button></span></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
   .catch(()=>{gcMes.innerHTML='<div class="mut">No se pudieron cargar las ventas del mes.</div>'})}
 function openGc(){
   const cats={};S.services.filter(x=>!x.p&&+x.v>0).forEach((x,i)=>{(cats[x.c||'Otros']=cats[x.c||'Otros']||[]).push(x)});
   gcSvc.innerHTML='<option value="">Monto libre (sin servicio)</option>'+Object.entries(cats).map(([c,l])=>`<optgroup label="${esc(c)}">${l.map(x=>`<option value="${esc(x.n)}">${esc(x.n)} · ${money(x.v)}</option>`).join('')}</optgroup>`).join('');
   gcM.value='';gcF.value=hoyIso();gcDe.value='';gcPara.value='';gcErr.textContent='';gcModal.hidden=false;gcMesDraw();
 }
-function saveGc(){
-  const m=Math.round(+gcM.value),d=gcF.value,sv=gcSvc.value,de=gcDe.value.trim(),pa=gcPara.value.trim();
+async function saveGc(){
+  const m=Math.round(+gcM.value),d=gcF.value,sv=gcSvc.value,de=gcDe.value.trim(),pa=gcPara.value.trim(),bt=document.querySelector('[data-gcsave]');
   if(!(m>0)){gcErr.textContent='Escribe el monto de la giftcard.';gcM.focus();return}
   if(!d){gcErr.textContent='Elige la fecha de venta.';return}
+  if(bt.disabled)return;
   const c=[sv||'Giftcard',pa?'para '+pa:'',de?'de '+de:''].filter(Boolean).join(' · ').slice(0,80);
-  gcErr.textContent='';const id='h'+Date.now();
-  FINref().set({gifts:{[id]:{d,m,c,...(sv?{s:sv}:{}),...(pa?{para:pa}:{}),...(de?{de}:{})}}},{merge:true})
-    .then(()=>{showToast(`Giftcard registrada ✓ · ${money(m)}`);gcM.value='';gcDe.value='';gcPara.value='';gcSvc.value='';gcMesDraw();openGp({d,m,c,s:sv,para:pa,de})})
-    .catch(e=>{gcErr.textContent='No se pudo guardar ('+(e.code||'error')+'). Revisa tu conexión e intenta de nuevo.'});
+  gcErr.textContent='';const id='h'+Date.now(),base={d,m,c,...(sv?{s:sv}:{}),...(pa?{para:pa}:{}),...(de?{de}:{})},n=gcNuevoNum();
+  bt.disabled=true;let x=null;try{x=await gcCifra(n,gcPubDat(base))}catch(e){}
+  FINref().set({gifts:{[id]:{...base,n,...(x?{x}:{})}}},{merge:true})
+    .then(()=>{showToast(`Giftcard registrada ✓ · N° ${fmtN(n)} · ${money(m)}`);gcM.value='';gcDe.value='';gcPara.value='';gcSvc.value='';gcMesDraw();openGp({id,...base,n})})
+    .catch(e=>{gcErr.textContent='No se pudo guardar ('+(e.code||'error')+'). Revisa tu conexión e intenta de nuevo.'})
+    .finally(()=>{bt.disabled=false});
 }
 // --- listas desplegables como ventanas emergentes: la lista original sigue igual (mismas opciones y valores) ---
 let pickSel=null;
