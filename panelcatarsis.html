@@ -237,6 +237,8 @@ input[type=checkbox]{min-height:0;width:auto}
 .mcli .mq{color:var(--teal);font-weight:600;margin-top:4px}
 .mbar{height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}.mbar i{display:block;height:100%;background:var(--teal);border-radius:3px}
 .mcli.nuevo b{font-size:15px}
+#gcBox[hidden]{display:none}
+.mcli.venc .mq{color:var(--red)}.mcli.venc .mbar i{background:var(--red)}
 /* --- maderoterapia --- */
 .madit{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:12px;margin:12px 0}
 .madh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
@@ -296,6 +298,7 @@ input[type=checkbox]{min-height:0;width:auto}
 <div class="add">
   <label class="f" for="cat">Categoría</label><select id="cat"></select>
   <div id="madBox" class="madbox" hidden><div class="madbh"><b>Cliente de maderoterapia</b><small id="madCnt"></small></div><div id="madCliList" class="mclis" role="radiogroup" aria-label="Cliente de maderoterapia"></div></div>
+  <div id="gcBox" class="madbox" hidden><div class="madbh"><b>Giftcard a cobrar</b><small id="gcCnt"></small></div><div id="gcList" class="mclis" role="radiogroup" aria-label="Giftcard a cobrar"></div></div>
   <label class="f" for="svc" style="margin-top:8px">Servicio</label><select id="svc"></select>
   <div class="row r3"><div><label class="f" for="time">Hora</label><select id="time" aria-describedby="timeHint"></select><input type="time" id="timeX" class="hide" aria-label="Otra hora" style="margin-top:6px"></div>
     <div><label class="f" for="dur">Duración (min)</label><input type="number" id="dur" min="5" step="5"></div>
@@ -303,8 +306,6 @@ input[type=checkbox]{min-height:0;width:auto}
   <div id="pkBox" hidden><label class="f" for="pk" style="margin-top:8px">Tipo de sesión</label><select id="pk"></select></div>
   <div class="defhint" id="defHint" hidden></div>
   <div class="row r2"><input id="client" placeholder="Nombre del cliente" aria-label="Nombre del cliente"><input id="phone" type="tel" placeholder="Teléfono (ej. 9 1234 5678)" aria-label="Teléfono"></div>
-  <div id="giftBox"><label class="f" for="gift">¿Corresponde a una giftcard?</label>
-  <select id="gift"><option value="0">No</option><option value="1">Sí, es una giftcard</option></select></div>
   <div class="mut" id="timeHint" style="font-size:12.5px;margin-top:6px"></div>
   <label class="f" for="estado">Estado de la hora</label>
   <select id="estado"><option value="reservada">Reservada</option><option value="confirmada">Confirmada</option><option value="bloqueado">Bloqueado (no disponible)</option></select>
@@ -423,7 +424,7 @@ input[type=checkbox]{min-height:0;width:auto}
 <div id="gcModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="gcTitle">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="gcTitle">Vender giftcard</h3><button type="button" class="x" data-gcclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Cuando la clienta use la giftcard, agenda la hora con «¿Corresponde a una giftcard? → Sí».</p>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Tiene 30 días para usarse: para cobrarla, en Agregar hora elige la categoría «Giftcard».</p>
   <label class="f" for="gcSvc">Servicio de regalo (opcional)</label><select id="gcSvc"></select>
   <div class="row"><div><label class="f" for="gcM">Monto ($)</label><input type="number" id="gcM" min="0" step="1000" inputmode="numeric"></div><div><label class="f" for="gcF">Fecha de venta</label><input type="date" id="gcF"></div></div>
   <div class="row"><div><label class="f" for="gcDe">Comprada por</label><input id="gcDe" maxlength="40" placeholder="Ej. Pedro" autocomplete="off"></div><div><label class="f" for="gcPara">Para</label><input id="gcPara" maxlength="40" placeholder="Ej. María" autocomplete="off"></div></div>
@@ -643,13 +644,14 @@ function initDB(){
   setupLogin(auth);
   outBtn.addEventListener('click',async()=>{try{localStorage.removeItem(KEY)}catch(e){} await auth.signOut();location.reload()});
   auth.onAuthStateChanged(u=>{
-    if(unsub){unsub();unsub=null}if(unsubR){unsubR();unsubR=null}
+    if(unsub){unsub();unsub=null}if(unsubR){unsubR();unsubR=null}if(unsubF){unsubF();unsubF=null}
     if(!u){ref=null;readOnly=false;document.body.classList.remove('ro');lock(true);outBtn.classList.add('hide');return}
     lock(false);outBtn.classList.remove('hide');deniedRead=false;denyBox.hidden=true;
     ref=db.collection('masajes').doc('datos');
     db.collection('masajes').doc('ping').set({t:Date.now()}).then(()=>{readOnly=false;document.body.classList.remove('ro')}).catch(e=>{if(e.code==='permission-denied'){readOnly=true;document.body.classList.add('ro');if(!deniedRead)sync.textContent='Modo solo lectura ✓'}});
     gotMain=false;gotRes=false;firstPub=true;lastPub={};lastCfg='';firstPend=true;lastPend=new Set();
     unsubR=db.collection('reservas').onSnapshot(q=>{reservas=q.docs.map(d=>({id:d.id,...d.data()}));gotRes=true;afterSync()},()=>{});
+    unsubF=db.collection('masajes').doc('finanzas').onSnapshot(s=>{GIFTS=(s.exists&&s.data().gifts)||{};gcUpd()},()=>{});
     unsub=ref.onSnapshot(s=>{
       if(s.metadata.hasPendingWrites)return;
       if(s.exists){const d=s.data();S.branches=d.branches||S.branches;S.thers=d.thers||S.thers;S.services=d.services||S.services;S.cfg=d.cfg||S.cfg;S.appts=d.appts||[];
@@ -675,6 +677,7 @@ const waMsg=a=>{
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
   L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),enPack(a)?'• Sesión '+a.ps+' de '+a.pn+' de tu pack (ya pagado)':'• Valor: '+money(a.v));
   if(pag&&a.sp&&enPack(a)){}
+  else if(pag&&a.sp&&a.gc)L.push('• Pagado con giftcard ✓');
   else if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
   else if(pag&&tot)L.push('• Pagado: '+money(ab));
   else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
@@ -760,7 +763,7 @@ const packCode=(n,k)=>cortoL(n,62)+' · Pack '+k;
 const packSvc=n=>{for(const x of S.services)for(const q of (x.k||[]))if(packCode(x.n,q.s)===n)return{n:`${x.n} · Pack ${q.s} (sesión 1 de ${q.s})`,m:+x.m,v:+q.v,pn:+q.s};return null};
 const baseSvcDe=t=>{t=String(t||'');const b=t.replace(/ · Pack \d+.*$/,'').replace(/ · sesión de pack$/,'');return S.services.find(x=>x.n===b)};
 const pagoTotal=a=>{const x=baseSvcDe(a&&a.s);return !!(x&&esMadSvc(x)&&(S.cfg.madera||{}).full!==false)};
-function pkFill(s){const k=(s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.innerHTML='';return}
+function pkFill(s){const k=(cat.value!==GCC&&s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.innerHTML='';return}
   pk.innerHTML=`<option value="">Sesión individual · ${money(s.v)}</option>`+k.map(q=>`<option value="${q.s}">Pack ${q.s} sesiones · ${money(q.v)} (1ª sesión)</option>`).join('')}
 // Nombre y datos del pack de la hora que se agrega
 function pkInfo(s,nid){const v=pkBox.hidden?'':pk.value;
@@ -781,8 +784,8 @@ function packList(){
   return P.sort((a,b)=>a.c.localeCompare(b.c,'es')||(a.d+a.t).localeCompare(b.d+b.t));
 }
 function madCliUpd(full){
-  const s=S.services[svc.value]||S.services[0],on=esMadSvc(s);
-  madBox.hidden=!on;giftBox.hidden=on;if(on)gift.value='0';
+  const s=S.services[svc.value]||S.services[0],on=esMadSvc(s)&&cat.value!==GCC;
+  madBox.hidden=!on;
   if(!on){madCli=null;return}
   const L=packList().filter(p=>p.quedan>0);
   if(madCli&&!L.some(p=>p.id==madCli&&p.base===s.n))madCli=null;
@@ -929,7 +932,7 @@ const aDef=s=>!!(s&&s.p&&!(+s.v>0));
 const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
 function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
   return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
-const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;pkFill(s);madCliUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
+const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 function render(){
   edBtn.textContent=editing?'Cerrar':'Editar';
@@ -964,14 +967,14 @@ function render(){
   selbox.classList.toggle('hide',single);
   branches.innerHTML=S.branches.map((b,i)=>`<button class="branch ${i==S.branch?'on':''}" data-sb="${i}">${esc(b)}</button>`).join('');
   thers.innerHTML=S.thers.map((t,i)=>`<div class="ther ${i==S.ther?'on':''}" data-st="${i}"><b>${esc(t)}</b><span class="mut">${ROL}</span></div>`).join('');
-  const cats=[...new Set(S.services.map(x=>x.c||'Otros'))],cc=cats.includes(cat.value)?cat.value:cats[0];
+  const cats=[...new Set(S.services.map(x=>x.c||'Otros')),GCC],cc=cats.includes(cat.value)?cat.value:cats[0];
   cat.innerHTML=cats.map(c=>`<option ${c===cc?'selected':''}>${esc(c)}</option>`).join('');
   const prev=svc.value,first=!svc.options.length,gr={};
-  S.services.forEach((x,i)=>{if((x.c||'Otros')!==cc)return;(gr[x.g||'']=gr[x.g||'']||[]).push(`<option value="${i}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+money(x.v)}</option>`)});
+  S.services.forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+money(x.v)}</option>`)});
   svc.innerHTML=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
   if([...svc.options].some(o=>o.value===prev))svc.value=prev;else{svc.selectedIndex=0;fill()}
   if(first)fill();
-  madCliUpd();
+  madCliUpd();gcUpd();
   const L0=mine();
   const w1=new Date(wkS);w1.setDate(wkS.getDate()+6);
   let h=`<h3 class="wkh"><span>Semana del ${wkS.getDate()}${wkS.getMonth()!==w1.getMonth()?' de '+MES[wkS.getMonth()]:''} al ${w1.getDate()} de ${MES[w1.getMonth()]}</span><span class="gotow"><button type="button" class="goto" data-goto>📅 Ir a fecha</button><input type="date" id="pick" class="pickhid" tabindex="-1" aria-hidden="true"></span></h3><div class="wk"><button class="nav" data-wk="-1" aria-label="Semana anterior">‹</button><div class="dgrid">`;
@@ -1024,6 +1027,8 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
+  else if(el=g('data-gcsel')){const gg=gcLista().find(x=>x.id===el.dataset.gcsel);if(!gg)return;gcSel=gg.id;if(gg.para)client.value=gg.para;
+    const i=gg.s?S.services.findIndex(x=>x.n===gg.s):-1;if(i>=0&&[...svc.options].some(o=>o.value==i))svc.value=i;fill();if(gg.quedan<0)showToast('Ojo: esta giftcard venció el '+fmtD(gg.vence));return}
   else if(el=g('data-gcopen')){if(!readOnly)openGc();return}
   else if(el=g('data-gcclose')){gcModal.hidden=true;return}
   else if(e.target.id==='gcModal'){gcModal.hidden=true;return}
@@ -1077,21 +1082,40 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='addAppt'){
     const tv=getTime();if(!tv)return;const s=S.services[svc.value]||S.services[0];
     if(aDef(s)&&!(+dur.value>=5&&+price.value>0)){defHint.innerHTML=defHintTxt(s,1);defHint.hidden=false;(+dur.value>=5?price:dur).focus();return}
+    let gcx={};if(cat.value===GCC){const gg=gcSel&&gcLista().find(x=>x.id===gcSel&&!x.usada);if(!gg){showToast('Elige la giftcard que se va a cobrar');gcBox.scrollIntoView({behavior:'smooth',block:'center'});return}
+      gcx={gc:1,gid:gg.id,p:'pagado',sp:1,...(estado.value==='reservada'?{e:'confirmada'}:{})}}
     const nid=Date.now(),pi=pkInfo(s,nid);
-    S.appts.push({id:nid,k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pi.s,v:pi.v===0?0:(+price.value||0),e:estado.value,p:'pendiente',...pi.x,...(gift.value==='1'&&giftBox.hidden===false?{gc:1}:{})});
+    S.appts.push({id:nid,k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pi.s,v:pi.v===0?0:(+price.value||0),e:estado.value,p:'pendiente',...pi.x,...gcx});
     if(pi.x.pk&&pi.x.ps>1){madCli=null;showToast(`Sesión ${pi.x.ps} de ${pi.x.pn} agregada ✓ · quedan ${pi.x.pn-pi.x.ps}`)}
-    client.value='';phone.value='';gift.value='0'}
+    if(gcx.gid){gcSel=null;showToast('Giftcard cobrada ✓')}
+    client.value='';phone.value=''}
   else return;
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
+// --- giftcards: cobrar (categoría «Giftcard» en Agregar hora). Vencen 30 días después de la venta ---
+var GIFTS={},unsubF=null,gcSel=null;
+const GCC='Giftcard',GC_DIAS=30;
+const gcVence=d=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+GC_DIAS);return iso(x)};
+const diasHasta=d=>Math.round((new Date(d+'T12:00')-new Date(iso(today)+'T12:00'))/864e5);
+function gcLista(){const us=new Set(S.appts.filter(a=>a.gid).map(a=>a.gid));
+  return Object.entries(GIFTS||{}).filter(([,g])=>g&&g.d).map(([id,g])=>{const vence=gcVence(g.d);return{id,...g,vence,quedan:diasHasta(vence),usada:us.has(id)}}).sort((a,b)=>a.vence.localeCompare(b.vence))}
+const gcEstado=g=>g.usada?'Cobrada':g.quedan<0?`Vencida hace ${-g.quedan} día${g.quedan==-1?'':'s'}`:g.quedan===0?'Vence hoy':`Quedan ${g.quedan} día${g.quedan==1?'':'s'}`;
+function gcUpd(full){
+  const on=cat.value===GCC;gcBox.hidden=!on;if(!on){gcSel=null;return}
+  const L=gcLista().filter(g=>!g.usada).sort((a,b)=>(a.quedan<0)-(b.quedan<0)||a.vence.localeCompare(b.vence));if(gcSel&&!L.some(g=>g.id===gcSel))gcSel=null;
+  const vig=L.filter(g=>g.quedan>=0).length;gcCnt.textContent=L.length?`${vig} vigente${vig==1?'':'s'}${L.length>vig?` · ${L.length-vig} vencida${L.length-vig==1?'':'s'}`:''}`:'';
+  gcList.innerHTML=L.map(g=>`<button type="button" role="radio" aria-checked="${g.id===gcSel}" class="mcli ${g.id===gcSel?'on':''} ${g.quedan<0?'venc':''}" data-gcsel="${esc(g.id)}"><b>${esc(g.para?'Para '+g.para:(g.c||'Giftcard'))}</b><small>${esc([g.de?'De '+g.de:'','vendida el '+fmtD(g.d)].filter(Boolean).join(' · '))}</small><span>${esc(g.s||'Monto libre')} · ${money(g.m)}</span><span class="mq">${gcEstado(g)} · vence el ${fmtD(g.vence)}</span><div class="mbar"><i style="width:${Math.max(0,Math.min(100,Math.round(g.quedan/GC_DIAS*100)))}%"></i></div></button>`).join('')
+    ||'<p class="mut" style="font-size:13px;margin:6px 2px 0">No hay giftcards por cobrar. Regístralas con «🎁 Vender giftcard».</p>';
+  if(!full)return;const g=gcSel&&L.find(x=>x.id===gcSel);if(g)price.value=g.m;
+}
 // --- vender giftcard (se guarda en masajes/finanzas → gifts, igual que antes desde el balance) ---
 const FINref=()=>firebase.firestore().collection('masajes').doc('finanzas');
 const hoyIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 function gcMesDraw(){const mes=(gcF.value||hoyIso()).slice(0,7);gcMes.innerHTML='<div class="mut">Cargando ventas del mes…</div>';
-  FINref().get().then(s=>{const g=Object.values((s.exists&&s.data().gifts)||{}).filter(x=>String(x.d||'').slice(0,7)===mes).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  FINref().get().then(s=>{GIFTS=(s.exists&&s.data().gifts)||GIFTS;const g=gcLista().filter(x=>String(x.d||'').slice(0,7)===mes).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
     const tot=g.reduce((a,x)=>a+(+x.m||0),0);
-    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${fmtD(x.d)}</small></span><b>${money(x.m)}</b></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
+    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${fmtD(x.d)} · ${gcEstado(x)}</small></span><b>${money(x.m)}</b></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
   .catch(()=>{gcMes.innerHTML='<div class="mut">No se pudieron cargar las ventas del mes.</div>'})}
 function openGc(){
   const cats={};S.services.filter(x=>!x.p&&+x.v>0).forEach((x,i)=>{(cats[x.c||'Otros']=cats[x.c||'Otros']||[]).push(x)});
@@ -1146,7 +1170,7 @@ document.addEventListener('change',e=>{
   else if(t.name==='dhmode'){dhSync();return}
   else if(t.id==='time'){timeX.classList.toggle('hide',time.value!=='__otra');if(time.value==='__otra')timeX.focus();return}
   else if(t.id==='dur'){fillTimes();return}
-  else if(t.id==='gift'||t.id==='timeX'||t.id==='price'||t.id==='estado'){return}
+  else if(t.id==='timeX'||t.id==='price'||t.id==='estado'){return}
   else if(d.b!==undefined){const o=S.branches[+d.b];S.branches[+d.b]=t.value;S.appts.forEach(a=>{const [b,r]=a.k.split('|');if(b===o)a.k=t.value+'|'+r})}
   else if(d.t!==undefined){const o=S.thers[+d.t];S.thers[+d.t]=t.value;S.appts.forEach(a=>{const [b,r]=a.k.split('|');if(r===o)a.k=b+'|'+t.value})}
   else if(d.sv!==undefined){const dd=S.cfg.duo&&S.cfg.duo.d,on=S.services[+d.sv].n;if(d.f==='n'&&dd&&on in dd){dd[t.value]=dd[on];delete dd[on]}S.services[+d.sv][d.f]=['n','c','g'].includes(d.f)?t.value:(+t.value||0);svc.innerHTML=''}
