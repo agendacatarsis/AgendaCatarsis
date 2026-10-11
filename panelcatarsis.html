@@ -206,6 +206,21 @@ input[type=checkbox]{min-height:0;width:auto}
 .dhts button.on{background:var(--teal);border-color:var(--teal);color:var(--onacc)}
 .dhsum{font-size:13.5px;margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint);line-height:1.45}
 #dhBox[hidden]{display:none}
+/* --- listas como ventanas emergentes --- */
+.pk-w{position:relative;display:block}
+.pk-o{position:absolute;inset:0;z-index:1;cursor:pointer}
+.ro .ctl .pk-o{pointer-events:none}
+.pickm{z-index:60;padding:0;align-items:flex-end}
+.pickm .mbox{border-radius:22px 22px 0 0;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;padding:16px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+@media(min-width:700px){.pickm{align-items:center;padding:16px}.pickm .mbox{border-radius:24px}}
+#pickQ{margin:8px 0 2px}#pickQ[hidden]{display:none}
+#pickList{overflow:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
+.pko{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:13px 8px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;min-height:54px;border-radius:0}
+.pko small{display:block;color:var(--mut);font-size:13px;margin-top:2px;font-weight:400}
+.pko.on{color:var(--teal);font-weight:600;background:var(--tint);border-radius:12px;border-bottom-color:transparent}
+.pko.on::after{content:'✓';font-weight:700;font-size:18px}
+.pko:disabled{opacity:.4;cursor:default}
+.pkg{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:14px 8px 2px}
 /* --- maderoterapia --- */
 .madit{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:12px;margin:12px 0}
 .madh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
@@ -385,6 +400,13 @@ input[type=checkbox]{min-height:0;width:auto}
   <div class="err" id="duoErr" role="alert"></div>
   <button class="btn" style="width:100%" type="button" data-duosave>Guardar descuentos</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-duoclose>Cancelar</button>
+ </div>
+</div>
+<div id="pickModal" class="modal pickm" hidden role="dialog" aria-modal="true" aria-labelledby="pickTit">
+ <div class="mbox">
+  <div class="mhead"><h3 id="pickTit">Elige una opción</h3><button type="button" class="x" data-pickclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <input id="pickQ" type="search" placeholder="Buscar…" autocomplete="off" aria-label="Buscar" hidden>
+  <div id="pickList" role="listbox"></div>
  </div>
 </div>
 <div id="toastBox" role="status" aria-live="polite"></div>
@@ -985,7 +1007,30 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true}}});
+// --- listas desplegables como ventanas emergentes: la lista original sigue igual (mismas opciones y valores) ---
+let pickSel=null;
+const pickNorm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+function pickTitulo(sel){const w=sel.closest('.pk-w'),l=(sel.labels&&sel.labels[0])||(w&&w.previousElementSibling&&w.previousElementSibling.tagName==='LABEL'?w.previousElementSibling:null);return ((l?l.textContent:'')||sel.getAttribute('aria-label')||'Elige una opción').trim()}
+function pickDraw(){const q=pickNorm(pickQ.value),all=[...pickSel.options];let h='';
+  [...pickSel.children].forEach(ch=>{const g=ch.tagName==='OPTGROUP',ops=g?[...ch.children]:[ch];let b='';
+    ops.forEach(o=>{if(o.tagName!=='OPTION')return;const t=o.textContent,i=all.indexOf(o),k=t.indexOf(' · ');if(q&&!pickNorm(t).includes(q))return;
+      b+=`<button type="button" role="option" aria-selected="${i===pickSel.selectedIndex}" class="pko ${i===pickSel.selectedIndex?'on':''}" data-pko="${i}" ${o.disabled?'disabled':''}><span>${k>0?`${esc(t.slice(0,k))}<small>${esc(t.slice(k+3))}</small>`:esc(t)}</span></button>`});
+    if(b)h+=(g?`<div class="pkg">${esc(ch.label)}</div>`:'')+b});
+  pickList.innerHTML=h||'<p class="mut" style="padding:10px 8px">Sin resultados.</p>'}
+function openPick(sel){if(!sel||sel.disabled||!sel.options.length)return;pickSel=sel;pickTit.textContent=pickTitulo(sel);pickQ.value='';pickQ.hidden=sel.options.length<=12;pickDraw();pickModal.hidden=false;
+  const on=pickList.querySelector('.pko.on');if(on)on.scrollIntoView({block:'center'});if(!pickQ.hidden&&matchMedia('(hover:hover)').matches)pickQ.focus()}
+function closePick(){pickModal.hidden=true;const s=pickSel;pickSel=null;return s}
+function choosePick(i){const s=closePick();if(!s)return;if(s.selectedIndex!==i){s.selectedIndex=i;s.dispatchEvent(new Event('change',{bubbles:true}))}}
+function enhanceSelects(){document.querySelectorAll('select').forEach(sel=>{if(sel.parentNode&&sel.parentNode.classList&&sel.parentNode.classList.contains('pk-w'))return;
+  const w=document.createElement('span');w.className='pk-w';sel.parentNode.insertBefore(w,sel);w.appendChild(sel);const o=document.createElement('i');o.className='pk-o';o.setAttribute('aria-hidden','true');w.appendChild(o)})}
+let pickQd=0;new MutationObserver(()=>{if(pickQd)return;pickQd=1;requestAnimationFrame(()=>{pickQd=0;enhanceSelects()})}).observe(document.body,{childList:true,subtree:true});
+enhanceSelects();
+document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
+  if(o){const sel=o.parentNode.querySelector('select');if(sel&&!(document.body.classList.contains('ro')&&sel.closest('.ctl')))openPick(sel);return}
+  const b=e.target.closest('[data-pko]');if(b){choosePick(+b.dataset.pko);return}
+  if(e.target.closest('[data-pickclose]')||e.target.id==='pickModal')closePick()});
+pickQ.addEventListener('input',pickDraw);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
