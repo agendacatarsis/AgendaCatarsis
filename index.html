@@ -366,10 +366,12 @@ function madCard({i,s}){
   ${ks.length?`<div class="opts" role="radiogroup" aria-label="Sesiones">${op.join('')}</div>`:''}
   <div class="sp"><span class="pr" data-prc>${money(s.v)}</span><button class="rbtn" data-res="${i}">Reservar</button></div></article>`;
 }
+// Palabras destacadas (si en la base de datos quedó el texto antiguo, se muestra el nuevo)
+const madTags=M=>{const t=String((M&&M.tags)||'').trim();return !t||t==='Bienestar · Drenaje · Tonificación · Armonía'?'Drenaje · Modelación · Reducción':t};
 function madSec(c,its){
   const M=MADX(),ev=M.ev?waLink(`Hola, me gustaría agendar la evaluación gratuita de ${String(c).toLowerCase()}.`):'';
   return `<section class="sec" data-sec="${esc(c)}"><h3>${esc(c)}<small>${its.length} tratamiento${its.length==1?'':'s'}</small></h3>
-  <div class="madintro">${M.sub?`<p class="msub">${esc(M.sub)}</p>`:''}${M.tags?`<p class="mtags">${esc(M.tags)}</p>`:''}${M.desc?`<p class="mdesc">${esc(M.desc)}</p>`:''}</div>`
+  <div class="madintro">${M.sub?`<p class="msub">${esc(M.sub)}</p>`:''}${madTags(M)?`<p class="mtags">${esc(madTags(M))}</p>`:''}${M.desc?`<p class="mdesc">${esc(M.desc)}</p>`:''}</div>`
   +(()=>{const gs={};its.forEach(it=>{const g=it.s.g&&it.s.g!==c?it.s.g:'';(gs[g]=gs[g]||[]).push(it)});return Object.entries(gs).map(([g,l])=>(g?`<h5 class="grp">${esc(g)}</h5>`:'')+l.map(svcCard).join('')).join('')})()
   +(M.ev?`<div class="madnote"><span class="ico">📅</span><div><b>Evaluación gratuita</b>${esc(M.ev)}${ev?`<br><a class="rbtn wa" href="${ev}" target="_blank" rel="noopener">💬 Agendar evaluación</a>`:''}</div></div>`:'')
   +(M.full!==false?`<div class="madnote"><span class="ico">💳</span><div><b>Importante</b>Para realizar el tratamiento se debe cancelar el valor completo de la sesión o pack.</div></div>`:'')+'</section>';
