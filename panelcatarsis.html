@@ -206,6 +206,12 @@ input[type=checkbox]{min-height:0;width:auto}
 .dhts button.on{background:var(--teal);border-color:var(--teal);color:var(--onacc)}
 .dhsum{font-size:13.5px;margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint);line-height:1.45}
 #dhBox[hidden]{display:none}
+/* --- maderoterapia --- */
+.madit{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:12px;margin:12px 0}
+.madh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
+.madit textarea{width:100%}
+.madit .row{margin:4px 0}
+#pkBox[hidden]{display:none}
 /* --- editar horario de una cita --- */
 .hrbtn{white-space:nowrap;font-size:13px}
 .ro .hrbtn{display:none!important}
@@ -262,6 +268,7 @@ input[type=checkbox]{min-height:0;width:auto}
   <div class="row r3"><div><label class="f" for="time">Hora</label><select id="time" aria-describedby="timeHint"></select><input type="time" id="timeX" class="hide" aria-label="Otra hora" style="margin-top:6px"></div>
     <div><label class="f" for="dur">Duración (min)</label><input type="number" id="dur" min="5" step="5"></div>
     <div><label class="f" for="price">Valor ($)</label><input type="number" id="price" min="0" step="500"></div></div>
+  <div id="pkBox" hidden><label class="f" for="pk" style="margin-top:8px">Tipo de sesión</label><select id="pk"></select></div>
   <div class="defhint" id="defHint" hidden></div>
   <div class="row r2"><input id="client" placeholder="Nombre del cliente" aria-label="Nombre del cliente"><input id="phone" type="tel" placeholder="Teléfono (ej. 9 1234 5678)" aria-label="Teléfono"></div>
   <label class="f" for="gift">¿Corresponde a una giftcard?</label>
@@ -331,6 +338,22 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-horaclose>Cancelar</button>
  </div>
 </div>
+<div id="madModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="madTitle">
+ <div class="mbox" style="max-width:560px">
+  <div class="mhead"><h3 id="madTitle">Maderoterapia</h3><button type="button" class="x" data-madclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Administra los tratamientos de maderoterapia de tu página de reservas: duración, valor por sesión, packs de sesiones y beneficios.</p>
+  <label class="duosw"><input type="checkbox" id="madShow"> Mostrar «Maderoterapia» en la página de reservas</label>
+  <label class="duosw"><input type="checkbox" id="madFull"> Cobrar el valor completo de la sesión o pack al reservar</label>
+  <label class="f" for="madSub">Subtítulo</label><input id="madSub" maxlength="80">
+  <label class="f" for="madDesc" style="margin-top:8px">Descripción</label><textarea id="madDesc" rows="4"></textarea>
+  <label class="f" for="madEv" style="margin-top:8px">Evaluación gratuita (se muestra con botón de WhatsApp; déjalo vacío para no mostrarla)</label><input id="madEv" maxlength="160">
+  <div id="madList"></div>
+  <button type="button" class="pill" style="width:100%;margin-top:10px" data-madadd>＋ Agregar tratamiento</button>
+  <div class="err" id="madErr" role="alert"></div>
+  <button class="btn" style="width:100%;margin-top:6px" type="button" data-madsave>Guardar maderoterapia</button>
+  <button class="pill" style="width:100%;margin-top:8px" type="button" data-madclose>Cancelar</button>
+ </div>
+</div>
 <div id="dhModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dhTitle" style="z-index:30">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="dhTitle">Días y horas de masajes dúo</h3><button type="button" class="x" data-dhclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
@@ -383,6 +406,14 @@ const mon=new Date(today);mon.setDate(today.getDate()-((today.getDay()+6)%7));
 const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIA=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+// Maderoterapia (valores del folleto). Se administran en Editar → Maderoterapia
+const MAD_DEF=[
+ {n:'Maderoterapia Abdomen + Espalda',m:60,v:35000,c:'Maderoterapia',g:'Tratamientos corporales',b:['Modela y define la zona media','Favorece el drenaje de líquidos','Mejora la postura y la apariencia de la piel'],k:[{s:5,v:150000},{s:10,v:280000}]},
+ {n:'Maderoterapia Levantamiento de Glúteos + Piernas',m:60,v:35000,c:'Maderoterapia',g:'Tratamientos corporales',b:['Tonifica y reafirma','Mejora la apariencia de la piel','Estimula la circulación y el drenaje'],k:[{s:5,v:150000},{s:10,v:280000}]},
+ {n:'Maderoterapia Brazos',m:60,v:35000,c:'Maderoterapia',g:'Tratamientos corporales',b:['Modela y define el contorno del brazo','Favorece el drenaje de líquidos','Mejora la firmeza y apariencia de la piel'],k:[{s:5,v:150000},{s:10,v:280000}]},
+ {n:'Maderoterapia Facial',m:40,v:30000,c:'Maderoterapia',g:'Tratamientos faciales',b:['Estimula la circulación','Mejora la firmeza y elasticidad de la piel','Favorece el drenaje linfático facial'],k:[{s:5,v:130000},{s:10,v:200000}]},
+ {n:'Maderoterapia Papada',m:40,v:30000,c:'Maderoterapia',g:'Tratamientos faciales',b:['Favorece el drenaje de líquidos','Define el contorno facial','Mejora la apariencia de la piel'],k:[{s:5,v:130000},{s:10,v:200000}]}];
+const MAD_CFG={on:true,c:'Maderoterapia',sub:'Modelación corporal y facial',tags:'Bienestar · Drenaje · Tonificación · Armonía',desc:'Maderoterapia manual + drenaje linfático manual. Terapia manual que combina el uso de instrumentos de madera con técnicas de drenaje linfático, estimulando la circulación, favoreciendo el bienestar, la modelación corporal y la mejora de la apariencia de la piel.',ev:'Definimos la zona y el número de sesiones ideales para ti.',full:true};
 let S={branches:['Catarsis Osorno'],thers:['Daniela Velásquez'],services:DEF,appts:[],branch:0,ther:0};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 function migrate(){
@@ -391,6 +422,8 @@ function migrate(){
   if(!S.services||!S.services.length||S.services.some(x=>!x.c))S.services=DEF.map(x=>({...x}));
   S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:''},S.cfg||{});
   S.cfg.promos=Array.isArray(S.cfg.promos)?S.cfg.promos:[];
+  S.cfg.madera=Object.assign({},MAD_CFG,S.cfg.madera||{});
+  if(!S.cfg.made1){S.cfg.made1=1;needPush=true;if(!S.services.some(x=>(x.c||'')===S.cfg.madera.c))MAD_DEF.forEach(x=>S.services.push(JSON.parse(JSON.stringify(x))))}
   if(!S.cfg.acro){S.cfg.acro=1;needPush=true;if(!S.services.some(x=>/acrocord/i.test(x.n||'')))S.services.push({'n':'Evaluación de acrocordones','m':15,'v':10000,'c':'Acrocordones','g':'','w':1},{'n':'Tratamiento de acrocordones','m':30,'v':0,'c':'Acrocordones','g':'','p':1})}
   if(!S.cfg.acro2){S.cfg.acro2=1;needPush=true;const ev=S.services.find(x=>x.n==='Evaluación de acrocordones');if(ev)ev.w=1}
   if(!S.cfg.acro3){S.cfg.acro3=1;needPush=true;const ev=S.services.find(x=>x.n==='Evaluación de acrocordones');if(ev&&+ev.v===5000)ev.v=10000} // evaluación: $10.000
@@ -418,7 +451,7 @@ function processReservas(){
   const db=firebase.firestore();let ch=false;const items=reservas;reservas=[];
   items.forEach((r,i)=>{
     if(!r.d||!r.t||S.appts.some(x=>x.rid===r.id))return;
-    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s);
+    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s);
     S.appts.push({id:Date.now()+i,rid:r.id,k:S.branches[0]+'|'+S.thers[0],d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1});ch=true;
   });
   if(ch)render();
@@ -432,7 +465,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{})})),promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;pubP=db.collection('publico').doc('agenda').set(doc).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Editar → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -580,13 +613,14 @@ const end=(t,m)=>{const [h,n]=t.split(':').map(Number);const x=h*60+n+m;return S
 const wa=p=>{let d=p.replace(/\D/g,'');if(d.length===9)d='56'+d;return 'https://wa.me/'+d};
 const opt=(arr,v)=>arr.map(([k,l])=>`<option value="${k}" ${k===v?'selected':''}>${l}</option>`).join('');
 const waMsg=a=>{
-  const du=esDuo(a),A=du?duoAbono():+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
+  const du=esDuo(a),tot=pagoTotal(a),A=du?duoAbono():tot?+a.v:+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
   const L=['Hola'+(a.c?' '+a.c:'')+', te escribimos de Catarsis Estética y Bienestar.',''];
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
   L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),'• Valor: '+money(a.v));
   if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
+  else if(pag&&tot)L.push('• Pagado: '+money(ab));
   else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
-  else if(!conf){L.push('','Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);L.push('','Después envíanos el comprobante por este chat.')}
+  else if(!conf){L.push('',tot?'Para confirmarla, transfiere el valor completo de '+money(ab)+' dentro de '+plz(S.cfg.plazoMin)+':':'Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);L.push('','Después envíanos el comprobante por este chat.')}
   L.push('','📍 Cochrane 450, Osorno','Cómo llegar: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('Cochrane 450, Osorno'));
   return wa(a.f)+'?text='+encodeURIComponent(L.join('\n'));
 };
@@ -658,6 +692,53 @@ function savePromo(){
   if(bad){promoErr.textContent=bad;return}
   S.cfg.promos=out;promoModal.hidden=true;render();
   showToast(out.length?`Promoción guardada ✓ · ${out.length} servicio${out.length==1?'':'s'}`:'Promociones quitadas');
+}
+// --- maderoterapia: tratamientos con sesiones y packs ---
+const MADC=()=>((S.cfg.madera||{}).c)||'Maderoterapia';
+const esMadSvc=x=>!!x&&(x.c||'')===MADC();
+// Nombre corto para la reserva (debe ser igual al de index.html)
+const cortoL=(n,L)=>{n=String(n||'');const B=t=>new TextEncoder().encode(t).length;if(B(n)<=L)return n;const c=Array.from(n);while(c.length&&B(c.join('').trimEnd()+'…')>L)c.pop();return c.join('').trimEnd()+'…'};
+const packCode=(n,k)=>cortoL(n,62)+' · Pack '+k;
+const packSvc=n=>{for(const x of S.services)for(const q of (x.k||[]))if(packCode(x.n,q.s)===n)return{n:`${x.n} · Pack ${q.s} (sesión 1 de ${q.s})`,m:+x.m,v:+q.v};return null};
+const baseSvcDe=t=>{t=String(t||'');const b=t.replace(/ · Pack \d+.*$/,'').replace(/ · sesión de pack$/,'');return S.services.find(x=>x.n===b)};
+const pagoTotal=a=>{const x=baseSvcDe(a&&a.s);return !!(x&&esMadSvc(x)&&(S.cfg.madera||{}).full!==false)};
+function pkFill(s){const k=(s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.innerHTML='';return}
+  pk.innerHTML=`<option value="">Sesión individual · ${money(s.v)}</option>`+k.map(q=>`<option value="${q.s}">Pack ${q.s} sesiones · ${money(q.v)} (1ª sesión)</option>`).join('')+'<option value="pp">Sesión de un pack ya pagado · $0</option>'}
+const pkNombre=s=>{const v=pkBox.hidden?'':pk.value;if(v==='pp')return s.n+' · sesión de pack';const q=(s.k||[]).find(x=>String(x.s)===v);return q?`${s.n} · Pack ${q.s} (sesión 1 de ${q.s})`:s.n};
+const madGrupos=['Tratamientos corporales','Tratamientos faciales'];
+function madItemHtml(x,i){const k=(x.k||[]).concat([{},{},{}]).slice(0,3),gs=[...new Set([...madGrupos,x.g||madGrupos[0]])];
+  return `<div class="madit" data-mi="${i}"><div class="madh"><b>${esc(x.n||'Nuevo tratamiento')}</b><button type="button" class="x" data-madx aria-label="Quitar tratamiento" style="flex:0 0 38px;height:38px">✕</button></div>
+  <label class="f">Nombre</label><input data-mf="n" maxlength="60" value="${esc(x.n||'')}" placeholder="Ej. Maderoterapia Cintura">
+  <div class="row"><div><label class="f">Tipo</label><select data-mf="g">${gs.map(g=>`<option value="${esc(g)}" ${g===(x.g||madGrupos[0])?'selected':''}>${esc((t=>t.charAt(0).toUpperCase()+t.slice(1))(g.replace(/^Tratamientos /,'')))}</option>`).join('')}</select></div><div><label class="f">Duración (min)</label><input type="number" inputmode="numeric" min="5" max="480" step="5" data-mf="m" value="${x.m||60}"></div></div>
+  <label class="f">Valor por sesión ($)</label><input type="number" inputmode="numeric" min="0" step="1000" data-mf="v" value="${x.v!=null?x.v:''}">
+  <div class="madpk"><div class="f" style="margin:10px 0 0 4px"><b>Packs de sesiones</b> (deja vacío para no ofrecerlo)</div><div class="row" style="margin:2px 0 -4px"><div class="f" style="margin:0 0 0 4px">N° de sesiones</div><div class="f" style="margin:0 0 0 4px">Valor del pack ($)</div></div>${k.map((q,j)=>`<div class="row"><div><input type="number" inputmode="numeric" min="2" max="50" data-pks="${j}" value="${q.s||''}" placeholder="Ej. 5" aria-label="Pack ${j+1}: sesiones"></div><div><input type="number" inputmode="numeric" min="0" step="1000" data-pkv="${j}" value="${q.v||''}" placeholder="Ej. 150000" aria-label="Pack ${j+1}: valor"></div></div>`).join('')}</div>
+  <label class="f">Beneficios (uno por línea)</label><textarea data-mf="b" rows="3">${esc((x.b||[]).join('\n'))}</textarea></div>`}
+function openMad(){
+  const M=S.cfg.madera,L=S.services.filter(esMadSvc);
+  madShow.checked=M.on!==false;madFull.checked=M.full!==false;madSub.value=M.sub||'';madDesc.value=M.desc||'';madEv.value=M.ev||'';
+  madList.innerHTML=L.map(madItemHtml).join('')||'<p class="mut" id="madVacio">Aún no hay tratamientos. Toca «Agregar tratamiento».</p>';
+  madErr.textContent='';madModal.hidden=false;
+}
+function saveMad(){
+  const M=S.cfg.madera,out=[];let bad='';
+  madList.querySelectorAll('.madit').forEach((el,i)=>{if(bad)return;const f=k=>el.querySelector(`[data-mf="${k}"]`).value.trim();
+    const n=f('n'),m=Math.round(+f('m')),v=f('v')===''?NaN:Math.round(+f('v')),b=f('b').split('\n').map(t=>t.trim()).filter(Boolean).slice(0,8),k=[];
+    if(n.length<2){bad=`Escribe el nombre del tratamiento ${i+1}.`;return}
+    if(out.some(x=>x.n.toLowerCase()===n.toLowerCase())||S.services.some(x=>!esMadSvc(x)&&x.n.toLowerCase()===n.toLowerCase())){bad=`Ya existe un servicio llamado "${n}".`;return}
+    if(!(m>=5&&m<=480)){bad=`Revisa la duración de "${n}" (entre 5 y 480 minutos).`;return}
+    if(!(v>=0)){bad=`Escribe el valor por sesión de "${n}".`;return}
+    for(let j=0;j<3;j++){const a=el.querySelector(`[data-pks="${j}"]`).value.trim(),c=el.querySelector(`[data-pkv="${j}"]`).value.trim();if(!a&&!c)continue;
+      const ss=Math.round(+a),vv=Math.round(+c);
+      if(!(ss>=2&&ss<=50)||!(vv>0)){bad=`Revisa el pack ${j+1} de "${n}": escribe la cantidad de sesiones (2 a 50) y el valor.`;return}
+      if(k.some(q=>q.s===ss)){bad=`"${n}" tiene dos packs de ${ss} sesiones.`;return}
+      k.push({s:ss,v:vv})}
+    k.sort((a,b)=>a.s-b.s);out.push({n,m,v,c:MADC(),g:el.querySelector('[data-mf="g"]').value,b,k})});
+  if(bad){madErr.textContent=bad;madErr.scrollIntoView({block:'nearest'});return}
+  {const ord=[...new Set([...madGrupos,...out.map(x=>x.g)])];out.sort((a,b)=>ord.indexOf(a.g)-ord.indexOf(b.g))}
+  let at=S.services.findIndex(esMadSvc);const rest=S.services.filter(x=>!esMadSvc(x));if(at<0||at>rest.length)at=rest.length;
+  rest.splice(at,0,...out);S.services=rest;
+  Object.assign(M,{on:madShow.checked,full:madFull.checked,sub:madSub.value.trim(),desc:madDesc.value.trim(),ev:madEv.value.trim()});
+  madModal.hidden=true;svc.innerHTML='';render();showToast(`Maderoterapia guardada ✓ · ${out.length} tratamiento${out.length==1?'':'s'}`);
 }
 // --- días y horas en que se pueden reservar masajes dúo ---
 const DHN=[[1,'Lunes'],[2,'Martes'],[3,'Miércoles'],[4,'Jueves'],[5,'Viernes'],[6,'Sábado'],[0,'Domingo']];
@@ -757,7 +838,7 @@ const aDef=s=>!!(s&&s.p&&!(+s.v>0));
 const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
 function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
   return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
-const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
+const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;pkFill(s);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 function render(){
   edBtn.textContent=editing?'Cerrar':'Editar';
@@ -785,7 +866,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
+    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-madopen>🪵 Maderoterapia${(n=>` · ${n} tratamiento${n==1?'':'s'}`)(S.services.filter(esMadSvc).length)}${S.cfg.madera.on===false?' · oculto':''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
   }
   const single=S.branches.length===1&&S.thers.length===1;
   who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
@@ -851,6 +932,12 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
+  else if(el=g('data-madopen')){if(!readOnly)openMad();return}
+  else if(el=g('data-madclose')){madModal.hidden=true;return}
+  else if(e.target.id==='madModal'){madModal.hidden=true;return}
+  else if(el=g('data-madsave')){saveMad();return}
+  else if(el=g('data-madadd')){const v=document.getElementById('madVacio');if(v)v.remove();madList.insertAdjacentHTML('beforeend',madItemHtml({g:madGrupos[0],m:60,k:[{s:5},{s:10}]},madList.children.length));const n=madList.lastElementChild;n.scrollIntoView({behavior:'smooth',block:'center'});n.querySelector('[data-mf="n"]').focus();return}
+  else if(el=g('data-madx')){el.closest('.madit').remove();return}
   else if(el=g('data-dhopen')){if(!readOnly)openDH();return}
   else if(el=g('data-dhclose')){closeDH();return}
   else if(e.target.id==='dhModal'){closeDH();return}
@@ -890,18 +977,19 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='addAppt'){
     const tv=getTime();if(!tv)return;const s=S.services[svc.value]||S.services[0];
     if(aDef(s)&&!(+dur.value>=5&&+price.value>0)){defHint.innerHTML=defHintTxt(s,1);defHint.hidden=false;(+dur.value>=5?price:dur).focus();return}
-    S.appts.push({id:Date.now(),k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:s.n,v:+price.value||0,e:estado.value,p:'pendiente',...(gift.value==='1'?{gc:1}:{})});
+    S.appts.push({id:Date.now(),k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pkNombre(s),v:+price.value||0,e:estado.value,p:'pendiente',...(gift.value==='1'?{gc:1}:{})});
     client.value='';phone.value='';gift.value='0'}
   else return;
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
   else if(t.id==='cat'){render();fill();return}
   else if(t.id==='svc'){fill();return}
+  else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v);price.value=v==='pp'?0:k?k.v:s.v;return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
   else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}

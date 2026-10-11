@@ -149,6 +149,26 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .ctabar{position:sticky;bottom:0;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(0,0,0,0),var(--bg) 35%);margin-top:6px}
 .ctabar .cta{margin-top:0}
 .hint{margin:4px 0 0;font-size:13.5px;color:var(--mut)}
+/* ===== Maderoterapia (formato experiencia) ===== */
+.madintro{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:6px 0 4px;text-align:center}
+.madintro .msub{font:600 13px Barlow,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--acc);margin:0}
+.madintro .mtags{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin:6px 0 10px}
+.madintro .mdesc{margin:0;font-size:14.5px;line-height:1.5}
+.svc.xp{flex-direction:column;align-items:stretch;gap:10px}
+.ben{margin:8px 0 0;padding:0;list-style:none;font-size:14px;line-height:1.45}
+.ben li{position:relative;padding-left:18px;margin:2px 0}
+.ben li::before{content:'✓';position:absolute;left:0;color:var(--acc);font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.opt{position:relative;display:block;cursor:pointer}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt span{display:block;border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center;line-height:1.25;background:var(--bg);min-height:62px}
+.opt b{display:block;font-size:14px}.opt small{display:block;font-size:12.5px;color:var(--mut)}.opt i{display:block;font-style:normal;font-size:11.5px;color:var(--acc);font-weight:600;margin-top:1px}
+.opt input:checked+span{border:2px solid var(--acc);background:var(--tint);padding:8px 5px}
+.opt input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
+.madnote{display:flex;gap:12px;align-items:flex-start;background:var(--tint);border-radius:14px;padding:12px 14px;margin:10px 0 0;font-size:14px;line-height:1.45}
+.madnote .ico{font-size:22px;line-height:1}
+.madnote b{display:block;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+.madnote .rbtn{margin-top:8px;padding:8px 14px;min-height:40px;font-size:14px}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
 <div id="app"><p class="mut">Cargando servicios…</p></div>
@@ -192,7 +212,7 @@ const H=()=>Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,
 // Servicios + promociones (las promociones se eligen en el panel: Editar → Crear promoción)
 const PROMO='Promociones';
 const SV=()=>{const sv=(ag&&ag.services)||[],pr=((ag&&ag.promos)||[]).filter(x=>x&&x.n&&+x.m>=5).map(x=>({n:'Promo: '+x.n,nom:x.n,m:+x.m,v:+x.v||0,vo:+x.vo||0,c:PROMO,g:'',promo:1}));return pr.concat(sv)};
-const nomS=s=>s.promo||s.duo?s.nom:s.n;
+const nomS=s=>s.pack?s.nom:s.promo||s.duo?s.nom:s.n;
 // Masajes dúo: dos personas al mismo tiempo, cada una elige su masaje (descuentos y abono en el panel: Editar → Descuentos dúo)
 const DUO='Masajes dúo';
 const DL=()=>{const d=ag&&ag.duo;return d&&d.on&&Array.isArray(d.l)?d.l.filter(x=>x&&x.n&&+x.m>=5):[]};
@@ -205,7 +225,16 @@ const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
 let duo=false,dA=0,dB=0,ptab='svc',catF='Todos',qTxt='',lastStep=-1;
 const duoSvc=()=>{const L=DL(),a=L[dA],b=L[dB];if(!a||!b)return null;return{n:duoCode(a.n,b.n),nom:'Masaje dúo',txt:'Masaje dúo: '+a.n+' + '+b.n,m:DM(),v:pD(a)+pD(b),vo:(+a.v||0)+(+b.v||0),c:DUO,duo:1,a,b}};
-const svc=()=>duo?duoSvc():(SV()[svcIdx]||null);
+// Maderoterapia: sesión individual o pack (panel → Editar → Maderoterapia)
+let mk=1;
+const MADX=()=>(ag&&ag.madera)||null;
+const MADC=()=>(MADX()&&MADX().c)||'Maderoterapia';
+const esMad=x=>!!x&&!!MADX()&&(x.c||'')===MADC();
+const cortoL=(n,L)=>{n=String(n||'');const B=t=>new TextEncoder().encode(t).length;if(B(n)<=L)return n;const c=Array.from(n);while(c.length&&B(c.join('').trimEnd()+'…')>L)c.pop();return c.join('').trimEnd()+'…'};
+const packCode=(n,k)=>cortoL(n,62)+' · Pack '+k;  // debe ser igual al de panelcatarsis.html
+const pagaTodo=sv=>!!sv&&esMad(sv)&&MADX().full!==false;
+const svc=()=>{if(duo)return duoSvc();const b=SV()[svcIdx]||null;if(!b)return null;const q=mk>1&&Array.isArray(b.k)?b.k.find(x=>+x.s===mk):null;
+  return q?Object.assign({},b,{n:packCode(b.n,q.s),nom:b.n,txt:`${b.n} · Pack ${q.s} sesiones`,v:+q.v,pack:+q.s,unit:Math.round(q.v/q.s),base:+b.v}):b};
 function timesFor(d,sv){
   const h=H(),paso=Math.max(10,+h.paso||30),dur=Math.max(5,+sv.m||paso),wd=toD(d).getDay(),dh=sv.duo?DH():null;
   const src=tid==='admin'?(ag.ocupado||{}):(oc2[tid]||{});const oc=(src[d]||[]).map(s=>s.split('-').map(Number));
@@ -240,7 +269,7 @@ db.collection('publico').doc('agenda').onSnapshot(d=>{ag=d.exists?d.data():{};on
 db.collection('ocupados').onSnapshot(q=>{oc2={};q.docs.forEach(d=>{oc2[d.id]=d.data().ocupado||{}});onData()},()=>{});
 db.collection('bloques').onSnapshot(q=>{taken=new Set(q.docs.map(d=>d.id));onData()},()=>{});
 const abonoDe=v=>{const A=+(ag&&ag.abono)||0;return A>0&&A<=100?Math.round(v*A/100):Math.min(+v,A)};
-const abonoSv=sv=>sv&&sv.duo?Math.min(+sv.v,ABD()):abonoDe(sv?sv.v:0);
+const abonoSv=sv=>sv&&sv.duo?Math.min(+sv.v,ABD()):pagaTodo(sv)?+sv.v:abonoDe(sv?sv.v:0);
 async function sendMail(tpl,params){
   if(!MAIL_ON||!tpl)return;
   try{await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EMAILJS.serviceId,template_id:tpl,user_id:EMAILJS.publicKey,template_params:params})})}catch(e){}
@@ -269,7 +298,7 @@ function card(){
   const cuando=sv&&selT!==null&&selDay?`<dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd>`:'';
   let dl='';
   if(sv&&sv.duo)dl=`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`;
-  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd>${sv.w?'':`<dt>Abono</dt><dd>${money(abonoSv(sv))}</dd>`}</dl>`;
+  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd>${esMad(sv)?`<dt>Plan</dt><dd>${sv.pack?`Pack ${sv.pack} sesiones <span class="mut" style="font-weight:400">(${money(sv.unit)} c/u)</span>`:'1 sesión'}</dd>`:''}<dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos${sv.pack?' por sesión':''}</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}${sv.pack&&sv.base*sv.pack>sv.v?` <s class="mut" style="font-weight:400">${money(sv.base*sv.pack)}</s>`:''}</dd>${sv.w?'':`<dt>${pagaTodo(sv)?'Pago al reservar':'Abono'}</dt><dd>${money(abonoSv(sv))}${pagaTodo(sv)?' <span class="mut" style="font-weight:400">(valor completo)</span>':''}</dd>`}</dl>${sv.pack?`<p class="pnote">Reservas tu primera sesión; las ${sv.pack-1} siguientes las coordinamos contigo.</p>`:''}`;
   return `<aside class="card"><h3 class="sumh">Tu reserva</h3>${thSel}${step===1&&duo?duoCtl(sv):''}${notes}${dl}${step===1?'<button type="button" class="lnk" data-go="svc">← Cambiar servicio</button>':''}</aside>`;
 }
 function duoCtl(sv){
@@ -324,15 +353,32 @@ function catalogo(){
 function svcCard(it){
   if(it.duo){const L=DL(),mn=Math.min(...L.map(pD))*2;
     return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${DM()} min${duoHorTxt()?` · 📅 ${duoHorTxt()}`:''}</span></div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
+  if(it.s&&esMad(it.s)&&!it.s.w)return madCard(it);
   const s=it.s,nm=nomS(s),ev=!s.promo&&/^evaluaci/i.test(s.n),wl=s.w?waLink(waTxtSvc(s)):'';
   const btn=s.w?(wl?`<a class="rbtn wa" href="${wl}" target="_blank" rel="noopener">💬 Agendar por WhatsApp</a>`:''):`<button class="rbtn" data-res="${it.i}">Reservar</button>`;
   return `<article class="svc" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')))}"><div class="si"><h4>${esc(nm)}${s.promo?'<span class="pz">Promoción</span>':''}</h4>${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">⏱ ${s.m} min</span></div><div class="sp"><span class="pr">${money(s.v)}${s.promo&&s.vo>s.v?`<s>${money(s.vo)}</s>`:''}</span>${btn}</div></article>`;
+}
+function madCard({i,s}){
+  const ks=(Array.isArray(s.k)?s.k:[]).filter(q=>+q.s>1&&+q.v>0),nm=`mo${i}`;
+  const op=[`<label class="opt"><input type="radio" name="${nm}" value="1" checked><span><b>1 sesión</b><small>${money(s.v)}</small></span></label>`]
+    .concat(ks.map(q=>{const u=Math.round(q.v/q.s),ah=s.v*q.s-q.v;return `<label class="opt"><input type="radio" name="${nm}" value="${q.s}"><span><b>Pack ${q.s}</b><small>${money(q.v)}</small>${ah>0?`<i>${money(u)} c/u</i>`:''}</span></label>`}));
+  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h4>${esc(s.n)}</h4>${(s.b||[]).length?`<ul class="ben">${s.b.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}<span class="meta">⏱ ${s.m} min por sesión</span></div>
+  ${ks.length?`<div class="opts" role="radiogroup" aria-label="Sesiones">${op.join('')}</div>`:''}
+  <div class="sp"><span class="pr" data-prc>${money(s.v)}</span><button class="rbtn" data-res="${i}">Reservar</button></div></article>`;
+}
+function madSec(c,its){
+  const M=MADX(),ev=M.ev?waLink(`Hola, me gustaría agendar la evaluación gratuita de ${String(c).toLowerCase()}.`):'';
+  return `<section class="sec" data-sec="${esc(c)}"><h3>🪵 ${esc(c)}<small>${its.length} tratamiento${its.length==1?'':'s'}</small></h3>
+  <div class="madintro">${M.sub?`<p class="msub">${esc(M.sub)}</p>`:''}${M.tags?`<p class="mtags">${esc(M.tags)}</p>`:''}${M.desc?`<p class="mdesc">${esc(M.desc)}</p>`:''}</div>`
+  +(()=>{const gs={};its.forEach(it=>{const g=it.s.g&&it.s.g!==c?it.s.g:'';(gs[g]=gs[g]||[]).push(it)});return Object.entries(gs).map(([g,l])=>(g?`<h5 class="grp">${esc(g)}</h5>`:'')+l.map(svcCard).join('')).join('')})()
+  +(M.ev?`<div class="madnote"><span class="ico">📅</span><div><b>Evaluación gratuita</b>${esc(M.ev)}${ev?`<br><a class="rbtn wa" href="${ev}" target="_blank" rel="noopener">💬 Agendar evaluación</a>`:''}</div></div>`:'')
+  +(M.full!==false?`<div class="madnote"><span class="ico">💳</span><div><b>Importante</b>Para realizar el tratamiento se debe cancelar el valor completo de la sesión o pack.</div></div>`:'')+'</section>';
 }
 function view0(app){
   const {cats,by}=catalogo();if(catF!=='Todos'&&!cats.includes(catF))catF='Todos';
   const foc=document.activeElement&&document.activeElement.id==='q';
   const ic=c=>c===PROMO?'★ ':c===DUO?'👥 ':'';
-  const secs=cats.map(c=>{let last=null;const its=by[c];
+  const secs=cats.map(c=>{let last=null;const its=by[c];if(MADX()&&c===MADC())return madSec(c,its);
     return `<section class="sec" data-sec="${esc(c)}"><h3>${ic(c)}${esc(c)}<small>${its.length} servicio${its.length==1?'':'s'}</small></h3>`+its.map(it=>{const g=it.s&&it.s.g&&it.s.g!==c?it.s.g:'';let h='';if(g!==last){if(g)h=`<h5 class="grp">${esc(g)}</h5>`;last=g}return h+svcCard(it)}).join('')+'</section>'}).join('');
   const A=+(ag&&ag.abono)||0,ab=A>0&&A<=100?A+'% del valor':money(A);
   app.innerHTML=`<header class="hero">${galHtml()}<div class="hb"><div class="lgc"><img class="logo" alt="Catarsis" src="${LOGO}"></div>
@@ -351,7 +397,7 @@ function view0(app){
    ${horarioTxt()?`<h3>Horario de atención</h3><p>${horarioTxt()}</p>`:''}${DL().length&&duoHorTxt()?`<p style="margin-top:4px">Masajes dúo: ${duoHorTxt()}</p>`:''}
    <h3>Atiende</h3><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
    ${WA()?`<h3>Contacto</h3><p><a href="${waLink()}" target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a></p>`:''}
-   <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo.</p>
+   <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
   <p class="foot">${NEGOCIO} · ${ADDR}</p></div>`;
   applyF();
@@ -418,12 +464,12 @@ function startCd(a){
 function view3(app){
   const a=booked;if(!a)return;
   const ab=a.ab!=null?a.ab:abonoDe(a.v);
-  const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)}. Te envío el comprobante del abono.`);
+  const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)}. Te envío el comprobante ${a.full?'del pago':'del abono'}.`);
   app.innerHTML=`<div class="ok"><h3 style="color:var(--grn)">Solicitud enviada</h3><p><b>${esc(a.s)}</b>${a.th?' con '+esc(a.th):''}<br>${cap(fmtD(a.d))} · ${fmt(a.t)} a ${fmt(a.t+a.m)}</p>
   <p style="margin:0 0 10px">📍 <b>Dirección:</b> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Cochrane 450, Osorno')}" target="_blank" rel="noopener">Cochrane 450, Osorno</a></p>
   ${MAIL_ON&&a.mail?`<p class="mut" style="margin:0 0 8px">Te enviamos el detalle a <b>${esc(a.mail)}</b>. Si no lo ves, revisa la carpeta de spam.</p>`:''}
-  <p>Tu hora queda <b>pendiente hasta que se pague el abono</b>${ab?` de <b>${money(ab)}</b> (se descuenta del valor del servicio)`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para transferirlo; pasado ese plazo la hora puede liberarse.</p>
-  <div class="timer" id="timer" role="timer"><span>Tiempo para transferir el abono</span><b id="cd">--:--</b></div>
+  <p>Tu hora queda <b>pendiente hasta que se pague ${a.full?'el valor completo':'el abono'}</b>${ab?` de <b>${money(ab)}</b>${a.full?'':' (se descuenta del valor del servicio)'}`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para transferirlo; pasado ese plazo la hora puede liberarse.</p>
+  <div class="timer" id="timer" role="timer"><span>Tiempo para transferir ${a.full?'el pago':'el abono'}</span><b id="cd">--:--</b></div>
   ${DATOS()?`<pre>${esc(DATOS())}</pre>`:''}${WA()?`<a class="cta" href="https://wa.me/${WA()}?text=${msg}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>`:''}
   <button class="cta alt" data-go="again">Reservar otra hora</button></div>`;
   startCd(a);
@@ -431,7 +477,7 @@ function view3(app){
 }
 document.addEventListener('click',e=>{
   const g=k=>e.target.closest('['+k+']');let el;
-  if(el=g('data-res')){const v=el.dataset.res;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
+  if(el=g('data-res')){const v=el.dataset.res,r=el.closest('article')&&el.closest('article').querySelector('.opts input:checked');mk=r?+r.value:1;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
   else if(el=g('data-cf')){catF=el.dataset.cf;document.querySelectorAll('.cchips button').forEach(b=>b.classList.toggle('on',b===el));applyF();const s=document.querySelector('.srch');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({behavior:'smooth'});return}
   else if(el=g('data-pt'))ptab=el.dataset.pt;
   else if(el=g('data-day')){selDay=el.dataset.day;selT=null;notice=''}
@@ -443,6 +489,8 @@ document.addEventListener('click',e=>{
   render();
 });
 document.addEventListener('input',e=>{if(e.target.id==='q'){qTxt=e.target.value;applyF()}});
+document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('.opts'))return;const art=t.closest('article'),s=SV()[+art.querySelector('[data-res]').dataset.res];if(!s)return;
+  const q=(s.k||[]).find(x=>+x.s===+t.value),pr=art.querySelector('[data-prc]');if(pr)pr.textContent=money(q?q.v:s.v)});
 document.addEventListener('change',e=>{if(e.target.id==='th'){tid=e.target.value;selT=null;notice='';recompute();render();return}
   if(e.target.id==='svc'){svcIdx=+e.target.value;selT=null;notice='';recompute();render()}
   if(e.target.id==='duo1'||e.target.id==='duo2'){if(e.target.id==='duo1')dA=+e.target.value;else dB=+e.target.value;selT=null;notice='';recompute();render()}});
@@ -454,8 +502,8 @@ document.addEventListener('submit',async e=>{
   if(t.replace(/\D/g,'').length<8){er.textContent='Escribe un teléfono válido.';return}
   const mail=MAIL_ON?$('mail').value.trim():'';
   if(MAIL_ON&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){er.textContent='Escribe un correo válido.';return}
-  const disp=sv.duo?sv.txt:sv.n,ab=abonoSv(sv);
-  if($('hp').value||Date.now()-t2<2500){booked={d:selDay,t:selT,s:disp,m:+sv.m,v:+sv.v,ab,n,th:curTh().n,at:Date.now()};step=3;selT=null;render();return}
+  const disp=sv.duo||sv.pack?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv);
+  if($('hp').value||Date.now()-t2<2500){booked={d:selDay,t:selT,s:disp,m:+sv.m,v:+sv.v,ab,full,n,th:curTh().n,at:Date.now()};step=3;selT=null;render();return}
   busy=true;$('send').disabled=true;er.textContent='';
   const d=selDay,s0=selT,dur=Math.max(5,+sv.m),paso=Math.max(10,+H().paso||30),tel=(x=>x.length>9?x.slice(-9):x)(t.replace(/\D/g,''));
   try{
@@ -464,7 +512,7 @@ document.addEventListener('submit',async e=>{
     b.set(db.collection('pendientes').doc(tel),{r:rr.id});
     for(let x=s0;x<s0+dur;x+=paso)b.set(db.collection('bloques').doc(tid+'_'+d+'_'+hhmm(x)),{d,t:fmt(x),r:rr.id,tid});
     await b.commit();
-    booked={d,t:s0,s:disp,m:dur,v:+sv.v,ab,n,th:curTh().n,mail,at:Date.now()};step=3;busy=false;selT=null;render();
+    booked={d,t:s0,s:disp,m:dur,v:+sv.v,ab,full,n,th:curTh().n,mail,at:Date.now()};step=3;busy=false;selT=null;render();
     sendMails(booked,t,mail);
     avisar({id:rr.id,b:tid+'_'+d+'_'+hhmm(s0),tel,nombre:n,telefono:t,servicio:disp,fecha:cap(fmtD(d)),hora:fmt(s0)+' a '+fmt(s0+dur),valor:money(+sv.v),terapeuta:TH().length>1?curTh().n:'',panel:new URL('panelcatarsis.html',location.href).href});
   }catch(x){
