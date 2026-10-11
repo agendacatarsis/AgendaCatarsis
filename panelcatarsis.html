@@ -206,6 +206,11 @@ input[type=checkbox]{min-height:0;width:auto}
 .dhts button.on{background:var(--teal);border-color:var(--teal);color:var(--onacc)}
 .dhsum{font-size:13.5px;margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint);line-height:1.45}
 #dhBox[hidden]{display:none}
+/* --- vender giftcard --- */
+.giftbtn{border-style:solid;border-color:var(--line);background:var(--card);font-weight:600}
+.gcmes{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+.gcmes .gch{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}.gcmes .gch small{color:var(--mut)}
+.gcrow{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line)}.gcrow small{display:block;color:var(--mut);font-size:12.5px}
 /* --- listas como ventanas emergentes --- */
 .pk-w{position:relative;display:block}
 .pk-o{position:absolute;inset:0;z-index:1;cursor:pointer}
@@ -306,6 +311,7 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="btn" style="width:100%;margin-top:12px" id="addAppt">Agregar hora</button>
 </div>
 <button class="btn2 nobox" data-blkopen>Selecciona tus horas no disponibles</button>
+<button class="btn2 nobox giftbtn" data-gcopen>🎁 Vender giftcard</button>
 </section></main>
 <div id="confModal" class="modal conf nobox" hidden role="alertdialog" aria-modal="true" aria-labelledby="confTitle" aria-describedby="confMsg">
  <div class="mbox" style="max-width:380px;text-align:center">
@@ -412,6 +418,19 @@ input[type=checkbox]{min-height:0;width:auto}
   <div class="err" id="duoErr" role="alert"></div>
   <button class="btn" style="width:100%" type="button" data-duosave>Guardar descuentos</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-duoclose>Cancelar</button>
+ </div>
+</div>
+<div id="gcModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="gcTitle">
+ <div class="mbox" style="max-width:480px">
+  <div class="mhead"><h3 id="gcTitle">Vender giftcard</h3><button type="button" class="x" data-gcclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Cuando la clienta use la giftcard, agenda la hora con «¿Corresponde a una giftcard? → Sí».</p>
+  <label class="f" for="gcSvc">Servicio de regalo (opcional)</label><select id="gcSvc"></select>
+  <div class="row"><div><label class="f" for="gcM">Monto ($)</label><input type="number" id="gcM" min="0" step="1000" inputmode="numeric"></div><div><label class="f" for="gcF">Fecha de venta</label><input type="date" id="gcF"></div></div>
+  <div class="row"><div><label class="f" for="gcDe">Comprada por</label><input id="gcDe" maxlength="40" placeholder="Ej. Pedro" autocomplete="off"></div><div><label class="f" for="gcPara">Para</label><input id="gcPara" maxlength="40" placeholder="Ej. María" autocomplete="off"></div></div>
+  <div class="err" id="gcErr" role="alert"></div>
+  <button class="btn" style="width:100%;margin-top:4px" type="button" data-gcsave>Registrar venta</button>
+  <div class="gcmes" id="gcMes"></div>
+  <button class="pill" style="width:100%;margin-top:8px" type="button" data-gcclose>Cerrar</button>
  </div>
 </div>
 <div id="pickModal" class="modal pickm" hidden role="dialog" aria-modal="true" aria-labelledby="pickTit">
@@ -1005,6 +1024,10 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
+  else if(el=g('data-gcopen')){if(!readOnly)openGc();return}
+  else if(el=g('data-gcclose')){gcModal.hidden=true;return}
+  else if(e.target.id==='gcModal'){gcModal.hidden=true;return}
+  else if(el=g('data-gcsave')){saveGc();return}
   else if(el=g('data-mcli')){const id=el.dataset.mcli;
     if(!id){madCli=null;client.value='';phone.value='';fill();return}
     const pq=packList().find(x=>String(x.id)===id);if(!pq)return;madCli=pq.id;client.value=pq.c;phone.value=pq.f;
@@ -1062,6 +1085,29 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
+// --- vender giftcard (se guarda en masajes/finanzas → gifts, igual que antes desde el balance) ---
+const FINref=()=>firebase.firestore().collection('masajes').doc('finanzas');
+const hoyIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function gcMesDraw(){const mes=(gcF.value||hoyIso()).slice(0,7);gcMes.innerHTML='<div class="mut">Cargando ventas del mes…</div>';
+  FINref().get().then(s=>{const g=Object.values((s.exists&&s.data().gifts)||{}).filter(x=>String(x.d||'').slice(0,7)===mes).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+    const tot=g.reduce((a,x)=>a+(+x.m||0),0);
+    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${fmtD(x.d)}</small></span><b>${money(x.m)}</b></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
+  .catch(()=>{gcMes.innerHTML='<div class="mut">No se pudieron cargar las ventas del mes.</div>'})}
+function openGc(){
+  const cats={};S.services.filter(x=>!x.p&&+x.v>0).forEach((x,i)=>{(cats[x.c||'Otros']=cats[x.c||'Otros']||[]).push(x)});
+  gcSvc.innerHTML='<option value="">Monto libre (sin servicio)</option>'+Object.entries(cats).map(([c,l])=>`<optgroup label="${esc(c)}">${l.map(x=>`<option value="${esc(x.n)}">${esc(x.n)} · ${money(x.v)}</option>`).join('')}</optgroup>`).join('');
+  gcM.value='';gcF.value=hoyIso();gcDe.value='';gcPara.value='';gcErr.textContent='';gcModal.hidden=false;gcMesDraw();
+}
+function saveGc(){
+  const m=Math.round(+gcM.value),d=gcF.value,sv=gcSvc.value,de=gcDe.value.trim(),pa=gcPara.value.trim();
+  if(!(m>0)){gcErr.textContent='Escribe el monto de la giftcard.';gcM.focus();return}
+  if(!d){gcErr.textContent='Elige la fecha de venta.';return}
+  const c=[sv||'Giftcard',pa?'para '+pa:'',de?'de '+de:''].filter(Boolean).join(' · ').slice(0,80);
+  gcErr.textContent='';const id='h'+Date.now();
+  FINref().set({gifts:{[id]:{d,m,c,...(sv?{s:sv}:{}),...(pa?{para:pa}:{}),...(de?{de}:{})}}},{merge:true})
+    .then(()=>{showToast(`Giftcard registrada ✓ · ${money(m)}`);gcM.value='';gcDe.value='';gcPara.value='';gcSvc.value='';gcMesDraw()})
+    .catch(e=>{gcErr.textContent='No se pudo guardar ('+(e.code||'error')+'). Revisa tu conexión e intenta de nuevo.'});
+}
 // --- listas desplegables como ventanas emergentes: la lista original sigue igual (mismas opciones y valores) ---
 let pickSel=null;
 const pickNorm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -1085,12 +1131,14 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
   const b=e.target.closest('[data-pko]');if(b){choosePick(+b.dataset.pko);return}
   if(e.target.closest('[data-pickclose]')||e.target.id==='pickModal')closePick()});
 pickQ.addEventListener('input',pickDraw);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
   else if(t.id==='cat'){render();fill();return}
   else if(t.id==='svc'){fill();return}
+  else if(t.id==='gcSvc'){const x=S.services.find(s=>s.n===t.value);if(x)gcM.value=x.v;return}
+  else if(t.id==='gcF'){gcMesDraw();return}
   else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v);price.value=v==='pp'||v==='use'?0:k?k.v:s.v;return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
