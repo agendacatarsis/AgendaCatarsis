@@ -406,7 +406,8 @@ let wkS=new Date(mon),sel=iso(today),editing=false,custom=false,ref=null,skip=fa
 let deniedRead=false;
 function showDeny(u){deniedRead=true;denyBox.innerHTML=`<b>Esta cuenta no tiene acceso a la agenda.</b><div class="mut" style="margin-top:4px">Entraste como <b>${esc(u.email||'(sin correo)')}</b>. Si es tu cuenta, agrega este UID a la lista de <b>owner()</b> en las reglas de Firestore y toca Publicar:</div><code id="denyUid">${esc(u.uid)}</code><div class="row"><button class="pill" data-copyuid>Copiar UID</button><button class="pill" data-logout>Salir y entrar con otra cuenta</button></div>`;denyBox.hidden=false;sync.textContent='Sin acceso a la agenda'}
 const uidTag=u=>` Tu UID es: <code style="user-select:all;background:var(--tint);padding:2px 6px;border-radius:6px;word-break:break-all">${u.uid}</code> Pégalo en las reglas de Firestore.`;
-const push0=()=>ref.set({branches:S.branches,thers:S.thers,services:S.services,cfg:S.cfg,appts:S.appts},{merge:true}).catch(e=>{const u=firebase.auth().currentUser;sync.innerHTML=e.code==='permission-denied'&&u?'Sin permiso para guardar.'+uidTag(u):'No se pudo guardar en la nube ('+(e.code||'error')+')';return false});
+// mergeFields: reemplaza cada campo completo (así se borran días, horas o descuentos que quitaste) y conserva los demás campos del documento
+const push0=()=>ref.set({branches:S.branches,thers:S.thers,services:S.services,cfg:S.cfg,appts:S.appts},{mergeFields:['branches','thers','services','cfg','appts']}).catch(e=>{const u=firebase.auth().currentUser;sync.innerHTML=e.code==='permission-denied'&&u?'Sin permiso para guardar.'+uidTag(u):'No se pudo guardar en la nube ('+(e.code||'error')+')';return false});
 let pushP=Promise.resolve(),pubP=Promise.resolve();
 const push=()=>(pushP=push0());
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} if(ref&&!skip&&!readOnly)push();if(ref&&gotMain&&gotRes&&!readOnly)syncPublic()};
