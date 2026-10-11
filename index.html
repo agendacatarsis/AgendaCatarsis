@@ -84,9 +84,59 @@ input,select{min-height:46px}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 
 select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;margin:6px 0 2px;font:inherit}
+
+/* ===== Portada estilo agenda online ===== */
+.bar[hidden]{display:none}
+.hero{margin:-16px -16px 0}
+.cover{height:128px;background:radial-gradient(circle at 16% 28%,rgba(255,255,255,.38),transparent 40%),radial-gradient(circle at 86% 78%,rgba(255,255,255,.22),transparent 38%),linear-gradient(135deg,#dcc8a6 0%,#b09270 58%,#836a52 100%)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .cover{background:radial-gradient(circle at 16% 28%,rgba(255,255,255,.10),transparent 40%),linear-gradient(135deg,#4a3f31 0%,#3a3127 60%,#2a241d 100%)}}
+.hb{padding:0 16px;text-align:center;margin-top:-54px}
+.lgc{width:108px;height:108px;border-radius:50%;background:var(--card);border:4px solid var(--bg);display:grid;place-items:center;margin:0 auto 10px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.lgc img{height:80px;width:auto;mix-blend-mode:multiply}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .lgc img{mix-blend-mode:screen}}
+@media(min-width:760px){.cover{height:170px;border-radius:0 0 22px 22px}.hb{margin-top:-60px}}
+.hero h1{font-size:31px;line-height:1.05}
+.hero .sub{margin:6px 0 0;color:var(--acc);font-size:15px;font-weight:500}
+.hero .inf{margin:8px 0 0;font-size:14px;color:var(--mut);line-height:1.5}
+.hero .inf a{color:inherit}
+.hacts{display:flex;gap:8px;justify-content:center;margin:14px 0 0;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;font-size:14px;text-decoration:none;color:var(--ink);min-height:42px}
+.cat-wrap{max-width:760px;margin:0 auto}
+.ptabs{display:flex;border-bottom:1px solid var(--line);margin:22px 0 16px}
+.ptabs button{flex:1;border:0;background:none;padding:12px 6px;font-weight:600;font-size:15.5px;color:var(--mut);border-bottom:3px solid transparent;margin-bottom:-1px;cursor:pointer;min-height:48px}
+.ptabs button.on{color:var(--ink);border-bottom-color:var(--acc)}
+.srch{position:relative;margin:0 0 12px}
+.srch input{padding-left:42px;margin:0}
+.srch span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
+.cchips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 4px;padding:2px 16px 8px;scrollbar-width:none}
+.cchips::-webkit-scrollbar{display:none}
+.cchips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;font-size:14px;cursor:pointer;white-space:nowrap;min-height:42px}
+.cchips button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.sec{margin:16px 0 4px}
+.sec>h3{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:25px;margin:0 0 4px}
+.sec>h3 small{font:500 13px Barlow,sans-serif;color:var(--mut)}
+.grp{font:600 12.5px Barlow,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:14px 2px 6px}
+.svc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:8px 0;display:flex;flex-direction:column;gap:12px}
+.svc h4{margin:0;font-size:16.5px;font-weight:600;line-height:1.3}
+.sd{margin:4px 0 0;font-size:13.5px;color:var(--mut);line-height:1.4}
+.meta{display:inline-block;margin-top:6px;font-size:13.5px;color:var(--mut)}
+.sp{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pr{font-size:17.5px;font-weight:600;white-space:nowrap}.pr small{font-size:12.5px;color:var(--mut);font-weight:500}.pr s{color:var(--mut);font-size:13px;font-weight:400;margin-left:6px}
+.rbtn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:10px;background:var(--btn);color:var(--btnink);font-weight:600;padding:10px 20px;min-height:44px;cursor:pointer;text-decoration:none;white-space:nowrap;font-size:14.5px}
+.rbtn.wa{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.svc[hidden],.sec[hidden],.grp[hidden],#noRes[hidden],.pane[hidden]{display:none}
+@media(min-width:760px){.svc{flex-direction:row;align-items:center;gap:16px}.svc .si{flex:1}.sp{flex:none;gap:16px}}
+.info{line-height:1.5}.info h3{font-size:19px;margin:16px 0 4px}.info h3:first-child{margin-top:0}.info p{margin:0}
+.foot{text-align:center;color:var(--mut);font-size:13px;margin:30px 0 0}
+.sumh{font-size:21px;margin:0}
+.lnk{border:0;background:none;color:var(--acc);font-weight:600;padding:12px 0 0;cursor:pointer;font-size:14.5px;text-decoration:underline;min-height:44px}
+.tgrp{font:600 13px Barlow,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin:16px 0 8px}
+.ctabar{position:sticky;bottom:0;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(0,0,0,0),var(--bg) 35%);margin-top:6px}
+.ctabar .cta{margin-top:0}
+.hint{margin:4px 0 0;font-size:13.5px;color:var(--mut)}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
-<div id="app"><p class="mut">Cargando horas disponibles…</p></div>
+<div id="app"><p class="mut">Cargando servicios…</p></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -118,7 +168,7 @@ const fmt=x=>p2(Math.floor(x/60))+':'+p2(x%60);
 const hhmm=x=>p2(Math.floor(x/60))+p2(x%60);
 const toMin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 const t0=ymd(new Date()),HORIZON=42;
-let legacy={},tid='admin',oc2={},t2=0,ag=null,taken=new Set(),svcIdx=0,selDay=null,selT=null,week=mondayOf(t0),filt='all',step=1,busy=false,booked=null,notice='',avail={};
+let legacy={},tid='admin',oc2={},t2=0,ag=null,taken=new Set(),svcIdx=0,selDay=null,selT=null,week=mondayOf(t0),filt='all',step=0,busy=false,booked=null,notice='',avail={};
 const $=id=>document.getElementById(id);
 const TH=()=>{const l=(ag&&ag.terapeutas)||[];return l.length?l:[{id:'admin',n:'Daniela Velásquez',r:'Cosmetóloga y Masoterapeuta'}]};
 const curTh=()=>TH().find(t=>t.id===tid)||TH()[0];
@@ -136,7 +186,7 @@ const pD=x=>Math.max(0,(+x.v||0)-Math.max(0,+x.d||0));
 // Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de panelcatarsis.html
 const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
-let duo=false,dA=0,dB=0;
+let duo=false,dA=0,dB=0,ptab='svc',catF='Todos',qTxt='',lastStep=-1;
 const duoSvc=()=>{const L=DL(),a=L[dA],b=L[dB];if(!a||!b)return null;return{n:duoCode(a.n,b.n),nom:'Masaje dúo',txt:'Masaje dúo: '+a.n+' + '+b.n,m:DM(),v:pD(a)+pD(b),vo:(+a.v||0)+(+b.v||0),c:DUO,duo:1,a,b}};
 const svc=()=>duo?duoSvc():(SV()[svcIdx]||null);
 function timesFor(d,sv){
@@ -190,34 +240,100 @@ function sendMails(a,tel,mail){
   sendMail(EMAILJS.templateAdmin,p);
 }
 function stepper(){
-  const L=['Disponibilidad','Identificación','Confirmación'];
-  $('stepper').innerHTML=`<ol class="st">${L.map((l,i)=>{const n=i+1,c=n<step?'done':n===step?'cur':'';return `<li class="${c}"><span class="dot">${n<step?'✓':n}</span>${l}</li>`}).join('')}</ol>`;
-  $('back').hidden=step!==2;
+  const bar=document.querySelector('.bar');bar.hidden=step===0;
+  if(step===0)return;
+  const L=['Servicio','Fecha y hora','Tus datos','Confirmación'];
+  $('stepper').innerHTML=`<ol class="st">${L.map((l,i)=>{const c=i<step?'done':i===step?'cur':'';return `<li class="${c}"><span class="dot">${i<step?'✓':i+1}</span>${l}</li>`}).join('')}</ol>`;
+  $('back').hidden=!(step===1||step===2);
 }
 function card(){
-  const sv=svc();
-  const all=SV(),c0=[...new Set(all.map(s=>s.c||'Otros'))],cats=DL().length?(c0[0]===PROMO?[PROMO,DUO,...c0.slice(1)]:[DUO,...c0]):c0,cn=duo?DUO:((sv&&sv.c)||c0[0]),gr={};
-  all.forEach((s,i)=>{if((s.c||'Otros')!==cn)return;(gr[s.g||'']=gr[s.g||'']||[]).push(`<option value="${i}" ${i===svcIdx?'selected':''}>${esc(nomS(s))} · ${s.m} min · ${money(s.v)}${s.promo&&s.vo>s.v?' (antes '+money(s.vo)+')':''}</option>`)});
-  const sel=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
-  const tabs=cats.length>1?`<div class="tabs cats" style="margin:14px 0 0">${cats.map(c=>`<button data-cat="${esc(c)}" class="${c===cn?'on':''} ${c===PROMO||c===DUO?'promo':''}">${c===PROMO?'★ ':c===DUO?'👥 ':''}${esc(c)}</button>`).join('')}</div>`:'';
-  return `<aside class="card"><div class="who"><img class="logo" alt="Catarsis" src="${LOGO}"><div><b>Catarsis Osorno</b><span>${esc(curTh().n)}</span><span class="acc">${esc(curTh().r||'')}</span></div></div>
-  ${step===1&&TH().length>1?`<label class="f" for="th">Terapeuta</label><select id="th">${TH().map(t=>`<option value="${esc(t.id)}" ${t.id===tid?'selected':''}>${esc(t.n)}</option>`).join('')}</select>`:''}${step===1?tabs+(duo?duoCtl(sv):`<label class="f" for="svc">Servicio</label><select id="svc">${sel}</select>${sv&&sv.promo?'<p class="pnote">★ Precio especial de promoción</p>':''}${sv&&!sv.promo&&/^evaluaci/i.test(sv.n)?'<p class="pnote">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas por la evaluación se descuenta del tratamiento.</p>':''}`):''}
-  ${sv&&sv.w?`<dl><dt>Servicio</dt><dd>${esc(sv.n)}</dd><dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}</dd></dl>`:selT!==null&&sv&&sv.duo?`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd><dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`:selT!==null&&sv?`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd><dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd><dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd></dl>`:`<p class="mut" style="margin:14px 0 0">Elige un día y una hora para ver el detalle.</p>`}</aside>`;
+  const sv=svc(),th=curTh();
+  const thSel=step===1&&TH().length>1?`<label class="f" for="th">Profesional</label><select id="th">${TH().map(t=>`<option value="${esc(t.id)}" ${t.id===tid?'selected':''}>${esc(t.n)}</option>`).join('')}</select>`:'';
+  const notes=!sv?'':sv.promo?'<p class="pnote">★ Precio especial de promoción</p>':!sv.duo&&/^evaluaci/i.test(sv.n)?'<p class="pnote">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas por la evaluación se descuenta del tratamiento.</p>':'';
+  const cuando=sv&&selT!==null&&selDay?`<dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd>`:'';
+  let dl='';
+  if(sv&&sv.duo)dl=`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`;
+  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd>${sv.w?'':`<dt>Abono</dt><dd>${money(abonoSv(sv))}</dd>`}</dl>`;
+  return `<aside class="card"><h3 class="sumh">Tu reserva</h3>${thSel}${step===1&&duo?duoCtl(sv):''}${notes}${dl}${step===1?'<button type="button" class="lnk" data-go="svc">← Cambiar servicio</button>':''}</aside>`;
 }
 function duoCtl(sv){
   const L=DL(),gr={};L.forEach((x,i)=>{(gr[x.g||'']=gr[x.g||'']||[]).push(i)});
   const op=k=>Object.entries(gr).map(([g,ix])=>{const o=ix.map(i=>{const x=L[i],p=pD(x);return `<option value="${i}" ${i===k?'selected':''}>${esc(x.n)} · ${money(p)}${p<+x.v?' (antes '+money(x.v)+')':''}</option>`}).join('');return g?`<optgroup label="${esc(g)}">${o}</optgroup>`:o}).join('');
   return `<p class="pnote">👥 Para dos personas al mismo tiempo, ${DM()} minutos: cada una elige su masaje.</p>
   <label class="f" for="duo1">Masaje persona 1</label><select id="duo1">${op(dA)}</select>
-  <label class="f" for="duo2">Masaje persona 2</label><select id="duo2">${op(dB)}</select>
-  ${sv?`<div class="duotot">Total dúo: <b>${money(sv.v)}</b>${sv.vo>sv.v?` <s>${money(sv.vo)}</s>`:''} · ${sv.m} min<br>Abono para reservar: <b>${money(abonoSv(sv))}</b></div>`:''}`;
+  <label class="f" for="duo2">Masaje persona 2</label><select id="duo2">${op(dB)}</select>`;
 }
 function render(){
   stepper();
   if(ag===null)return;
+  if(step!==lastStep){if(lastStep!==-1)window.scrollTo(0,0);lastStep=step}
+  if(step===0)return view0($('app'));
   if(step===1)return view1($('app'));
   if(step===2)return view2($('app'));
   view3($('app'));
+}
+// ===== Portada: servicios por categoría (formato agenda online) =====
+const NEGOCIO='Catarsis Estética y Bienestar',ADDR='Cochrane 450, Osorno',MAPS='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(ADDR);
+const DN=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const norm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+function diasTxt(ds){const o=[1,2,3,4,5,6,0].filter(d=>(ds||[]).includes(d));if(!o.length)return '';
+  if(o.length===7)return 'Todos los días';
+  const ix=o.map(d=>(d+6)%7),seg=ix.every((v,i)=>!i||v===ix[i-1]+1);
+  if(seg&&o.length>2)return DN[o[0]]+' a '+DN[o[o.length-1]].toLowerCase();
+  return o.map((d,i)=>i?DN[d].toLowerCase():DN[d]).join(', ').replace(/, ([^,]*)$/,' y $1')}
+const horarioTxt=()=>{const h=H(),d=diasTxt(h.dias);return d?`${d} · ${h.desde} a ${h.hasta}`:''};
+const waLink=t=>WA()?`https://wa.me/${WA()}${t?'?text='+encodeURIComponent(t):''}`:'';
+const waTxtSvc=s=>`Hola, me gustaría agendar una ${s.n.charAt(0).toLowerCase()+s.n.slice(1)}. ¿Qué horarios tienen disponibles?`;
+function catalogo(){
+  const all=SV(),cats=[],by={},add=(c,it)=>{if(!by[c]){by[c]=[];cats.push(c)}by[c].push(it)};
+  all.forEach((s,i)=>{if(s.promo)add(PROMO,{i,s})});
+  if(DL().length)add(DUO,{duo:1});
+  all.forEach((s,i)=>{if(!s.promo)add(s.c||'Otros',{i,s})});
+  return {cats,by};
+}
+function svcCard(it){
+  if(it.duo){const L=DL(),mn=Math.min(...L.map(pD))*2;
+    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${DM()} min</span></div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
+  const s=it.s,nm=nomS(s),ev=!s.promo&&/^evaluaci/i.test(s.n),wl=s.w?waLink(waTxtSvc(s)):'';
+  const btn=s.w?(wl?`<a class="rbtn wa" href="${wl}" target="_blank" rel="noopener">💬 Agendar por WhatsApp</a>`:''):`<button class="rbtn" data-res="${it.i}">Reservar</button>`;
+  return `<article class="svc" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')))}"><div class="si"><h4>${esc(nm)}${s.promo?'<span class="pz">Promoción</span>':''}</h4>${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">⏱ ${s.m} min</span></div><div class="sp"><span class="pr">${money(s.v)}${s.promo&&s.vo>s.v?`<s>${money(s.vo)}</s>`:''}</span>${btn}</div></article>`;
+}
+function view0(app){
+  const {cats,by}=catalogo();if(catF!=='Todos'&&!cats.includes(catF))catF='Todos';
+  const foc=document.activeElement&&document.activeElement.id==='q';
+  const ic=c=>c===PROMO?'★ ':c===DUO?'👥 ':'';
+  const secs=cats.map(c=>{let last=null;const its=by[c];
+    return `<section class="sec" data-sec="${esc(c)}"><h3>${ic(c)}${esc(c)}<small>${its.length} servicio${its.length==1?'':'s'}</small></h3>`+its.map(it=>{const g=it.s&&it.s.g&&it.s.g!==c?it.s.g:'';let h='';if(g!==last){if(g)h=`<h5 class="grp">${esc(g)}</h5>`;last=g}return h+svcCard(it)}).join('')+'</section>'}).join('');
+  const A=+(ag&&ag.abono)||0,ab=A>0&&A<=100?A+'% del valor':money(A);
+  app.innerHTML=`<header class="hero"><div class="cover" aria-hidden="true"></div><div class="hb"><div class="lgc"><img class="logo" alt="Catarsis" src="${LOGO}"></div>
+  <h1>${NEGOCIO}</h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
+  <p class="inf">📍 <a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a>${horarioTxt()?`<br>🕒 ${horarioTxt()}`:''}</p>
+  <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">🗺️ Cómo llegar</a></div></div></header>
+  <div class="cat-wrap"><div class="ptabs" role="tablist"><button role="tab" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button><button role="tab" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
+  <div class="pane" ${ptab==='svc'?'':'hidden'}>
+   <div class="srch"><span>🔍</span><input id="q" type="search" placeholder="Buscar servicio" autocomplete="off" aria-label="Buscar servicio" value="${esc(qTxt)}"></div>
+   ${cats.length>1?`<div class="cchips">${['Todos',...cats].map(c=>`<button data-cf="${esc(c)}" class="${c===catF?'on':''}">${ic(c)}${esc(c)}</button>`).join('')}</div>`:''}
+   ${secs||'<p class="mut">Pronto publicaremos nuestros servicios.</p>'}
+   <p class="mut" id="noRes" hidden>No encontramos servicios con ese nombre.</p>
+  </div>
+  <div class="pane info card" ${ptab==='info'?'':'hidden'}>
+   <h3>Dirección</h3><p>📍 ${ADDR} · <a href="${MAPS}" target="_blank" rel="noopener">Ver en el mapa</a></p>
+   ${horarioTxt()?`<h3>Horario de atención</h3><p>${horarioTxt()}</p>`:''}
+   <h3>Atiende</h3><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
+   ${WA()?`<h3>Contacto</h3><p><a href="${waLink()}" target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a></p>`:''}
+   <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo.</p>
+  </div>
+  <p class="foot">${NEGOCIO} · ${ADDR}</p></div>`;
+  applyF();
+  if(foc){const q=$('q');q.focus();q.setSelectionRange(q.value.length,q.value.length)}
+}
+function applyF(){
+  const q=norm(qTxt.trim());let any=false;
+  document.querySelectorAll('#app .sec').forEach(sec=>{const okC=catF==='Todos'||sec.dataset.sec===catF;let n=0;
+    sec.querySelectorAll('.svc').forEach(c=>{const v=okC&&(!q||c.dataset.q.includes(q));c.hidden=!v;if(v)n++});
+    sec.querySelectorAll('.grp').forEach(g=>{let k=g.nextElementSibling,vis=false;while(k&&k.classList.contains('svc')){if(!k.hidden)vis=true;k=k.nextElementSibling}g.hidden=!vis});
+    sec.hidden=!n;if(n)any=true});
+  const nr=$('noRes');if(nr)nr.hidden=any||!document.querySelector('#app .sec');
 }
 // Servicios que se piden por WhatsApp (ej. evaluación de acrocordones): sin horas; la hora se agenda desde el panel
 function waView(sv){
@@ -228,22 +344,22 @@ function waView(sv){
 }
 function view1(app){
   const sv=svc();
-  if(!sv){app.innerHTML='<div class="card" style="max-width:520px;margin:auto"><h3>Reservas no disponibles por ahora</h3></div>';return}
+  if(!sv){step=0;return render()}
   if(sv.w){app.innerHTML=`<div class="grid">${card()}${waView(sv)}</div>`;return}
   const keys=Object.keys(avail);
   if(!keys.length){app.innerHTML=`<div class="grid">${card()}<div class="card"><h3>No hay horas disponibles por ahora</h3><p class="mut">Prueba con otro servicio o vuelve más tarde.</p>${WA()?`<a class="cta" href="https://wa.me/${WA()}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>`:''}</div></div>`;return}
   const wEnd=addD(week,6),lastD=addD(t0,HORIZON-1);let days='';
   for(let i=0;i<7;i++){const d=addD(week,i),h=!!avail[d];days+=`<button class="day ${h?'has':''} ${d===selDay?'on':''}" ${h?'':'disabled'} data-day="${d}" aria-pressed="${d===selDay}"><small>${DC[toD(d).getDay()]}</small><b>${toD(d).getDate()}</b></button>`}
-  const w0=toD(week),w1=toD(wEnd);
-  const day=(avail[selDay]||[]).filter(x=>filt==='all'||(filt==='am'?x<780:x>=780));
+  const w0=toD(week),w1=toD(wEnd),day=avail[selDay]||[];
+  const grupo=(t,l)=>l.length?`<div class="tgrp">${t}</div><div class="chips">${l.map(x=>`<button class="chip ${x===selT?'on':''}" data-t="${x}" aria-pressed="${x===selT}"><b>${fmt(x)}</b></button>`).join('')}</div>`:'';
   app.innerHTML=`<div class="grid">${card()}<section>
   ${notice?`<div class="note" role="alert">${esc(notice)}</div>`:''}
-  <h3>Semana del ${w0.getDate()}${w0.getMonth()!==w1.getMonth()?' de '+MES[w0.getMonth()]:''} al ${w1.getDate()} de ${MES[w1.getMonth()]}</h3>
+  <h3>Elige fecha y hora</h3>
+  <p class="hint" style="margin:-6px 0 12px">Semana del ${w0.getDate()}${w0.getMonth()!==w1.getMonth()?' de '+MES[w0.getMonth()]:''} al ${w1.getDate()} de ${MES[w1.getMonth()]}</p>
   <div class="wk"><button class="nav" data-wk="-1" aria-label="Semana anterior" ${week<=mondayOf(t0)?'disabled':''}>‹</button><div class="days">${days}</div><button class="nav" data-wk="1" aria-label="Semana siguiente" ${wEnd>=lastD?'disabled':''}>›</button></div>
-  <h3>${selDay?cap(fmtD(selDay)):''}</h3>
-  <div class="tabs">${[['all','Todos los horarios'],['am','Mañana'],['pm','Tarde']].map(([k,l])=>`<button data-f="${k}" class="${filt===k?'on':''}">${l}</button>`).join('')}</div>
-  <div class="chips">${day.map(x=>`<button class="chip ${x===selT?'on':''}" data-t="${x}" aria-pressed="${x===selT}"><b>${fmt(x)}</b></button>`).join('')||'<p class="mut">No hay horas en este horario.</p>'}</div>
-  <button class="cta" data-go="next" ${selT!==null?'':'disabled'}>Reservar</button></section></div>`;
+  <h3 style="font-size:20px;margin:0">${selDay?cap(fmtD(selDay)):''}</h3>
+  ${grupo('Mañana',day.filter(x=>x<780))}${grupo('Tarde',day.filter(x=>x>=780))}${day.length?'':'<p class="mut">No hay horas este día.</p>'}
+  <div class="ctabar"><button class="cta" data-go="next" ${selT!==null?'':'disabled'}>${selT!==null?`Continuar · ${fmt(selT)}`:'Elige una hora para continuar'}</button></div></section></div>`;
 }
 function view2(app){
   app.innerHTML=`<div class="grid">${card()}<form id="form" novalidate><h3>Tus datos</h3><p class="mut" style="margin:0 0 6px">${MAIL_ON?'Te enviaremos el detalle de tu reserva por correo.':'Los usaremos solo para contactarte por tu reserva.'}</p>
@@ -251,7 +367,7 @@ function view2(app){
   <label class="f" for="tel">Teléfono</label><input id="tel" type="tel" placeholder="9 1234 5678" autocomplete="tel" maxlength="20" required>
   ${MAIL_ON?`<label class="f" for="mail">Correo</label><input id="mail" type="email" inputmode="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" maxlength="80" required>`:''}
   <input id="hp" name="sitio_web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-  <div class="err" id="err" role="alert"></div><div class="acts"><button class="cta alt" type="button" data-go="back">Volver</button><button class="cta" id="send" type="submit">Solicitar hora</button></div></form></div>`;
+  <div class="err" id="err" role="alert"></div><div class="acts"><button class="cta alt" type="button" data-go="back">Volver</button><button class="cta" id="send" type="submit">Confirmar reserva</button></div></form></div>`;
   t2=Date.now();$('nom').focus();
 }
 let cdT=null;
@@ -285,16 +401,18 @@ function view3(app){
 }
 document.addEventListener('click',e=>{
   const g=k=>e.target.closest('['+k+']');let el;
-  if(el=g('data-day')){selDay=el.dataset.day;selT=null;notice=''}
+  if(el=g('data-res')){const v=el.dataset.res;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
+  else if(el=g('data-cf')){catF=el.dataset.cf;document.querySelectorAll('.cchips button').forEach(b=>b.classList.toggle('on',b===el));applyF();const s=document.querySelector('.srch');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({behavior:'smooth'});return}
+  else if(el=g('data-pt'))ptab=el.dataset.pt;
+  else if(el=g('data-day')){selDay=el.dataset.day;selT=null;notice=''}
   else if(el=g('data-wk')){week=addD(week,7*+el.dataset.wk);const d=Object.keys(avail).find(x=>x>=week&&x<=addD(week,6));if(d){selDay=d;selT=null}}
-  else if(el=g('data-cat')){const c=el.dataset.cat;if(c===DUO)duo=true;else{duo=false;svcIdx=SV().findIndex(s=>(s.c||'Otros')===c);if(svcIdx<0)svcIdx=0}selT=null;notice='';recompute()}
-  else if(el=g('data-f'))filt=el.dataset.f;
   else if(el=g('data-t')){selT=+el.dataset.t;notice=''}
-  else if(el=g('data-go')){const v=el.dataset.go;if(v==='next'&&selT!==null)step=2;else if(v==='back')step=1;else if(v==='again'){step=1;selT=null;booked=null}else return}
-  else if(e.target.id==='back')step=1;
+  else if(el=g('data-go')){const v=el.dataset.go;if(v==='next'&&selT!==null)step=2;else if(v==='back')step=1;else if(v==='svc'){step=0;selT=null;notice=''}else if(v==='again'){step=0;selT=null;booked=null}else return}
+  else if(e.target.closest('#back')){step=step===2?1:0;if(step===0){selT=null;notice=''}}
   else return;
   render();
 });
+document.addEventListener('input',e=>{if(e.target.id==='q'){qTxt=e.target.value;applyF()}});
 document.addEventListener('change',e=>{if(e.target.id==='th'){tid=e.target.value;selT=null;notice='';recompute();render();return}
   if(e.target.id==='svc'){svcIdx=+e.target.value;selT=null;notice='';recompute();render()}
   if(e.target.id==='duo1'||e.target.id==='duo2'){if(e.target.id==='duo1')dA=+e.target.value;else dB=+e.target.value;selT=null;notice='';recompute();render()}});
