@@ -649,12 +649,14 @@ const money=n=>'$'+Number(n||0).toLocaleString('es-CL');
 const end=(t,m)=>{const [h,n]=t.split(':').map(Number);const x=h*60+n+m;return String(Math.floor(x/60)%24).padStart(2,'0')+':'+String(x%60).padStart(2,'0')};
 const wa=p=>{let d=p.replace(/\D/g,'');if(d.length===9)d='56'+d;return 'https://wa.me/'+d};
 const opt=(arr,v)=>arr.map(([k,l])=>`<option value="${k}" ${k===v?'selected':''}>${l}</option>`).join('');
+const enPack=a=>!!(a&&a.pk&&+a.ps>1);
 const waMsg=a=>{
   const du=esDuo(a),tot=pagoTotal(a),A=du?duoAbono():tot?+a.v:+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
   const L=['Hola'+(a.c?' '+a.c:'')+', te escribimos de Catarsis Estética y Bienestar.',''];
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
-  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),'• Valor: '+money(a.v));
-  if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
+  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),enPack(a)?'• Sesión '+a.ps+' de '+a.pn+' de tu pack (ya pagado)':'• Valor: '+money(a.v));
+  if(pag&&a.sp&&enPack(a)){}
+  else if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
   else if(pag&&tot)L.push('• Pagado: '+money(ab));
   else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
   else if(!conf){L.push('',tot?'Para confirmarla, transfiere el valor completo de '+money(ab)+' dentro de '+plz(S.cfg.plazoMin)+':':'Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);L.push('','Después envíanos el comprobante por este chat.')}
@@ -743,7 +745,7 @@ function pkFill(s){const k=(s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.
   pk.innerHTML=`<option value="">Sesión individual · ${money(s.v)}</option>`+k.map(q=>`<option value="${q.s}">Pack ${q.s} sesiones · ${money(q.v)} (1ª sesión)</option>`).join('')}
 // Nombre y datos del pack de la hora que se agrega
 function pkInfo(s,nid){const v=pkBox.hidden?'':pk.value;
-  if(v==='use'){const p=packList().find(x=>x.id==madCli);if(p){const k=p.usadas+1;return{s:`${p.base} · Pack ${p.n} (sesión ${k} de ${p.n})`,v:0,x:{pk:p.id,ps:k,pn:p.n}}}}
+  if(v==='use'){const p=packList().find(x=>x.id==madCli);if(p){const k=p.usadas+1;return{s:`${p.base} · Pack ${p.n} (sesión ${k} de ${p.n})`,v:0,x:{pk:p.id,ps:k,pn:p.n,p:'pagado',sp:1,...(estado.value==='reservada'?{e:'confirmada'}:{})}}}}
   if(v==='pp')return{s:s.n+' · sesión de pack',x:{}};
   const q=(s.k||[]).find(x=>String(x.s)===v);if(q)return{s:`${s.n} · Pack ${q.s} (sesión 1 de ${q.s})`,x:{pk:nid,ps:1,pn:+q.s}};
   return{s:s.n,x:{}}}
@@ -963,7 +965,7 @@ function render(){
   const pend=L.filter(a=>!['disponible','bloqueado'].includes(a.e)&&a.p==='pendiente').length;
   dayInfo.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} agendada${L.length==1?'':'s'}`+(pend?` · ${pend} abono${pend==1?'':'s'} pendiente${pend==1?'':'s'}`:''):'Sin horas agendadas.';
   viewbar.innerHTML=`<button data-view="lista" class="${dayView==='lista'?'on':''}">Lista</button><button data-view="linea" class="${dayView==='linea'?'on':''}">Línea de tiempo</button>`;
-  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
+  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
   slots.innerHTML=slotsHtml();blkDay.textContent=fmtD(sel);fillTimes();
   save();
 }
