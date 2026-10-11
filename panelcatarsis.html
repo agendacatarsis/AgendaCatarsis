@@ -194,16 +194,18 @@ input[type=checkbox]{min-height:0;width:auto}
 .prow.on .pin{display:grid}
 .prow .pin label{font-size:12px;color:var(--mut);display:block}
 /* --- días y horas de masajes dúo --- */
-.duobtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
-.duobtns .promobtn{margin:0;flex-direction:column;gap:2px;min-height:58px;padding:8px 10px;line-height:1.2}
-.duobtns .promobtn small{font-size:12px;color:var(--mut);font-weight:400}
-.dhrow{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.dhrow label{display:flex;gap:8px;align-items:center;font-size:15px;cursor:pointer}
-.dhrow label input{width:22px;height:22px;min-height:0;margin:0;accent-color:var(--teal)}
-.dhrow input[type=time]{padding:8px 6px;min-height:42px;font-size:14px}
-.dhrow.off input[type=time]{opacity:.35;pointer-events:none}
-.dhhead{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;font-size:12px;color:var(--mut);margin:10px 0 0}
-#dhRows[hidden]{display:none}
+.dhopen{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;text-align:left;margin:12px 0 4px;padding:10px 14px;border-radius:14px}
+.dhopen small{display:block;font-size:12.5px;color:var(--mut);font-weight:400;margin-top:2px}
+.dhdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:12px 0 8px}
+.dhdays button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:7px 0;font-size:13px;cursor:pointer;line-height:1.15;min-height:48px;color:var(--ink)}
+.dhdays button small{display:block;font-size:11px;color:var(--mut);min-height:13px}
+.dhdays button.has{background:var(--tint)}
+.dhdays button.on{background:var(--teal);border-color:var(--teal);color:var(--onacc)}.dhdays button.on small{color:var(--onacc)}
+.dhts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}
+.dhts button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 0;font:600 14px Barlow,sans-serif;cursor:pointer;min-height:42px;color:var(--ink)}
+.dhts button.on{background:var(--teal);border-color:var(--teal);color:var(--onacc)}
+.dhsum{font-size:13.5px;margin:8px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint);line-height:1.45}
+#dhBox[hidden]{display:none}
 /* --- editar horario de una cita --- */
 .hrbtn{white-space:nowrap;font-size:13px}
 .ro .hrbtn{display:none!important}
@@ -329,13 +331,19 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-horaclose>Cancelar</button>
  </div>
 </div>
-<div id="dhModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dhTitle">
+<div id="dhModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dhTitle" style="z-index:30">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="dhTitle">Días y horas de masajes dúo</h3><button type="button" class="x" data-dhclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <p class="mut" style="font-size:14px;margin:6px 0 4px">Elige cuándo se pueden reservar <b>masajes dúo</b> en tu página de reservas (por ejemplo, solo los días que tienes a la segunda terapeuta). Tus horas ya agendadas o bloqueadas se descuentan igual.</p>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Elige en qué horas se pueden reservar <b>masajes dúo</b> en tu página de reservas (por ejemplo, solo cuando tienes a la segunda terapeuta). Si una de esas horas ya está agendada o bloqueada, no se muestra.</p>
   <label class="duosw"><input type="radio" name="dhmode" value="gen" id="dhGen"> <span>Igual a mi horario de atención<br><small class="mut" id="dhGenTxt"></small></span></label>
-  <label class="duosw"><input type="radio" name="dhmode" value="esp" id="dhEsp"> Horario especial para masajes dúo</label>
-  <div id="dhRows"></div>
+  <label class="duosw"><input type="radio" name="dhmode" value="esp" id="dhEsp"> Solo en horas específicas</label>
+  <div id="dhBox">
+   <div class="dhdays" id="dhDays"></div>
+   <div class="mut" id="dhDayTit" style="font-size:13.5px;margin:4px 0 2px"></div>
+   <div class="dhts" id="dhTimes"></div>
+   <button type="button" class="pill" style="width:100%;margin-top:4px" data-dhclr>Quitar las horas de este día</button>
+   <div class="dhsum" id="dhSum"></div>
+  </div>
   <div class="err" id="dhErr" role="alert"></div>
   <button class="btn" style="width:100%;margin-top:6px" type="button" data-dhsave>Guardar días y horas</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-dhclose>Cancelar</button>
@@ -348,6 +356,7 @@ input[type=checkbox]{min-height:0;width:auto}
   <label class="duosw"><input type="checkbox" id="duoShow"> Mostrar «Masajes dúo» en la página de reservas</label>
   <div class="row"><div><label class="f" for="duoAbIn">Abono dúo ($)</label><input type="number" inputmode="numeric" id="duoAbIn" min="0" step="1000"></div><div><label class="f" for="duoMinIn">Duración dúo (min)</label><input type="number" inputmode="numeric" id="duoMinIn" min="5" max="480" step="5"></div></div>
   <div class="mut" style="font-size:12.5px;margin:4px 0 0 4px">El abono se descuenta del total. La duración es la misma para cualquier par de masajes.</div>
+  <button type="button" class="pill dhopen" data-dhopen><span>📅 Días y horas disponibles<small id="dhBtnTxt"></small></span><span aria-hidden="true">›</span></button>
   <div id="duoList"></div>
   <div class="err" id="duoErr" role="alert"></div>
   <button class="btn" style="width:100%" type="button" data-duosave>Guardar descuentos</button>
@@ -385,6 +394,8 @@ function migrate(){
   if(!S.cfg.acro){S.cfg.acro=1;needPush=true;if(!S.services.some(x=>/acrocord/i.test(x.n||'')))S.services.push({'n':'Evaluación de acrocordones','m':15,'v':5000,'c':'Acrocordones','g':'','w':1},{'n':'Tratamiento de acrocordones','m':30,'v':0,'c':'Acrocordones','g':'','p':1})}
   if(!S.cfg.acro2){S.cfg.acro2=1;needPush=true;const ev=S.services.find(x=>x.n==='Evaluación de acrocordones');if(ev)ev.w=1}
   S.cfg.duo=Object.assign({on:true,ab:20000,m:50,d:{}},S.cfg.duo||{});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};
+  {const h=S.cfg.duo.h,mm=t=>{const [a,b]=String(t).split(':').map(Number);return a*60+b},f=x=>String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');
+   if(h&&!h.t&&h.d){const t={};Object.entries(h.d).forEach(([k,r])=>{const o=[];if(r&&r.a&&r.b)for(let x=mm(r.a);x+(+S.cfg.duo.m||50)<=mm(r.b);x+=30)o.push(f(x));if(o.length)t[k]=o});S.cfg.duo.h={on:!!h.on,t}}} // días y horas dúo: de rangos a horas específicas
   if(S.cfg.abono>0&&S.cfg.abono<=100)S.cfg.abono=10000;
   S.cfg.horario=Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},S.cfg.horario||{});
   S.appts.forEach(a=>{a.k=a.k.replace('Mi sucursal','Catarsis Osorno').replace('Terapeuta 1','Daniela Velásquez');a.e=a.e||'reservada';a.p=a.p||'pendiente';a.v=a.v||0;a.f=a.f||''});
@@ -648,27 +659,36 @@ function savePromo(){
 }
 // --- días y horas en que se pueden reservar masajes dúo ---
 const DHN=[[1,'Lunes'],[2,'Martes'],[3,'Miércoles'],[4,'Jueves'],[5,'Viernes'],[6,'Sábado'],[0,'Domingo']];
-const dhOn=()=>{const h=(S.cfg.duo||{}).h;return !!(h&&h.on&&h.d&&Object.keys(h.d).length)};
+const dhOn=()=>{const h=(S.cfg.duo||{}).h;return !!(h&&h.on&&h.t&&Object.values(h.t).some(l=>Array.isArray(l)&&l.length))};
 const horarioGenTxt=()=>{const h=S.cfg.horario,ds=DHN.filter(([v])=>(h.dias||[]).includes(v)).map(([,n])=>n.slice(0,3));return ds.length?`${ds.join(', ')} · ${h.desde} a ${h.hasta}`:'Sin días de atención'};
-function openDH(){
-  const h=(S.cfg.duo||{}).h||{},on=dhOn(),g=S.cfg.horario,cur=h.d&&Object.keys(h.d).length?h.d:null;
-  dhGen.checked=!on;dhEsp.checked=on;dhGenTxt.textContent=horarioGenTxt();
-  dhRows.innerHTML=`<div class="dhhead"><span>Día</span><span>Desde</span><span>Hasta</span></div>`+DHN.map(([v,n])=>{const r=cur?cur[v]:((g.dias||[]).includes(v)?{a:g.desde,b:g.hasta}:null),a=r?r.a:g.desde,b=r?r.b:g.hasta;
-    return `<div class="dhrow ${r?'':'off'}"><label><input type="checkbox" data-dhd="${v}" ${r?'checked':''}>${n}</label><input type="time" step="900" data-dha="${v}" value="${a}" aria-label="${n} desde"><input type="time" step="900" data-dhb="${v}" value="${b}" aria-label="${n} hasta"></div>`}).join('');
-  dhRows.hidden=!on;dhErr.textContent='';dhModal.hidden=false;
+const yLista=l=>l.join(', ').replace(/, ([^,]*)$/,' y $1');
+const dhResumen=t=>{const L=DHN.filter(([v])=>(t[v]||[]).length).map(([v,n])=>`<b>${n}:</b> ${yLista(t[v].slice().sort())}`);return L.length?L.join('<br>'):'Aún no eliges horas.'};
+const dhBtnSet=()=>{const el=document.getElementById('dhBtnTxt');if(!el)return;const t=((S.cfg.duo||{}).h||{}).t||{},n=Object.values(t).reduce((a,l)=>a+(l||[]).length,0);el.textContent=dhOn()?`Horas específicas · ${n} hora${n==1?'':'s'} en ${Object.values(t).filter(l=>(l||[]).length).length} día${Object.values(t).filter(l=>(l||[]).length).length==1?'':'s'}`:'Igual a tu horario de atención'};
+let dhT={},dhDay=3;
+function dhSlots(){const g=S.cfg.horario,a=Math.min(480,toMin(g.desde||'10:00')),b=Math.max(1260,toMin(g.hasta||'19:00')),o=[];for(let x=Math.floor(a/30)*30;x<b;x+=30)o.push(hm(x));return o}
+function dhDraw(){
+  dhDays.innerHTML=DHN.map(([v,n])=>{const k=(dhT[v]||[]).length;return `<button type="button" data-dhday="${v}" class="${v==dhDay?'on':''} ${k?'has':''}" aria-pressed="${v==dhDay}">${n.slice(0,3)}<small>${k?k+' h':''}</small></button>`}).join('');
+  const sel=new Set(dhT[dhDay]||[]),nm=(DHN.find(x=>x[0]==dhDay)||[])[1]||'';
+  dhDayTit.innerHTML=`<b>${nm}:</b> toca las horas de inicio disponibles para masajes dúo (${duoMin()} min).`;
+  dhTimes.innerHTML=dhSlots().map(x=>`<button type="button" data-dht="${x}" class="${sel.has(x)?'on':''}" aria-pressed="${sel.has(x)}">${x}</button>`).join('');
+  dhSum.innerHTML=dhResumen(dhT);
 }
-function dhSync(){dhRows.hidden=!dhEsp.checked;dhRows.querySelectorAll('[data-dhd]').forEach(cb=>cb.closest('.dhrow').classList.toggle('off',!cb.checked));dhErr.textContent=''}
+function openDH(){
+  const h=(S.cfg.duo||{}).h||{},on=dhOn();
+  dhT={};if(h.t)Object.entries(h.t).forEach(([k,l])=>{if(Array.isArray(l)&&l.length)dhT[k]=l.slice()});
+  else if(h.d)Object.entries(h.d).forEach(([k,r])=>{const o=[];if(r&&r.a&&r.b)for(let x=toMin(r.a);x+duoMin()<=toMin(r.b);x+=30)o.push(hm(x));if(o.length)dhT[k]=o}); // versión anterior (rangos)
+  const f=DHN.find(([v])=>(dhT[v]||[]).length);dhDay=f?f[0]:3;
+  dhGen.checked=!on;dhEsp.checked=on;dhGenTxt.textContent=horarioGenTxt();dhBox.hidden=!on;dhErr.textContent='';dhDraw();
+  duoModal.hidden=true;dhModal.hidden=false;
+}
+function closeDH(){dhModal.hidden=true;duoModal.hidden=false;dhBtnSet()}
+function dhSync(){dhBox.hidden=!dhEsp.checked;dhErr.textContent=''}
 function saveDH(){
   const D=S.cfg.duo;
-  if(dhGen.checked){D.h={on:false,d:(D.h&&D.h.d)||{}};dhModal.hidden=true;render();showToast('Masajes dúo: mismo horario de atención ✓');return}
-  const d={};let bad='';
-  dhRows.querySelectorAll('[data-dhd]:checked').forEach(cb=>{if(bad)return;const v=cb.dataset.dhd,n=(DHN.find(x=>x[0]==v)||[])[1],a=dhRows.querySelector(`[data-dha="${v}"]`).value,b=dhRows.querySelector(`[data-dhb="${v}"]`).value;
-    if(!a||!b||toMin(b)<=toMin(a)){bad=`Revisa el horario del ${n.toLowerCase()}: «hasta» debe ser después de «desde».`;return}
-    if(toMin(b)-toMin(a)<duoMin()){bad=`El ${n.toLowerCase()} tiene menos tiempo que un masaje dúo (${duoMin()} min).`;return}
-    d[v]={a,b}});
-  if(!bad&&!Object.keys(d).length)bad='Marca al menos un día, o elige «Igual a mi horario de atención».';
-  if(bad){dhErr.textContent=bad;return}
-  D.h={on:true,d};dhModal.hidden=true;render();showToast(`Días y horas dúo guardados ✓ · ${Object.keys(d).length} día${Object.keys(d).length==1?'':'s'}`);
+  if(dhGen.checked){D.h={on:false,t:dhT};closeDH();render();showToast('Masajes dúo: mismo horario de atención ✓');return}
+  const t={};Object.entries(dhT).forEach(([k,l])=>{if(l&&l.length)t[k]=[...new Set(l)].sort()});
+  if(!Object.keys(t).length){dhErr.textContent='Elige al menos una hora, o marca «Igual a mi horario de atención».';return}
+  D.h={on:true,t};closeDH();render();const n=Object.values(t).reduce((a,l)=>a+l.length,0);showToast(`Horas dúo guardadas ✓ · ${n} hora${n==1?'':'s'}`);
 }
 // --- editar horario (inicio, término y duración) de una cita ---
 let horaId=null;
@@ -695,7 +715,7 @@ const duoAbono=()=>{const a=+((S.cfg.duo||{}).ab);return a>=0?a:20000};
 const duoMin=()=>{const m=Math.round(+((S.cfg.duo||{}).m));return m>=5&&m<=480?m:50};
 const duoLista=()=>{const m=S.services.filter(x=>/maso|masaj/i.test(x.c||''));return m.length?m:S.services.filter(x=>/masaj/i.test(x.n||''))};
 const duoDesc=x=>{const d=Math.round(+(((S.cfg.duo||{}).d||{})[x.n])||0);return Math.max(0,Math.min(+x.v||0,d))};
-const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),m:duoMin(),h:dhOn()?{d:D.h.d}:null,l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
+const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),m:duoMin(),h:dhOn()?{t:D.h.t}:null,l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
 // Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de index.html
 const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
@@ -709,7 +729,7 @@ function openDuo(){
   duoList.innerHTML=L.length?Object.entries(gr).map(([g,ix])=>(g?`<div class="pgrp">${esc(g)}</div>`:'')+ix.map(i=>{const x=L[i],d=duoDesc(x);
     return `<div class="prow duorow ${d?'on':''}"><span class="pn">${esc(x.n)}<small>Valor normal: ${money(x.v)}</small><small class="dp">${duoTxt(x,d)}</small></span><label>Descuento ($)<input type="number" inputmode="numeric" min="0" step="500" data-dd="${i}" value="${d}"></label></div>`}).join('')).join('')
     :'<p class="mut">No hay masajes en tu lista de servicios. Agrega servicios en la categoría «Masoterapia».</p>';
-  duoErr.textContent='';duoModal.hidden=false;
+  duoErr.textContent='';dhBtnSet();duoModal.hidden=false;
 }
 function saveDuo(){
   const L=duoLista(),d={};let bad='';
@@ -763,7 +783,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><div class="duobtns"><button type="button" class="btn finbtn promobtn" data-duoopen><span>👥 Descuentos dúo</span><small>${S.cfg.duo.on?((n=>n?`${n} con descuento`:'Sin descuentos')(Object.keys(S.cfg.duo.d||{}).length)):'Oculto en reservas'}</small></button><button type="button" class="btn finbtn promobtn" data-dhopen><span>📅 Días y horas dúo</span><small>${dhOn()?'Horario especial':'Igual a tu horario'}</small></button></div><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
+    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
   }
   const single=S.branches.length===1&&S.thers.length===1;
   who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
@@ -830,8 +850,11 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
   else if(el=g('data-dhopen')){if(!readOnly)openDH();return}
-  else if(el=g('data-dhclose')){dhModal.hidden=true;return}
-  else if(e.target.id==='dhModal'){dhModal.hidden=true;return}
+  else if(el=g('data-dhclose')){closeDH();return}
+  else if(e.target.id==='dhModal'){closeDH();return}
+  else if(el=g('data-dhday')){dhDay=+el.dataset.dhday;dhDraw();return}
+  else if(el=g('data-dht')){const x=el.dataset.dht,l=dhT[dhDay]=dhT[dhDay]||[],i=l.indexOf(x);if(i>=0)l.splice(i,1);else l.push(x);dhErr.textContent='';dhDraw();return}
+  else if(el=g('data-dhclr')){dhT[dhDay]=[];dhDraw();return}
   else if(el=g('data-dhsave')){saveDH();return}
   else if(el=g('data-duoopen')){if(!readOnly)openDuo();return}
   else if(el=g('data-duoclose')){duoModal.hidden=true;return}
@@ -871,7 +894,7 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
@@ -880,8 +903,7 @@ document.addEventListener('change',e=>{
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
   else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}
-  else if(t.name==='dhmode'||d.dhd!==undefined){dhSync();return}
-  else if(d.dha!==undefined||d.dhb!==undefined){dhErr.textContent='';return}
+  else if(t.name==='dhmode'){dhSync();return}
   else if(t.id==='time'){timeX.classList.toggle('hide',time.value!=='__otra');if(time.value==='__otra')timeX.focus();return}
   else if(t.id==='dur'){fillTimes();return}
   else if(t.id==='gift'||t.id==='timeX'||t.id==='price'||t.id==='estado'){return}
