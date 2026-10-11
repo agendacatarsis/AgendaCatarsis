@@ -345,6 +345,7 @@ input[type=checkbox]{min-height:0;width:auto}
   <label class="duosw"><input type="checkbox" id="madShow"> Mostrar «Maderoterapia» en la página de reservas</label>
   <label class="duosw"><input type="checkbox" id="madFull"> Cobrar el valor completo de la sesión o pack al reservar</label>
   <label class="f" for="madSub">Subtítulo</label><input id="madSub" maxlength="80">
+  <label class="f" for="madTags" style="margin-top:8px">Palabras destacadas (separadas por ·)</label><input id="madTags" maxlength="80" placeholder="Drenaje · Modelación · Reducción">
   <label class="f" for="madDesc" style="margin-top:8px">Descripción</label><textarea id="madDesc" rows="4"></textarea>
   <label class="f" for="madEv" style="margin-top:8px">Evaluación gratuita (se muestra con botón de WhatsApp; déjalo vacío para no mostrarla)</label><input id="madEv" maxlength="160">
   <div id="madList"></div>
@@ -413,7 +414,7 @@ const MAD_DEF=[
  {n:'Maderoterapia Brazos',m:60,v:35000,c:'Maderoterapia',g:'Tratamientos corporales',b:['Modela y define el contorno del brazo','Favorece el drenaje de líquidos','Mejora la firmeza y apariencia de la piel'],k:[{s:5,v:150000},{s:10,v:280000}]},
  {n:'Maderoterapia Facial',m:40,v:30000,c:'Maderoterapia',g:'Tratamientos faciales',b:['Estimula la circulación','Mejora la firmeza y elasticidad de la piel','Favorece el drenaje linfático facial'],k:[{s:5,v:130000},{s:10,v:200000}]},
  {n:'Maderoterapia Papada',m:40,v:30000,c:'Maderoterapia',g:'Tratamientos faciales',b:['Favorece el drenaje de líquidos','Define el contorno facial','Mejora la apariencia de la piel'],k:[{s:5,v:130000},{s:10,v:200000}]}];
-const MAD_CFG={on:true,c:'Maderoterapia',sub:'Modelación corporal y facial',tags:'Bienestar · Drenaje · Tonificación · Armonía',desc:'Maderoterapia manual + drenaje linfático manual. Terapia manual que combina el uso de instrumentos de madera con técnicas de drenaje linfático, estimulando la circulación, favoreciendo el bienestar, la modelación corporal y la mejora de la apariencia de la piel.',ev:'Definimos la zona y el número de sesiones ideales para ti.',full:true};
+const MAD_CFG={on:true,c:'Maderoterapia',sub:'Modelación corporal y facial',tags:'Drenaje · Modelación · Reducción',desc:'Maderoterapia manual + drenaje linfático manual. Terapia manual que combina el uso de instrumentos de madera con técnicas de drenaje linfático, estimulando la circulación, favoreciendo el bienestar, la modelación corporal y la mejora de la apariencia de la piel.',ev:'Definimos la zona y el número de sesiones ideales para ti.',full:true};
 let S={branches:['Catarsis Osorno'],thers:['Daniela Velásquez'],services:DEF,appts:[],branch:0,ther:0};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 function migrate(){
@@ -423,6 +424,7 @@ function migrate(){
   S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:''},S.cfg||{});
   S.cfg.promos=Array.isArray(S.cfg.promos)?S.cfg.promos:[];
   S.cfg.madera=Object.assign({},MAD_CFG,S.cfg.madera||{});
+  if(!S.cfg.made2){S.cfg.made2=1;needPush=true;if(S.cfg.madera.tags==='Bienestar · Drenaje · Tonificación · Armonía')S.cfg.madera.tags=MAD_CFG.tags}
   if(!S.cfg.made1){S.cfg.made1=1;needPush=true;if(!S.services.some(x=>(x.c||'')===S.cfg.madera.c))MAD_DEF.forEach(x=>S.services.push(JSON.parse(JSON.stringify(x))))}
   if(!S.cfg.acro){S.cfg.acro=1;needPush=true;if(!S.services.some(x=>/acrocord/i.test(x.n||'')))S.services.push({'n':'Evaluación de acrocordones','m':15,'v':10000,'c':'Acrocordones','g':'','w':1},{'n':'Tratamiento de acrocordones','m':30,'v':0,'c':'Acrocordones','g':'','p':1})}
   if(!S.cfg.acro2){S.cfg.acro2=1;needPush=true;const ev=S.services.find(x=>x.n==='Evaluación de acrocordones');if(ev)ev.w=1}
@@ -715,7 +717,7 @@ function madItemHtml(x,i){const k=(x.k||[]).concat([{},{},{}]).slice(0,3),gs=[..
   <label class="f">Beneficios (uno por línea)</label><textarea data-mf="b" rows="3">${esc((x.b||[]).join('\n'))}</textarea></div>`}
 function openMad(){
   const M=S.cfg.madera,L=S.services.filter(esMadSvc);
-  madShow.checked=M.on!==false;madFull.checked=M.full!==false;madSub.value=M.sub||'';madDesc.value=M.desc||'';madEv.value=M.ev||'';
+  madShow.checked=M.on!==false;madFull.checked=M.full!==false;madSub.value=M.sub||'';madTags.value=M.tags||'';madDesc.value=M.desc||'';madEv.value=M.ev||'';
   madList.innerHTML=L.map(madItemHtml).join('')||'<p class="mut" id="madVacio">Aún no hay tratamientos. Toca «Agregar tratamiento».</p>';
   madErr.textContent='';madModal.hidden=false;
 }
@@ -737,7 +739,7 @@ function saveMad(){
   {const ord=[...new Set([...madGrupos,...out.map(x=>x.g)])];out.sort((a,b)=>ord.indexOf(a.g)-ord.indexOf(b.g))}
   let at=S.services.findIndex(esMadSvc);const rest=S.services.filter(x=>!esMadSvc(x));if(at<0||at>rest.length)at=rest.length;
   rest.splice(at,0,...out);S.services=rest;
-  Object.assign(M,{on:madShow.checked,full:madFull.checked,sub:madSub.value.trim(),desc:madDesc.value.trim(),ev:madEv.value.trim()});
+  Object.assign(M,{on:madShow.checked,full:madFull.checked,sub:madSub.value.trim(),tags:madTags.value.trim(),desc:madDesc.value.trim(),ev:madEv.value.trim()});
   madModal.hidden=true;svc.innerHTML='';render();showToast(`Maderoterapia guardada ✓ · ${out.length} tratamiento${out.length==1?'':'s'}`);
 }
 // --- días y horas en que se pueden reservar masajes dúo ---
@@ -866,7 +868,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-madopen>🪵 Maderoterapia${(n=>` · ${n} tratamiento${n==1?'':'s'}`)(S.services.filter(esMadSvc).length)}${S.cfg.madera.on===false?' · oculto':''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
+    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-madopen>Maderoterapia${(n=>` · ${n} tratamiento${n==1?'':'s'}`)(S.services.filter(esMadSvc).length)}${S.cfg.madera.on===false?' · oculto':''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
   }
   const single=S.branches.length===1&&S.thers.length===1;
   who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
