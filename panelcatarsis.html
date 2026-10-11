@@ -221,6 +221,17 @@ input[type=checkbox]{min-height:0;width:auto}
 .pko.on::after{content:'✓';font-weight:700;font-size:18px}
 .pko:disabled{opacity:.4;cursor:default}
 .pkg{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:14px 8px 2px}
+/* --- maderoterapia: clientes con pack en Agregar hora --- */
+.madbox{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:12px;margin:10px 0 2px}
+.madbox[hidden],#giftBox[hidden]{display:none}
+.madbh{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 6px}.madbh small{color:var(--mut);font-size:12.5px}
+.mclis{max-height:360px;overflow:auto;-webkit-overflow-scrolling:touch}
+.mcli{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:10px 12px;margin:6px 0;cursor:pointer;color:var(--ink);font:inherit;line-height:1.3}
+.mcli.on{border:2px solid var(--teal);background:var(--tint);padding:9px 11px}
+.mcli b{display:block;font-size:15px}.mcli small,.mcli span{display:block;font-size:13px;color:var(--mut)}
+.mcli .mq{color:var(--teal);font-weight:600;margin-top:4px}
+.mbar{height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}.mbar i{display:block;height:100%;background:var(--teal);border-radius:3px}
+.mcli.nuevo b{font-size:15px}
 /* --- maderoterapia --- */
 .madit{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:12px;margin:12px 0}
 .madh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
@@ -279,6 +290,7 @@ input[type=checkbox]{min-height:0;width:auto}
 <div id="list"></div>
 <div class="add">
   <label class="f" for="cat">Categoría</label><select id="cat"></select>
+  <div id="madBox" class="madbox" hidden><div class="madbh"><b>Cliente de maderoterapia</b><small id="madCnt"></small></div><div id="madCliList" class="mclis" role="radiogroup" aria-label="Cliente de maderoterapia"></div></div>
   <label class="f" for="svc" style="margin-top:8px">Servicio</label><select id="svc"></select>
   <div class="row r3"><div><label class="f" for="time">Hora</label><select id="time" aria-describedby="timeHint"></select><input type="time" id="timeX" class="hide" aria-label="Otra hora" style="margin-top:6px"></div>
     <div><label class="f" for="dur">Duración (min)</label><input type="number" id="dur" min="5" step="5"></div>
@@ -286,8 +298,8 @@ input[type=checkbox]{min-height:0;width:auto}
   <div id="pkBox" hidden><label class="f" for="pk" style="margin-top:8px">Tipo de sesión</label><select id="pk"></select></div>
   <div class="defhint" id="defHint" hidden></div>
   <div class="row r2"><input id="client" placeholder="Nombre del cliente" aria-label="Nombre del cliente"><input id="phone" type="tel" placeholder="Teléfono (ej. 9 1234 5678)" aria-label="Teléfono"></div>
-  <label class="f" for="gift">¿Corresponde a una giftcard?</label>
-  <select id="gift"><option value="0">No</option><option value="1">Sí, es una giftcard</option></select>
+  <div id="giftBox"><label class="f" for="gift">¿Corresponde a una giftcard?</label>
+  <select id="gift"><option value="0">No</option><option value="1">Sí, es una giftcard</option></select></div>
   <div class="mut" id="timeHint" style="font-size:12.5px;margin-top:6px"></div>
   <label class="f" for="estado">Estado de la hora</label>
   <select id="estado"><option value="reservada">Reservada</option><option value="confirmada">Confirmada</option><option value="bloqueado">Bloqueado (no disponible)</option></select>
@@ -476,7 +488,8 @@ function processReservas(){
   items.forEach((r,i)=>{
     if(!r.d||!r.t||S.appts.some(x=>x.rid===r.id))return;
     const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s);
-    S.appts.push({id:Date.now()+i,rid:r.id,k:S.branches[0]+'|'+S.thers[0],d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1});ch=true;
+    const nid=Date.now()+i;
+    S.appts.push({id:nid,rid:r.id,k:S.branches[0]+'|'+S.thers[0],d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1,...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{})});ch=true;
   });
   if(ch)render();
   if(!items.length)return;
@@ -723,12 +736,45 @@ const esMadSvc=x=>!!x&&(x.c||'')===MADC();
 // Nombre corto para la reserva (debe ser igual al de index.html)
 const cortoL=(n,L)=>{n=String(n||'');const B=t=>new TextEncoder().encode(t).length;if(B(n)<=L)return n;const c=Array.from(n);while(c.length&&B(c.join('').trimEnd()+'…')>L)c.pop();return c.join('').trimEnd()+'…'};
 const packCode=(n,k)=>cortoL(n,62)+' · Pack '+k;
-const packSvc=n=>{for(const x of S.services)for(const q of (x.k||[]))if(packCode(x.n,q.s)===n)return{n:`${x.n} · Pack ${q.s} (sesión 1 de ${q.s})`,m:+x.m,v:+q.v};return null};
+const packSvc=n=>{for(const x of S.services)for(const q of (x.k||[]))if(packCode(x.n,q.s)===n)return{n:`${x.n} · Pack ${q.s} (sesión 1 de ${q.s})`,m:+x.m,v:+q.v,pn:+q.s};return null};
 const baseSvcDe=t=>{t=String(t||'');const b=t.replace(/ · Pack \d+.*$/,'').replace(/ · sesión de pack$/,'');return S.services.find(x=>x.n===b)};
 const pagoTotal=a=>{const x=baseSvcDe(a&&a.s);return !!(x&&esMadSvc(x)&&(S.cfg.madera||{}).full!==false)};
 function pkFill(s){const k=(s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.innerHTML='';return}
-  pk.innerHTML=`<option value="">Sesión individual · ${money(s.v)}</option>`+k.map(q=>`<option value="${q.s}">Pack ${q.s} sesiones · ${money(q.v)} (1ª sesión)</option>`).join('')+'<option value="pp">Sesión de un pack ya pagado · $0</option>'}
-const pkNombre=s=>{const v=pkBox.hidden?'':pk.value;if(v==='pp')return s.n+' · sesión de pack';const q=(s.k||[]).find(x=>String(x.s)===v);return q?`${s.n} · Pack ${q.s} (sesión 1 de ${q.s})`:s.n};
+  pk.innerHTML=`<option value="">Sesión individual · ${money(s.v)}</option>`+k.map(q=>`<option value="${q.s}">Pack ${q.s} sesiones · ${money(q.v)} (1ª sesión)</option>`).join('')}
+// Nombre y datos del pack de la hora que se agrega
+function pkInfo(s,nid){const v=pkBox.hidden?'':pk.value;
+  if(v==='use'){const p=packList().find(x=>x.id==madCli);if(p){const k=p.usadas+1;return{s:`${p.base} · Pack ${p.n} (sesión ${k} de ${p.n})`,v:0,x:{pk:p.id,ps:k,pn:p.n}}}}
+  if(v==='pp')return{s:s.n+' · sesión de pack',x:{}};
+  const q=(s.k||[]).find(x=>String(x.s)===v);if(q)return{s:`${s.n} · Pack ${q.s} (sesión 1 de ${q.s})`,x:{pk:nid,ps:1,pn:+q.s}};
+  return{s:s.n,x:{}}}
+// Packs de maderoterapia comprados y sesiones usadas (se calcula desde la agenda)
+let madCli=null;
+function packList(){
+  const P=[],by={},cl=a=>String(a.f||'').replace(/\D/g,'').slice(-9)||String(a.c||'').trim().toLowerCase();
+  S.appts.forEach(a=>{const m=/^(.*) · Pack (\d+) \(sesión 1 de (\d+)\)$/.exec(a.s||'');if(!m)return;
+    const p={id:a.pk||a.id,aid:a.id,base:m[1],n:+m[2],c:a.c||'',f:a.f||'',d:a.d,t:a.t||'',k:cl(a),usadas:1};if(by[p.id])return;P.push(p);by[p.id]=p});
+  S.appts.forEach(a=>{const p=a.pk&&by[a.pk];if(p&&a.id!==p.aid)p.usadas++});
+  S.appts.filter(a=>!a.pk&&/ · sesión de pack$/.test(a.s||'')).sort((x,y)=>(x.d+x.t).localeCompare(y.d+y.t)).forEach(a=>{const b=a.s.replace(/ · sesión de pack$/,''),k=cl(a);
+    const p=P.filter(q=>q.base===b&&q.k===k&&q.usadas<q.n&&(q.d+q.t)<=(a.d+(a.t||''))).sort((x,y)=>(x.d+x.t).localeCompare(y.d+y.t))[0];if(p)p.usadas++});
+  P.forEach(p=>p.quedan=Math.max(0,p.n-p.usadas));
+  return P.sort((a,b)=>a.c.localeCompare(b.c,'es')||(a.d+a.t).localeCompare(b.d+b.t));
+}
+function madCliUpd(full){
+  const s=S.services[svc.value]||S.services[0],on=esMadSvc(s);
+  madBox.hidden=!on;giftBox.hidden=on;if(on)gift.value='0';
+  if(!on){madCli=null;return}
+  const L=packList().filter(p=>p.quedan>0);
+  if(madCli&&!L.some(p=>p.id==madCli&&p.base===s.n))madCli=null;
+  madCnt.textContent=L.length?`${L.length} pack${L.length==1?'':'s'} con sesiones disponibles`:'Sin packs activos';
+  madCliList.innerHTML=`<button type="button" role="radio" aria-checked="${!madCli}" class="mcli nuevo ${madCli?'':'on'}" data-mcli=""><b>➕ Nuevo cliente</b><small>Sesión individual o compra de un pack nuevo</small></button>`
+    +L.map(p=>`<button type="button" role="radio" aria-checked="${p.id==madCli}" class="mcli ${p.id==madCli?'on':''}" data-mcli="${p.id}"><b>${esc(p.c||'Sin nombre')}</b>${p.f?`<small>${esc(p.f)}</small>`:''}<span>${esc(p.base)} · Pack ${p.n}</span><span class="mq">Quedan ${p.quedan} de ${p.n} sesiones</span><div class="mbar"><i style="width:${Math.round(p.usadas/p.n*100)}%"></i></div></button>`).join('')
+    +(L.length?'':'<p class="mut" style="font-size:13px;margin:6px 2px 0">Aún no hay clientas con pack de maderoterapia. Cuando alguien compre un pack, aparecerá aquí con sus sesiones disponibles.</p>');
+  if(!madCli&&pk.querySelector('option[value="use"]')){pk.querySelector('option[value="use"]').remove();pk.value='';price.value=s.v}
+  if(!full)return;
+  [...pk.querySelectorAll('option[value="use"]')].forEach(o=>o.remove());
+  const p=madCli&&L.find(x=>x.id==madCli);
+  if(p){pk.insertAdjacentHTML('afterbegin',`<option value="use">Sesión ${p.usadas+1} de ${p.n} de su pack · $0</option>`);pk.value='use';price.value=0}
+}
 const madGrupos=['Tratamientos corporales','Tratamientos faciales'];
 function madItemHtml(x,i){const k=(x.k||[]).concat([{},{},{}]).slice(0,3),gs=[...new Set([...madGrupos,x.g||madGrupos[0]])];
   return `<div class="madit" data-mi="${i}"><div class="madh"><b>${esc(x.n||'Nuevo tratamiento')}</b><button type="button" class="x" data-madx aria-label="Quitar tratamiento" style="flex:0 0 38px;height:38px">✕</button></div>
@@ -862,7 +908,7 @@ const aDef=s=>!!(s&&s.p&&!(+s.v>0));
 const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
 function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
   return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
-const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;pkFill(s);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
+const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;pkFill(s);madCliUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 function render(){
   edBtn.textContent=editing?'Cerrar':'Editar';
@@ -904,6 +950,7 @@ function render(){
   svc.innerHTML=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
   if([...svc.options].some(o=>o.value===prev))svc.value=prev;else{svc.selectedIndex=0;fill()}
   if(first)fill();
+  madCliUpd();
   const L0=mine();
   const w1=new Date(wkS);w1.setDate(wkS.getDate()+6);
   let h=`<h3 class="wkh"><span>Semana del ${wkS.getDate()}${wkS.getMonth()!==w1.getMonth()?' de '+MES[wkS.getMonth()]:''} al ${w1.getDate()} de ${MES[w1.getMonth()]}</span><span class="gotow"><button type="button" class="goto" data-goto>📅 Ir a fecha</button><input type="date" id="pick" class="pickhid" tabindex="-1" aria-hidden="true"></span></h3><div class="wk"><button class="nav" data-wk="-1" aria-label="Semana anterior">‹</button><div class="dgrid">`;
@@ -956,6 +1003,10 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
+  else if(el=g('data-mcli')){const id=el.dataset.mcli;
+    if(!id){madCli=null;client.value='';phone.value='';fill();return}
+    const pq=packList().find(x=>String(x.id)===id);if(!pq)return;madCli=pq.id;client.value=pq.c;phone.value=pq.f;
+    const i=S.services.findIndex(x=>x.n===pq.base);if(i>=0&&[...svc.options].some(o=>o.value==i))svc.value=i;fill();return}
   else if(el=g('data-madopen')){if(!readOnly)openMad();return}
   else if(el=g('data-madclose')){madModal.hidden=true;return}
   else if(e.target.id==='madModal'){madModal.hidden=true;return}
@@ -1001,7 +1052,9 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='addAppt'){
     const tv=getTime();if(!tv)return;const s=S.services[svc.value]||S.services[0];
     if(aDef(s)&&!(+dur.value>=5&&+price.value>0)){defHint.innerHTML=defHintTxt(s,1);defHint.hidden=false;(+dur.value>=5?price:dur).focus();return}
-    S.appts.push({id:Date.now(),k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pkNombre(s),v:+price.value||0,e:estado.value,p:'pendiente',...(gift.value==='1'?{gc:1}:{})});
+    const nid=Date.now(),pi=pkInfo(s,nid);
+    S.appts.push({id:nid,k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pi.s,v:pi.v===0?0:(+price.value||0),e:estado.value,p:'pendiente',...pi.x,...(gift.value==='1'&&giftBox.hidden===false?{gc:1}:{})});
+    if(pi.x.pk&&pi.x.ps>1){madCli=null;showToast(`Sesión ${pi.x.ps} de ${pi.x.pn} agregada ✓ · quedan ${pi.x.pn-pi.x.ps}`)}
     client.value='';phone.value='';gift.value='0'}
   else return;
   render();
@@ -1036,7 +1089,7 @@ document.addEventListener('change',e=>{
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
   else if(t.id==='cat'){render();fill();return}
   else if(t.id==='svc'){fill();return}
-  else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v);price.value=v==='pp'?0:k?k.v:s.v;return}
+  else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v);price.value=v==='pp'||v==='use'?0:k?k.v:s.v;return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
   else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}
