@@ -238,6 +238,7 @@ input[type=checkbox]{min-height:0;width:auto}
 .mbar{height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}.mbar i{display:block;height:100%;background:var(--teal);border-radius:3px}
 .mcli.nuevo b{font-size:15px}
 #gcBox[hidden]{display:none}
+#gpImg[hidden],#gpDl[hidden]{display:none!important}
 .mcli.venc .mq{color:var(--red)}.mcli.venc .mbar i{background:var(--red)}
 /* --- maderoterapia --- */
 .madit{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:12px;margin:12px 0}
@@ -424,7 +425,7 @@ input[type=checkbox]{min-height:0;width:auto}
 <div id="gcModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="gcTitle">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="gcTitle">Vender giftcard</h3><button type="button" class="x" data-gcclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Tiene 30 días para usarse: para cobrarla, en Agregar hora elige la categoría «Giftcard».</p>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Registra la venta: se suma a los ingresos del mes en tu balance. Al registrarla puedes enviar la imagen de la giftcard por WhatsApp. Tiene 30 días para usarse: para cobrarla, en Agregar hora elige la categoría «Giftcard».</p>
   <label class="f" for="gcSvc">Servicio de regalo (opcional)</label><select id="gcSvc"></select>
   <div class="row"><div><label class="f" for="gcM">Monto ($)</label><input type="number" id="gcM" min="0" step="1000" inputmode="numeric"></div><div><label class="f" for="gcF">Fecha de venta</label><input type="date" id="gcF"></div></div>
   <div class="row"><div><label class="f" for="gcDe">Comprada por</label><input id="gcDe" maxlength="40" placeholder="Ej. Pedro" autocomplete="off"></div><div><label class="f" for="gcPara">Para</label><input id="gcPara" maxlength="40" placeholder="Ej. María" autocomplete="off"></div></div>
@@ -432,6 +433,17 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="btn" style="width:100%;margin-top:4px" type="button" data-gcsave>Registrar venta</button>
   <div class="gcmes" id="gcMes"></div>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-gcclose>Cerrar</button>
+ </div>
+</div>
+<div id="gpModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="gpTitle" style="z-index:40">
+ <div class="mbox" style="max-width:540px">
+  <div class="mhead"><h3 id="gpTitle">Giftcard para enviar</h3><button type="button" class="x" data-gpclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" id="gpSub" style="font-size:14px;margin:6px 0 0">Preparando la imagen…</p>
+  <img id="gpImg" alt="Giftcard" hidden style="width:100%;display:block;border-radius:12px;margin:10px 0;box-shadow:0 6px 18px rgba(0,0,0,.15)">
+  <div class="err" id="gpErr" role="alert"></div>
+  <button class="btn" style="width:100%" type="button" data-gpshare>📲 Enviar por WhatsApp</button>
+  <a class="pill" id="gpDl" download="giftcard-catarsis.jpg" style="display:flex;align-items:center;justify-content:center;width:100%;margin-top:8px;text-decoration:none;color:var(--ink)">⬇ Descargar imagen</a>
+  <button class="pill" style="width:100%;margin-top:8px" type="button" data-gpclose>Cerrar</button>
  </div>
 </div>
 <div id="pickModal" class="modal pickm" hidden role="dialog" aria-modal="true" aria-labelledby="pickTit">
@@ -1029,6 +1041,10 @@ document.addEventListener('click',e=>{
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
   else if(el=g('data-gcsel')){const gg=gcLista().find(x=>x.id===el.dataset.gcsel);if(!gg)return;gcSel=gg.id;if(gg.para)client.value=gg.para;
     const i=gg.s?S.services.findIndex(x=>x.n===gg.s):-1;if(i>=0&&[...svc.options].some(o=>o.value==i))svc.value=i;fill();if(gg.quedan<0)showToast('Ojo: esta giftcard venció el '+fmtD(gg.vence));return}
+  else if(el=g('data-gcsend')){const gg=gcLista().find(x=>x.id===el.dataset.gcsend);if(gg)openGp(gg);return}
+  else if(el=g('data-gpshare')){gpShare();return}
+  else if(el=g('data-gpclose')){gpModal.hidden=true;return}
+  else if(e.target.id==='gpModal'){gpModal.hidden=true;return}
   else if(el=g('data-gcopen')){if(!readOnly)openGc();return}
   else if(el=g('data-gcclose')){gcModal.hidden=true;return}
   else if(e.target.id==='gcModal'){gcModal.hidden=true;return}
@@ -1109,13 +1125,44 @@ function gcUpd(full){
     ||'<p class="mut" style="font-size:13px;margin:6px 2px 0">No hay giftcards por cobrar. Regístralas con «🎁 Vender giftcard».</p>';
   if(!full)return;const g=gcSel&&L.find(x=>x.id===gcSel);if(g)price.value=g.m;
 }
+// Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros
+const GC_PLANTILLA='giftcard-plantilla.jpg';
+function gcImagen(dat){
+  const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA});
+  const fuente=document.fonts&&document.fonts.load?document.fonts.load('500 38px Barlow').catch(()=>{}):Promise.resolve();
+  return Promise.all([carga,fuente]).then(([im])=>{
+    const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);
+    const k=c.width/661,fam="Barlow,'Segoe UI',Roboto,Arial,sans-serif";
+    const put=(t,x0,x1,cy)=>{t=String(t||'').trim();if(!t)return;const w=(x1-x0)*k;let f=19;x.font=`500 ${f*k}px ${fam}`;
+      while(f>11&&x.measureText(t).width>w){f-=.5;x.font=`500 ${f*k}px ${fam}`}
+      if(x.measureText(t).width>w){while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);t=t.trimEnd()+'…'}
+      x.fillStyle='#3b2f26';x.textBaseline='middle';x.fillText(t,x0*k,(cy+1)*k)};
+    put(dat.para,127,306,233.5);put(dat.de,377,569,233.5);put(dat.vale,163,569,283.5);put(dat.hasta,203,569,333.5);
+    return c});
+}
+const gcTexto=d=>`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}! Vale por: ${d.vale}. Válida hasta el ${d.hasta}. 📍 Lord Cochrane 450, Osorno.`;
+// Vista previa y envío por WhatsApp (en el celular abre el menú «Compartir»; en la app abre Chrome para compartir)
+let gpBlob=null,gpDat=null;
+const fLarga=d=>{const x=new Date(d+'T12:00');return x.getDate()+' de '+MES[x.getMonth()]+' de '+x.getFullYear()};
+const gcDatos=g=>({para:g.para||'',de:g.de||'',vale:g.s||(money(g.m)+' en servicios'),hasta:fLarga(gcVence(g.d))});
+const enApp=()=>!!(window.CatarsisApp&&window.CatarsisApp.abrir);
+function gcUrl(d){const q=new URLSearchParams();Object.entries(d).forEach(([k,v])=>{if(v)q.set(k,v)});return new URL('giftcard.html?'+q.toString(),location.href).href}
+function openGp(g){gpDat=gcDatos(g);gpBlob=null;gpImg.hidden=true;gpErr.textContent='';gpSub.textContent='Preparando la imagen…';gpDl.hidden=enApp();gpModal.hidden=false;
+  gcImagen(gpDat).then(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))).then(b=>{gpBlob=b;const u=URL.createObjectURL(b);gpImg.src=u;gpImg.hidden=false;gpDl.href=u;
+    gpSub.textContent=`Para ${gpDat.para||'—'} · de ${gpDat.de||'—'} · válida hasta el ${gpDat.hasta}.`})
+  .catch(()=>{gpSub.textContent='No se pudo crear la imagen: revisa que el archivo giftcard-plantilla.jpg esté subido a GitHub.'})}
+async function gpShare(){if(!gpDat)return;gpErr.textContent='';
+  if(gpBlob){const f=new File([gpBlob],'giftcard-catarsis.jpg',{type:'image/jpeg'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:gcTexto(gpDat)})}catch(e){if(e.name!=='AbortError')gpErr.textContent='No se pudo compartir. Descarga la imagen y envíala desde WhatsApp.'}return}}
+  if(enApp()){window.CatarsisApp.abrir(gcUrl(gpDat));showToast('Se abrió Chrome: toca «Compartir por WhatsApp»');return}
+  if(gpBlob){gpDl.click();window.open('https://wa.me/?text='+encodeURIComponent(gcTexto(gpDat)),'_blank','noopener');gpErr.textContent='La imagen se descargó: adjúntala en el chat de WhatsApp.'}}
 // --- vender giftcard (se guarda en masajes/finanzas → gifts, igual que antes desde el balance) ---
 const FINref=()=>firebase.firestore().collection('masajes').doc('finanzas');
 const hoyIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 function gcMesDraw(){const mes=(gcF.value||hoyIso()).slice(0,7);gcMes.innerHTML='<div class="mut">Cargando ventas del mes…</div>';
   FINref().get().then(s=>{GIFTS=(s.exists&&s.data().gifts)||GIFTS;const g=gcLista().filter(x=>String(x.d||'').slice(0,7)===mes).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
     const tot=g.reduce((a,x)=>a+(+x.m||0),0);
-    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${fmtD(x.d)} · ${gcEstado(x)}</small></span><b>${money(x.m)}</b></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
+    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${fmtD(x.d)} · ${gcEstado(x)}</small></span><span style="display:flex;align-items:center;gap:8px"><b>${money(x.m)}</b><button type="button" class="pill" data-gcsend="${esc(x.id)}" aria-label="Enviar giftcard por WhatsApp" style="padding:6px 10px;min-height:36px">📲</button></span></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
   .catch(()=>{gcMes.innerHTML='<div class="mut">No se pudieron cargar las ventas del mes.</div>'})}
 function openGc(){
   const cats={};S.services.filter(x=>!x.p&&+x.v>0).forEach((x,i)=>{(cats[x.c||'Otros']=cats[x.c||'Otros']||[]).push(x)});
@@ -1129,7 +1176,7 @@ function saveGc(){
   const c=[sv||'Giftcard',pa?'para '+pa:'',de?'de '+de:''].filter(Boolean).join(' · ').slice(0,80);
   gcErr.textContent='';const id='h'+Date.now();
   FINref().set({gifts:{[id]:{d,m,c,...(sv?{s:sv}:{}),...(pa?{para:pa}:{}),...(de?{de}:{})}}},{merge:true})
-    .then(()=>{showToast(`Giftcard registrada ✓ · ${money(m)}`);gcM.value='';gcDe.value='';gcPara.value='';gcSvc.value='';gcMesDraw()})
+    .then(()=>{showToast(`Giftcard registrada ✓ · ${money(m)}`);gcM.value='';gcDe.value='';gcPara.value='';gcSvc.value='';gcMesDraw();openGp({d,m,c,s:sv,para:pa,de})})
     .catch(e=>{gcErr.textContent='No se pudo guardar ('+(e.code||'error')+'). Revisa tu conexión e intenta de nuevo.'});
 }
 // --- listas desplegables como ventanas emergentes: la lista original sigue igual (mismas opciones y valores) ---
@@ -1155,7 +1202,7 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
   const b=e.target.closest('[data-pko]');if(b){choosePick(+b.dataset.pko);return}
   if(e.target.closest('[data-pickclose]')||e.target.id==='pickModal')closePick()});
 pickQ.addEventListener('input',pickDraw);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}

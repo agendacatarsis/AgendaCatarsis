@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Giftcard · Catarsis</title>
+<meta name="theme-color" content="#ede1cb">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ede1cb;--card:#f8f2e6;--ink:#1f1b16;--mut:#574d41;--line:#d6c7aa;--btn:#1f1b16;--btnink:#f8f2e6;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--card:#282420;--ink:#f1e7d3;--mut:#c4b9a6;--line:#443c30;--btn:#ede1cb;--btnink:#1f1b16}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px Barlow,system-ui,sans-serif;padding:20px 16px calc(28px + env(safe-area-inset-bottom,0px));max-width:620px;margin:auto}
+h1{font:700 28px 'Barlow Condensed',sans-serif;margin:0 0 4px}
+.mut{color:var(--mut)}
+img{width:100%;display:block;border-radius:14px;margin:14px 0;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border:0;border-radius:12px;background:var(--btn);color:var(--btnink);font:600 16px Barlow,sans-serif;text-decoration:none;cursor:pointer;margin-top:10px}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.err{color:#b8392b;min-height:20px;margin-top:8px;font-size:14px}
+</style></head><body>
+<h1>Giftcard de regalo</h1>
+<p class="mut" id="sub">Preparando la imagen…</p>
+<img id="img" alt="Giftcard Catarsis" hidden>
+<button class="btn" id="share" hidden>📲 Compartir por WhatsApp</button>
+<a class="btn alt" id="dl" download="giftcard-catarsis.jpg" hidden>⬇ Descargar imagen</a>
+<div class="err" id="err" role="alert"></div>
+<script>
+// Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros
+const GC_PLANTILLA='giftcard-plantilla.jpg';
+function gcImagen(dat){
+  const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA});
+  const fuente=document.fonts&&document.fonts.load?document.fonts.load('500 38px Barlow').catch(()=>{}):Promise.resolve();
+  return Promise.all([carga,fuente]).then(([im])=>{
+    const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);
+    const k=c.width/661,fam="Barlow,'Segoe UI',Roboto,Arial,sans-serif";
+    const put=(t,x0,x1,cy)=>{t=String(t||'').trim();if(!t)return;const w=(x1-x0)*k;let f=19;x.font=`500 ${f*k}px ${fam}`;
+      while(f>11&&x.measureText(t).width>w){f-=.5;x.font=`500 ${f*k}px ${fam}`}
+      if(x.measureText(t).width>w){while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);t=t.trimEnd()+'…'}
+      x.fillStyle='#3b2f26';x.textBaseline='middle';x.fillText(t,x0*k,(cy+1)*k)};
+    put(dat.para,127,306,233.5);put(dat.de,377,569,233.5);put(dat.vale,163,569,283.5);put(dat.hasta,203,569,333.5);
+    return c});
+}
+const gcTexto=d=>`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}! Vale por: ${d.vale}. Válida hasta el ${d.hasta}. 📍 Lord Cochrane 450, Osorno.`;
+
+const P=new URLSearchParams(location.search),dat={para:P.get('para')||'',de:P.get('de')||'',vale:P.get('vale')||'',hasta:P.get('hasta')||''};
+const $=id=>document.getElementById(id);let blob=null;
+if(!dat.vale&&!dat.para){$('sub').textContent='Esta página genera la giftcard desde la agenda de Catarsis.'}
+else gcImagen(dat).then(c=>new Promise(r=>c.toBlob(r,'image/jpeg',.92))).then(b=>{blob=b;const u=URL.createObjectURL(b);$('img').src=u;$('img').hidden=false;$('dl').href=u;$('dl').hidden=false;
+  $('sub').textContent='Toca «Compartir por WhatsApp» y elige el chat al que quieres enviarla.';$('share').hidden=false})
+ .catch(()=>{$('sub').textContent='No se pudo crear la imagen. Revisa tu conexión e intenta de nuevo.'});
+$('share').addEventListener('click',async()=>{if(!blob)return;const f=new File([blob],'giftcard-catarsis.jpg',{type:'image/jpeg'});$('err').textContent='';
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:gcTexto(dat)})}catch(e){if(e.name!=='AbortError')$('err').textContent='No se pudo compartir. Descarga la imagen y envíala desde WhatsApp.'}return}
+  $('dl').click();window.open('https://wa.me/?text='+encodeURIComponent(gcTexto(dat)),'_blank','noopener');$('err').textContent='La imagen se descargó: adjúntala en el chat de WhatsApp.'});
+</script>
+</body></html>
