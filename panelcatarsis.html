@@ -193,6 +193,17 @@ input[type=checkbox]{min-height:0;width:auto}
 .prow .pin{display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .prow.on .pin{display:grid}
 .prow .pin label{font-size:12px;color:var(--mut);display:block}
+/* --- días y horas de masajes dúo --- */
+.duobtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.duobtns .promobtn{margin:0;flex-direction:column;gap:2px;min-height:58px;padding:8px 10px;line-height:1.2}
+.duobtns .promobtn small{font-size:12px;color:var(--mut);font-weight:400}
+.dhrow{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.dhrow label{display:flex;gap:8px;align-items:center;font-size:15px;cursor:pointer}
+.dhrow label input{width:22px;height:22px;min-height:0;margin:0;accent-color:var(--teal)}
+.dhrow input[type=time]{padding:8px 6px;min-height:42px;font-size:14px}
+.dhrow.off input[type=time]{opacity:.35;pointer-events:none}
+.dhhead{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;font-size:12px;color:var(--mut);margin:10px 0 0}
+#dhRows[hidden]{display:none}
 /* --- editar horario de una cita --- */
 .hrbtn{white-space:nowrap;font-size:13px}
 .ro .hrbtn{display:none!important}
@@ -316,6 +327,18 @@ input[type=checkbox]{min-height:0;width:auto}
   <div class="err" id="hrErr" role="alert"></div>
   <button class="btn" style="width:100%;margin-top:6px" type="button" data-horasave>Guardar horario</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-horaclose>Cancelar</button>
+ </div>
+</div>
+<div id="dhModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dhTitle">
+ <div class="mbox" style="max-width:480px">
+  <div class="mhead"><h3 id="dhTitle">Días y horas de masajes dúo</h3><button type="button" class="x" data-dhclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:6px 0 4px">Elige cuándo se pueden reservar <b>masajes dúo</b> en tu página de reservas (por ejemplo, solo los días que tienes a la segunda terapeuta). Tus horas ya agendadas o bloqueadas se descuentan igual.</p>
+  <label class="duosw"><input type="radio" name="dhmode" value="gen" id="dhGen"> <span>Igual a mi horario de atención<br><small class="mut" id="dhGenTxt"></small></span></label>
+  <label class="duosw"><input type="radio" name="dhmode" value="esp" id="dhEsp"> Horario especial para masajes dúo</label>
+  <div id="dhRows"></div>
+  <div class="err" id="dhErr" role="alert"></div>
+  <button class="btn" style="width:100%;margin-top:6px" type="button" data-dhsave>Guardar días y horas</button>
+  <button class="pill" style="width:100%;margin-top:8px" type="button" data-dhclose>Cancelar</button>
  </div>
 </div>
 <div id="duoModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="duoTitle">
@@ -623,6 +646,30 @@ function savePromo(){
   S.cfg.promos=out;promoModal.hidden=true;render();
   showToast(out.length?`Promoción guardada ✓ · ${out.length} servicio${out.length==1?'':'s'}`:'Promociones quitadas');
 }
+// --- días y horas en que se pueden reservar masajes dúo ---
+const DHN=[[1,'Lunes'],[2,'Martes'],[3,'Miércoles'],[4,'Jueves'],[5,'Viernes'],[6,'Sábado'],[0,'Domingo']];
+const dhOn=()=>{const h=(S.cfg.duo||{}).h;return !!(h&&h.on&&h.d&&Object.keys(h.d).length)};
+const horarioGenTxt=()=>{const h=S.cfg.horario,ds=DHN.filter(([v])=>(h.dias||[]).includes(v)).map(([,n])=>n.slice(0,3));return ds.length?`${ds.join(', ')} · ${h.desde} a ${h.hasta}`:'Sin días de atención'};
+function openDH(){
+  const h=(S.cfg.duo||{}).h||{},on=dhOn(),g=S.cfg.horario,cur=h.d&&Object.keys(h.d).length?h.d:null;
+  dhGen.checked=!on;dhEsp.checked=on;dhGenTxt.textContent=horarioGenTxt();
+  dhRows.innerHTML=`<div class="dhhead"><span>Día</span><span>Desde</span><span>Hasta</span></div>`+DHN.map(([v,n])=>{const r=cur?cur[v]:((g.dias||[]).includes(v)?{a:g.desde,b:g.hasta}:null),a=r?r.a:g.desde,b=r?r.b:g.hasta;
+    return `<div class="dhrow ${r?'':'off'}"><label><input type="checkbox" data-dhd="${v}" ${r?'checked':''}>${n}</label><input type="time" step="900" data-dha="${v}" value="${a}" aria-label="${n} desde"><input type="time" step="900" data-dhb="${v}" value="${b}" aria-label="${n} hasta"></div>`}).join('');
+  dhRows.hidden=!on;dhErr.textContent='';dhModal.hidden=false;
+}
+function dhSync(){dhRows.hidden=!dhEsp.checked;dhRows.querySelectorAll('[data-dhd]').forEach(cb=>cb.closest('.dhrow').classList.toggle('off',!cb.checked));dhErr.textContent=''}
+function saveDH(){
+  const D=S.cfg.duo;
+  if(dhGen.checked){D.h={on:false,d:(D.h&&D.h.d)||{}};dhModal.hidden=true;render();showToast('Masajes dúo: mismo horario de atención ✓');return}
+  const d={};let bad='';
+  dhRows.querySelectorAll('[data-dhd]:checked').forEach(cb=>{if(bad)return;const v=cb.dataset.dhd,n=(DHN.find(x=>x[0]==v)||[])[1],a=dhRows.querySelector(`[data-dha="${v}"]`).value,b=dhRows.querySelector(`[data-dhb="${v}"]`).value;
+    if(!a||!b||toMin(b)<=toMin(a)){bad=`Revisa el horario del ${n.toLowerCase()}: «hasta» debe ser después de «desde».`;return}
+    if(toMin(b)-toMin(a)<duoMin()){bad=`El ${n.toLowerCase()} tiene menos tiempo que un masaje dúo (${duoMin()} min).`;return}
+    d[v]={a,b}});
+  if(!bad&&!Object.keys(d).length)bad='Marca al menos un día, o elige «Igual a mi horario de atención».';
+  if(bad){dhErr.textContent=bad;return}
+  D.h={on:true,d};dhModal.hidden=true;render();showToast(`Días y horas dúo guardados ✓ · ${Object.keys(d).length} día${Object.keys(d).length==1?'':'s'}`);
+}
 // --- editar horario (inicio, término y duración) de una cita ---
 let horaId=null;
 function openHora(id){const a=S.appts.find(x=>x.id==id);if(!a)return;horaId=a.id;
@@ -648,7 +695,7 @@ const duoAbono=()=>{const a=+((S.cfg.duo||{}).ab);return a>=0?a:20000};
 const duoMin=()=>{const m=Math.round(+((S.cfg.duo||{}).m));return m>=5&&m<=480?m:50};
 const duoLista=()=>{const m=S.services.filter(x=>/maso|masaj/i.test(x.c||''));return m.length?m:S.services.filter(x=>/masaj/i.test(x.n||''))};
 const duoDesc=x=>{const d=Math.round(+(((S.cfg.duo||{}).d||{})[x.n])||0);return Math.max(0,Math.min(+x.v||0,d))};
-const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),m:duoMin(),l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
+const duoPub=()=>{const D=S.cfg.duo||{};return{on:!!D.on,ab:duoAbono(),m:duoMin(),h:dhOn()?{d:D.h.d}:null,l:D.on?duoLista().map(x=>({n:x.n,m:+x.m,v:+x.v,g:x.g||'',d:duoDesc(x)})):[]}};
 // Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de index.html
 const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
@@ -676,7 +723,7 @@ function saveDuo(){
   const dm=Math.round(+duoMinIn.value);
   if(!bad&&!(dm>=5&&dm<=480))bad='La duración de los masajes dúo debe estar entre 5 y 480 minutos.';
   if(bad){duoErr.textContent=bad;return}
-  S.cfg.duo={on:duoShow.checked,ab,m:dm,d};duoModal.hidden=true;render();
+  S.cfg.duo=Object.assign({},S.cfg.duo,{on:duoShow.checked,ab,m:dm,d});duoModal.hidden=true;render();
   const n=Object.keys(d).length;
   showToast(S.cfg.duo.on?`Descuentos dúo guardados ✓${n?` · ${n} masaje${n==1?'':'s'} con descuento`:''}`:'Masajes dúo ocultos en la página de reservas');
 }
@@ -716,7 +763,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length)):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
+    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${S.cfg.promos.length?` · ${S.cfg.promos.length} servicio${S.cfg.promos.length==1?'':'s'}`:''}</button><div class="duobtns"><button type="button" class="btn finbtn promobtn" data-duoopen><span>👥 Descuentos dúo</span><small>${S.cfg.duo.on?((n=>n?`${n} con descuento`:'Sin descuentos')(Object.keys(S.cfg.duo.d||{}).length)):'Oculto en reservas'}</small></button><button type="button" class="btn finbtn promobtn" data-dhopen><span>📅 Días y horas dúo</span><small>${dhOn()?'Horario especial':'Igual a tu horario'}</small></button></div><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
   }
   const single=S.branches.length===1&&S.thers.length===1;
   who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
@@ -782,6 +829,10 @@ document.addEventListener('click',e=>{
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
+  else if(el=g('data-dhopen')){if(!readOnly)openDH();return}
+  else if(el=g('data-dhclose')){dhModal.hidden=true;return}
+  else if(e.target.id==='dhModal'){dhModal.hidden=true;return}
+  else if(el=g('data-dhsave')){saveDH();return}
   else if(el=g('data-duoopen')){if(!readOnly)openDuo();return}
   else if(el=g('data-duoclose')){duoModal.hidden=true;return}
   else if(e.target.id==='duoModal'){duoModal.hidden=true;return}
@@ -820,7 +871,7 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
@@ -829,6 +880,8 @@ document.addEventListener('change',e=>{
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
   else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}
+  else if(t.name==='dhmode'||d.dhd!==undefined){dhSync();return}
+  else if(d.dha!==undefined||d.dhb!==undefined){dhErr.textContent='';return}
   else if(t.id==='time'){timeX.classList.toggle('hide',time.value!=='__otra');if(time.value==='__otra')timeX.focus();return}
   else if(t.id==='dur'){fillTimes();return}
   else if(t.id==='gift'||t.id==='timeX'||t.id==='price'||t.id==='estado'){return}
