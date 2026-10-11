@@ -1122,8 +1122,12 @@ var GIFTS={},unsubF=null,gcSel=null,gotFin=false,gcIntentos=new Set();
 const GCC='Giftcard',GC_DIAS=30;
 const gcVence=d=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+GC_DIAS);return iso(x)};
 const diasHasta=d=>Math.round((new Date(d+'T12:00')-new Date(iso(today)+'T12:00'))/864e5);
+// Orden de venta: más reciente primero (fecha de venta y, el mismo día, hora en que se registró)
+const gcTs=g=>{const t=+g.t||+String(g.id||'').replace(/\D/g,'');return t>1.5e12&&t<4e12?t:0};
+const gcHora=g=>{const t=gcTs(g);if(!t)return '';const x=new Date(t),f=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');return f===g.d?String(x.getHours()).padStart(2,'0')+':'+String(x.getMinutes()).padStart(2,'0'):''};
+const gcOrden=(a,b)=>String(b.d||'').localeCompare(String(a.d||''))||gcTs(b)-gcTs(a);
 function gcLista(){const us=new Set(S.appts.filter(a=>a.gid).map(a=>a.gid));
-  return Object.entries(GIFTS||{}).filter(([,g])=>g&&g.d).map(([id,g])=>{const vence=gcVence(g.d);return{id,...g,vence,quedan:diasHasta(vence),usada:us.has(id)}}).sort((a,b)=>a.vence.localeCompare(b.vence))}
+  return Object.entries(GIFTS||{}).filter(([,g])=>g&&g.d).map(([id,g])=>{const vence=gcVence(g.d);return{id,...g,vence,quedan:diasHasta(vence),usada:us.has(id)}}).sort(gcOrden)}
 const gcEstado=g=>g.usada?'Cobrada':g.quedan<0?`Vencida hace ${-g.quedan} día${g.quedan==-1?'':'s'}`:g.quedan===0?'Vence hoy':`Quedan ${g.quedan} día${g.quedan==1?'':'s'}`;
 // Número único de 8 dígitos. En publico/agenda (lectura pública) cada giftcard va cifrada con su número:
 // sin el número no se puede leer a quién va dirigida ni ubicarla (PBKDF2 + AES-GCM, igual que en index.html).
@@ -1153,9 +1157,9 @@ async function gcAsegurarTodas(){if(gcAseg||readOnly||!firebase.auth().currentUs
   gcAseg=true;try{for(const g of L){gcIntentos.add(g.id);await gcAsegura(g.id)}}finally{gcAseg=false}}
 function gcUpd(full){
   const on=cat.value===GCC;gcBox.hidden=!on;if(!on){gcSel=null;return}
-  const L=gcLista().filter(g=>!g.usada).sort((a,b)=>(a.quedan<0)-(b.quedan<0)||a.vence.localeCompare(b.vence));if(gcSel&&!L.some(g=>g.id===gcSel))gcSel=null;
+  const L=gcLista().filter(g=>!g.usada).sort((a,b)=>(a.quedan<0)-(b.quedan<0)||gcOrden(a,b));if(gcSel&&!L.some(g=>g.id===gcSel))gcSel=null;
   const vig=L.filter(g=>g.quedan>=0).length;gcCnt.textContent=L.length?`${vig} vigente${vig==1?'':'s'}${L.length>vig?` · ${L.length-vig} vencida${L.length-vig==1?'':'s'}`:''}`:'';
-  gcList.innerHTML=L.map(g=>`<button type="button" role="radio" aria-checked="${g.id===gcSel}" class="mcli ${g.id===gcSel?'on':''} ${g.quedan<0?'venc':''}" data-gcsel="${esc(g.id)}"><b>${esc(g.para?'Para '+g.para:(g.c||'Giftcard'))}</b><small>${esc([g.de?'De '+g.de:'','vendida el '+fmtD(g.d)].filter(Boolean).join(' · '))}</small><span>${g.n?'N° '+fmtN(g.n)+' · ':''}${esc(g.s||'Monto libre')} · ${money(g.m)}</span><span class="mq">${gcEstado(g)} · vence el ${fmtD(g.vence)}</span><div class="mbar"><i style="width:${Math.max(0,Math.min(100,Math.round(g.quedan/GC_DIAS*100)))}%"></i></div></button>`).join('')
+  gcList.innerHTML=L.map(g=>`<button type="button" role="radio" aria-checked="${g.id===gcSel}" class="mcli ${g.id===gcSel?'on':''} ${g.quedan<0?'venc':''}" data-gcsel="${esc(g.id)}"><b>${esc(g.para?'Para '+g.para:(g.c||'Giftcard'))}</b><small>${esc([g.de?'De '+g.de:'','vendida el '+fmtD(g.d)+(gcHora(g)?', '+gcHora(g):'')].filter(Boolean).join(' · '))}</small><span>${g.n?'N° '+fmtN(g.n)+' · ':''}${esc(g.s||'Monto libre')} · ${money(g.m)}</span><span class="mq">${gcEstado(g)} · vence el ${fmtD(g.vence)}</span><div class="mbar"><i style="width:${Math.max(0,Math.min(100,Math.round(g.quedan/GC_DIAS*100)))}%"></i></div></button>`).join('')
     ||'<p class="mut" style="font-size:13px;margin:6px 2px 0">No hay giftcards por cobrar. Regístralas en Menú → «🎁 Vender giftcard».</p>';
   if(!full)return;const g=gcSel&&L.find(x=>x.id===gcSel);if(g)price.value=g.m;
 }
@@ -1197,9 +1201,9 @@ async function gpShare(){if(!gpDat)return;gpErr.textContent='';
 const FINref=()=>firebase.firestore().collection('masajes').doc('finanzas');
 const hoyIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 function gcMesDraw(){const mes=(gcF.value||hoyIso()).slice(0,7);gcMes.innerHTML='<div class="mut">Cargando ventas del mes…</div>';
-  FINref().get().then(s=>{GIFTS=(s.exists&&s.data().gifts)||GIFTS;const g=gcLista().filter(x=>String(x.d||'').slice(0,7)===mes).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  FINref().get().then(s=>{GIFTS=(s.exists&&s.data().gifts)||GIFTS;const g=gcLista().filter(x=>String(x.d||'').slice(0,7)===mes).sort(gcOrden);
     const tot=g.reduce((a,x)=>a+(+x.m||0),0);
-    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${x.n?'N° '+fmtN(x.n)+' · ':''}${fmtD(x.d)} · ${gcEstado(x)}</small></span><span style="display:flex;align-items:center;gap:8px"><b>${money(x.m)}</b><button type="button" class="pill" data-gcsend="${esc(x.id)}" aria-label="Enviar giftcard por WhatsApp" style="padding:6px 10px;min-height:36px">📲</button></span></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
+    gcMes.innerHTML=`<div class="gch"><b>Vendidas en ${MES[+mes.slice(5,7)-1]}</b><small>${g.length} · ${money(tot)}</small></div>`+(g.length?g.slice(0,8).map(x=>`<div class="gcrow"><span>${esc(x.c||'Giftcard')}<small>${x.n?'N° '+fmtN(x.n)+' · ':''}${fmtD(x.d)}${gcHora(x)?', '+gcHora(x):''} · ${gcEstado(x)}</small></span><span style="display:flex;align-items:center;gap:8px"><b>${money(x.m)}</b><button type="button" class="pill" data-gcsend="${esc(x.id)}" aria-label="Enviar giftcard por WhatsApp" style="padding:6px 10px;min-height:36px">📲</button></span></div>`).join(''):'<div class="mut">Aún no hay giftcards vendidas este mes.</div>')+(g.length>8?`<div class="mut" style="margin-top:6px">Ver todas en Balance y gastos.</div>`:'')})
   .catch(()=>{gcMes.innerHTML='<div class="mut">No se pudieron cargar las ventas del mes.</div>'})}
 function openGc(){
   const cats={};S.services.filter(x=>!x.p&&+x.v>0).forEach((x,i)=>{(cats[x.c||'Otros']=cats[x.c||'Otros']||[]).push(x)});
@@ -1212,7 +1216,7 @@ async function saveGc(){
   if(!d){gcErr.textContent='Elige la fecha de venta.';return}
   if(bt.disabled)return;
   const c=[sv||'Giftcard',pa?'para '+pa:'',de?'de '+de:''].filter(Boolean).join(' · ').slice(0,80);
-  gcErr.textContent='';const id='h'+Date.now(),base={d,m,c,...(sv?{s:sv}:{}),...(pa?{para:pa}:{}),...(de?{de}:{})},n=gcNuevoNum();
+  gcErr.textContent='';const t0=Date.now(),id='h'+t0,base={d,m,c,t:t0,...(sv?{s:sv}:{}),...(pa?{para:pa}:{}),...(de?{de}:{})},n=gcNuevoNum();
   bt.disabled=true;let x=null;try{x=await gcCifra(n,gcPubDat(base))}catch(e){}
   FINref().set({gifts:{[id]:{...base,n,...(x?{x}:{})}}},{merge:true})
     .then(()=>{showToast(`Giftcard registrada ✓ · N° ${fmtN(n)} · ${money(m)}`);gcM.value='';gcDe.value='';gcPara.value='';gcSvc.value='';gcMesDraw();openGp({id,...base,n})})
