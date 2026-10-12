@@ -152,6 +152,16 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .gcx .gcgo{margin-top:14px;width:100%}
 .gcx .lnk{display:block;padding-top:8px}
 .rbtn:disabled{opacity:.55;cursor:default}
+/* precios por cantidad (ej. extracción de milium) y valor según evaluación */
+.qopts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:360px){.qopts{grid-template-columns:repeat(2,1fr)}}
+.qopt{position:relative;display:block;cursor:pointer}
+.qopt input{position:absolute;opacity:0;pointer-events:none}
+.qopt span{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--tint);border:1px solid transparent;border-radius:10px;padding:9px 10px;min-height:44px;font-size:14px}
+.qopt i{font-style:normal;color:var(--mut)}.qopt b{font-weight:600;white-space:nowrap}
+.qopt input:checked+span{border:2px solid var(--acc);background:var(--card);padding:8px 9px}
+.qopt input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
+.pr.ev{font-size:13.5px;font-weight:500;color:var(--mut);white-space:normal;text-align:left;max-width:140px;line-height:1.3}
 .gcimg{display:block;width:100%;aspect-ratio:1322/940;object-fit:cover;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
 .gcv .sp{justify-content:flex-end}
 @media(min-width:760px){.gcv .gcimg{width:170px;flex:none}}
@@ -225,11 +235,11 @@ const $=id=>document.getElementById(id);
 const TH=()=>{const l=(ag&&ag.terapeutas)||[];return l.length?l:[{id:'admin',n:'Daniela Velásquez',r:'Cosmetóloga y Masoterapeuta'}]};
 const curTh=()=>TH().find(t=>t.id===tid)||TH()[0];
 const H=()=>Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},ag&&ag.horario||{});
-// Servicios + promociones (las promociones se eligen en el panel: Editar → Crear promoción)
+// Servicios + promociones (las promociones se eligen en el panel: Menú → Crear promoción)
 const PROMO='Promociones';
 const SV=()=>{const sv=(ag&&ag.services)||[],pr=((ag&&ag.promos)||[]).filter(x=>x&&x.n&&+x.m>=5).map(x=>({n:'Promo: '+x.n,nom:x.n,m:+x.m,v:+x.v||0,vo:+x.vo||0,c:PROMO,g:'',promo:1}));return pr.concat(sv)};
-const nomS=s=>s.pack?s.nom:s.promo||s.duo?s.nom:s.n;
-// Masajes dúo: dos personas al mismo tiempo, cada una elige su masaje (descuentos y abono en el panel: Editar → Descuentos dúo)
+const nomS=s=>s.pack||s.qty?s.nom:s.promo||s.duo?s.nom:s.n;
+// Masajes dúo: dos personas al mismo tiempo, cada una elige su masaje (descuentos y abono en el panel: Menú → Descuentos dúo)
 const DUO='Masajes dúo';
 const DL=()=>{const d=ag&&ag.duo;return d&&d.on&&Array.isArray(d.l)?d.l.filter(x=>x&&x.n&&+x.m>=5):[]};
 const ABD=()=>{const a=ag&&ag.duo?+ag.duo.ab:NaN;return a>=0?a:20000};
@@ -241,13 +251,15 @@ const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
 let duo=false,dA=0,dB=0,ptab='svc',catF=new URLSearchParams(location.search).has('giftcard')?'Giftcard':'Todos',qTxt='',lastStep=-1;
 const duoSvc=()=>{const L=DL(),a=L[dA],b=L[dB];if(!a||!b)return null;return{n:duoCode(a.n,b.n),nom:'Masaje dúo',txt:'Masaje dúo: '+a.n+' + '+b.n,m:DM(),v:pD(a)+pD(b),vo:(+a.v||0)+(+b.v||0),c:DUO,duo:1,a,b}};
-// Maderoterapia: sesión individual o pack (panel → Editar → Maderoterapia)
-let mk=1;
+// Maderoterapia: sesión individual o pack (panel → Menú → Maderoterapia)
+let mk=1,mq=0;
 const MADX=()=>(ag&&ag.madera)||null;
 const MADC=()=>(MADX()&&MADX().c)||'Maderoterapia';
 const esMad=x=>!!x&&!!MADX()&&(x.c||'')===MADC();
 const cortoL=(n,L)=>{n=String(n||'');const B=t=>new TextEncoder().encode(t).length;if(B(n)<=L)return n;const c=Array.from(n);while(c.length&&B(c.join('').trimEnd()+'…')>L)c.pop();return c.join('').trimEnd()+'…'};
 const packCode=(n,k)=>cortoL(n,62)+' · Pack '+k;  // debe ser igual al de panelcatarsis.html
+const qtyCode=(n,k)=>cortoL(n,66)+' × '+k;  // precio por cantidad; igual al de panelcatarsis.html
+const durTxt=m=>{m=+m||0;if(m<60)return m+' min';const h=Math.floor(m/60),r=m%60;return h+' h'+(r?' '+r+' min':'')};
 const pagaTodo=sv=>!!sv&&esMad(sv)&&MADX().full!==false;
 // Giftcard: la categoría aparece solo con el link del mensaje (?giftcard=Nombre). Se verifica con el número único
 // de 8 dígitos: cada giftcard está cifrada con su número en la agenda pública (igual que en panelcatarsis.html).
@@ -265,7 +277,9 @@ async function gcAbre(num){const{k,key}=await gcKdf(num),e=((ag&&ag.gc)||{})[k];
 const gcIdx=()=>{if(!gcV)return -1;const L=SV(),j=gcV.s?L.findIndex(x=>!x.promo&&!x.w&&x.n===gcV.s):-1;return j>=0?j:gcPick};
 const gcSvc=()=>{const b=SV()[gcIdx()];if(!gcV||!b)return null;const pre='Giftcard '+fmtN(gcV.n)+' · ',fijo=!!gcV.s&&b.n===gcV.s;
   return Object.assign({},b,{n:pre+cortoL(b.n,56),nom:b.n,txt:pre+b.n,gcard:1,gm:+gcV.m||0,dif:fijo?0:Math.max(0,(+b.v||0)-(+gcV.m||0)),hasta:gcV.h,k:null})};
-const svc=()=>{if(gcMode)return gcSvc();if(duo)return duoSvc();const b=SV()[svcIdx]||null;if(!b)return null;const q=mk>1&&Array.isArray(b.k)?b.k.find(x=>+x.s===mk):null;
+const svc=()=>{if(gcMode)return gcSvc();if(duo)return duoSvc();const b=SV()[svcIdx]||null;if(!b)return null;
+  const qt=mq>0&&Array.isArray(b.q)?b.q.find(x=>+x.n===mq):null;if(qt)return Object.assign({},b,{n:qtyCode(b.n,qt.n),nom:b.n,txt:`${b.n} × ${qt.n}`,v:+qt.v,qty:+qt.n});
+  const q=mk>1&&Array.isArray(b.k)?b.k.find(x=>+x.s===mk):null;
   return q?Object.assign({},b,{n:packCode(b.n,q.s),nom:b.n,txt:`${b.n} · Pack ${q.s} sesiones`,v:+q.v,pack:+q.s,unit:Math.round(q.v/q.s),base:+b.v}):b};
 function timesFor(d,sv){
   const h=H(),paso=Math.max(10,+h.paso||30),dur=Math.max(5,+sv.m||paso),wd=toD(d).getDay(),dh=sv.duo?DH():null;
@@ -301,7 +315,7 @@ db.collection('publico').doc('agenda').onSnapshot(d=>{ag=d.exists?d.data():{};on
 db.collection('ocupados').onSnapshot(q=>{oc2={};q.docs.forEach(d=>{oc2[d.id]=d.data().ocupado||{}});onData()},()=>{});
 db.collection('bloques').onSnapshot(q=>{taken=new Set(q.docs.map(d=>d.id));onData()},()=>{});
 const abonoDe=v=>{const A=+(ag&&ag.abono)||0;return A>0&&A<=100?Math.round(v*A/100):Math.min(+v,A)};
-const abonoSv=sv=>sv&&sv.gcard?0:sv&&sv.duo?Math.min(+sv.v,ABD()):pagaTodo(sv)?+sv.v:abonoDe(sv?sv.v:0);
+const abonoSv=sv=>sv&&sv.gcard?0:sv&&sv.ev&&!(+sv.v>0)?(+(ag&&ag.abono)>100?+ag.abono:0):sv&&sv.duo?Math.min(+sv.v,ABD()):pagaTodo(sv)?+sv.v:abonoDe(sv?sv.v:0);
 async function sendMail(tpl,params){
   if(!MAIL_ON||!tpl)return;
   try{await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EMAILJS.serviceId,template_id:tpl,user_id:EMAILJS.publicKey,template_params:params})})}catch(e){}
@@ -326,12 +340,12 @@ function stepper(){
 function card(){
   const sv=svc(),th=curTh();
   const thSel=step===1&&TH().length>1?`<label class="f" for="th">Profesional</label><select id="th">${TH().map(t=>`<option value="${esc(t.id)}" ${t.id===tid?'selected':''}>${esc(t.n)}</option>`).join('')}</select>`:'';
-  const notes=!sv?'':sv.promo?'<p class="pnote">★ Precio especial de promoción</p>':!sv.duo&&/^evaluaci/i.test(sv.n)?'<p class="pnote">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas por la evaluación se descuenta del tratamiento.</p>':'';
+  const notes=!sv?'':sv.promo?'<p class="pnote">★ Precio especial de promoción</p>':sv.ev?'<p class="pnote">En la evaluación se define el valor del tratamiento. El abono se descuenta de ese valor.</p>':!sv.duo&&/^evaluaci/i.test(sv.n)?'<p class="pnote">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas por la evaluación se descuenta del tratamiento.</p>':'';
   const cuando=sv&&selT!==null&&selDay?`<dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd>`:'';
   let dl='';
   if(sv&&sv.duo)dl=`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`;
   else if(sv&&sv.gcard)dl=`<dl><dt>Servicio</dt><dd>${esc(sv.nom)}<span class="pz">Giftcard</span></dd><dt>Giftcard</dt><dd>N° ${fmtN(gcV.n)}${gcV.p?' · para '+esc(gcV.p):''}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Pago</dt><dd>${sv.dif>0?`Giftcard ${money(sv.gm)} · diferencia ${money(sv.dif)} en el local`:'Pagado con tu giftcard ✓'}</dd></dl>${step===1?`<p class="pnote">Puedes reservar hasta el ${fLarga(sv.hasta)}, fecha en que vence tu giftcard.</p>`:''}`;
-  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd>${esMad(sv)?`<dt>Plan</dt><dd>${sv.pack?`Pack ${sv.pack} sesiones <span class="mut" style="font-weight:400">(${money(sv.unit)} c/u)</span>`:'1 sesión'}</dd>`:''}<dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos${sv.pack?' por sesión':''}</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.promo&&sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}${sv.pack&&sv.base*sv.pack>sv.v?` <s class="mut" style="font-weight:400">${money(sv.base*sv.pack)}</s>`:''}</dd>${sv.w?'':`<dt>${pagaTodo(sv)?'Pago al reservar':'Abono'}</dt><dd>${money(abonoSv(sv))}${pagaTodo(sv)?' <span class="mut" style="font-weight:400">(valor completo)</span>':''}</dd>`}</dl>${sv.pack?`<p class="pnote">Reservas tu primera sesión; las ${sv.pack-1} siguientes las coordinamos contigo.</p>`:''}`;
+  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?'<span class="pz">Promoción</span>':''}</dd>${esMad(sv)?`<dt>Plan</dt><dd>${sv.pack?`Pack ${sv.pack} sesiones <span class="mut" style="font-weight:400">(${money(sv.unit)} c/u)</span>`:'1 sesión'}</dd>`:''}<dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos${sv.pack?' por sesión':''}</dd>${sv.qty?`<dt>Cantidad</dt><dd>${sv.qty}</dd>`:''}<dt>Valor</dt><dd>${sv.ev?(+sv.v>0?`Según evaluación <span class="mut" style="font-weight:400">(desde ${money(sv.v)})</span>`:'Según evaluación'):money(sv.v)}${!sv.ev&&!sv.pack&&!sv.qty&&+sv.vo>+sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}${sv.pack&&sv.base*sv.pack>sv.v?` <s class="mut" style="font-weight:400">${money(sv.base*sv.pack)}</s>`:''}</dd>${sv.w?'':`<dt>${pagaTodo(sv)?'Pago al reservar':'Abono'}</dt><dd>${money(abonoSv(sv))}${pagaTodo(sv)?' <span class="mut" style="font-weight:400">(valor completo)</span>':''}</dd>`}</dl>${sv.pack?`<p class="pnote">Reservas tu primera sesión; las ${sv.pack-1} siguientes las coordinamos contigo.</p>`:''}`;
   return `<aside class="card"><h3 class="sumh">Tu reserva</h3>${thSel}${step===1&&duo?duoCtl(sv):''}${notes}${dl}${step===1?'<button type="button" class="lnk" data-go="svc">← Cambiar servicio</button>':''}</aside>`;
 }
 function duoCtl(sv){
@@ -388,11 +402,15 @@ function catalogo(){
 }
 function svcCard(it){
   if(it.duo){const L=DL(),mn=Math.min(...L.map(pD))*2;
-    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${DM()} min${duoHorTxt()?` · 📅 ${duoHorTxt()}`:''}</span></div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
+    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${durTxt(DM())}${duoHorTxt()?` · 📅 ${duoHorTxt()}`:''}</span></div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
   if(it.s&&esMad(it.s)&&!it.s.w)return madCard(it);
   const s=it.s,nm=nomS(s),ev=!s.promo&&/^evaluaci/i.test(s.n),wl=s.w?waLink(waTxtSvc(s)):'';
   const btn=s.w?(wl?`<a class="rbtn wa" href="${wl}" target="_blank" rel="noopener">💬 Agendar por WhatsApp</a>`:''):`<button class="rbtn" data-res="${it.i}">Reservar</button>`;
-  return `<article class="svc" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')))}"><div class="si"><h4>${esc(nm)}${s.promo?'<span class="pz">Promoción</span>':''}</h4>${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">⏱ ${s.m} min</span></div><div class="sp"><span class="pr">${money(s.v)}${s.promo&&s.vo>s.v?`<s>${money(s.vo)}</s>`:''}</span>${btn}</div></article>`;
+  const q=!s.promo&&!s.w&&Array.isArray(s.q)?s.q.filter(t=>+t.n>0&&+t.v>0):[];
+  const desde=s.ev&&+s.v>0?`Desde ${money(s.v)}. `:'',desc=s.ds||desde?`<p class="sd">${desde}${esc(s.ds||'')}</p>`:'';
+  const pr=s.ev?'<span class="pr ev">Valor según evaluación</span>':q.length?`<span class="pr" data-prc><small>Desde</small> ${money(Math.min(...q.map(t=>+t.v)))}</span>`:`<span class="pr">${money(s.v)}${+s.vo>+s.v?`<s>${money(s.vo)}</s>`:''}</span>`;
+  const qo=q.length?`<div class="qopts" role="radiogroup" aria-label="Cantidad">${q.map((t,j)=>`<label class="qopt"><input type="radio" name="q${it.i}" value="${t.n}" ${j?'':'checked'}><span><i>${t.n} ×</i><b>${money(t.v)}</b></span></label>`).join('')}</div>`:'';
+  return `<article class="svc${q.length?' xp':''}" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')+' '+(s.ds||'')))}"><div class="si"><h4>${esc(nm)}${s.promo?'<span class="pz">Promoción</span>':''}</h4>${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${desc}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">⏱ ${durTxt(s.m)}</span></div>${qo}<div class="sp">${pr}${btn}</div></article>`;
 }
 function gcCanje(){
   const nm=gcV&&gcV.p?gcV.p:GC_NOM;let body;
@@ -430,7 +448,7 @@ function madCard({i,s}){
   const ks=(Array.isArray(s.k)?s.k:[]).filter(q=>+q.s>1&&+q.v>0),nm=`mo${i}`;
   const op=[`<label class="opt"><input type="radio" name="${nm}" value="1" checked><span><b>1 sesión</b><small>${money(s.v)}</small></span></label>`]
     .concat(ks.map(q=>{const u=Math.round(q.v/q.s),ah=s.v*q.s-q.v;return `<label class="opt"><input type="radio" name="${nm}" value="${q.s}"><span><b>Pack ${q.s}</b><small>${money(q.v)}</small>${ah>0?`<i>${money(u)} c/u</i>`:''}</span></label>`}));
-  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h4>${esc(s.n)}</h4>${(s.b||[]).length?`<ul class="ben">${s.b.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}<span class="meta">⏱ ${s.m} min por sesión</span></div>
+  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h4>${esc(s.n)}</h4>${(s.b||[]).length?`<ul class="ben">${s.b.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}<span class="meta">⏱ ${durTxt(s.m)} por sesión</span></div>
   ${ks.length?`<div class="opts" role="radiogroup" aria-label="Sesiones">${op.join('')}</div>`:''}
   <div class="sp"><span class="pr" data-prc>${money(s.v)}</span><button class="rbtn" data-res="${i}">Reservar</button></div></article>`;
 }
@@ -559,8 +577,8 @@ document.addEventListener('click',e=>{
   const g=k=>e.target.closest('['+k+']');let el;
   if(el=g('data-gcver')){gcVerifica();return}
   else if(el=g('data-gcotra')){gcV=null;gcMode=false;gcTxt='';gcMsg='';gcPick=-1}
-  else if(el=g('data-gcres')){if(gcIdx()<0)return;gcMode=true;duo=false;mk=1;step=1;selT=null;notice='';recompute()}
-  else if(el=g('data-res')){gcMode=false;const v=el.dataset.res,r=el.closest('article')&&el.closest('article').querySelector('.opts input:checked');mk=r?+r.value:1;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
+  else if(el=g('data-gcres')){if(gcIdx()<0)return;gcMode=true;duo=false;mk=1;mq=0;step=1;selT=null;notice='';recompute()}
+  else if(el=g('data-res')){gcMode=false;const v=el.dataset.res,art=el.closest('article'),r=art&&art.querySelector('.opts input:checked'),r2=art&&art.querySelector('.qopts input:checked');mk=r?+r.value:1;mq=r2?+r2.value:0;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
   else if(el=g('data-cf')){catF=el.dataset.cf;document.querySelectorAll('.cchips button').forEach(b=>b.classList.toggle('on',b===el));applyF();const s=document.querySelector('.srch');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({behavior:'smooth'});return}
   else if(el=g('data-pt'))ptab=el.dataset.pt;
   else if(el=g('data-day')){selDay=el.dataset.day;selT=null;notice=''}
@@ -573,6 +591,8 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('input',e=>{if(e.target.id==='q'){qTxt=e.target.value;applyF()}else if(e.target.id==='gcNum'){gcTxt=e.target.value;if(gcMsg){gcMsg='';const er=$('gcErr');if(er)er.textContent=''}}});
 document.addEventListener('keydown',e=>{if(e.target.id==='gcNum'&&e.key==='Enter'){e.preventDefault();gcVerifica()}});
+document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('.qopts'))return;const art=t.closest('article'),s=SV()[+art.querySelector('[data-res]').dataset.res];if(!s)return;
+  const q=(s.q||[]).find(x=>+x.n===+t.value),pr=art.querySelector('[data-prc]');if(pr&&q)pr.textContent=money(q.v)});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('.opts'))return;const art=t.closest('article'),s=SV()[+art.querySelector('[data-res]').dataset.res];if(!s)return;
   const q=(s.k||[]).find(x=>+x.s===+t.value),pr=art.querySelector('[data-prc]');if(pr)pr.textContent=money(q?q.v:s.v)});
 document.addEventListener('change',e=>{if(e.target.id==='gcSv'){gcPick=+e.target.value;render();return}
@@ -587,7 +607,7 @@ document.addEventListener('submit',async e=>{
   if(t.replace(/\D/g,'').length<8){er.textContent='Escribe un teléfono válido.';return}
   const mail=MAIL_ON?$('mail').value.trim():'';
   if(MAIL_ON&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){er.textContent='Escribe un correo válido.';return}
-  const disp=sv.duo||sv.pack||sv.gcard?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv),gcB=sv.gcard?{n:gcV.n,p:gcV.p||'',dif:sv.dif}:null,vis=sv.gcard?sv.nom:disp;
+  const disp=sv.duo||sv.pack||sv.gcard||sv.qty?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv),gcB=sv.gcard?{n:gcV.n,p:gcV.p||'',dif:sv.dif}:null,vis=sv.gcard?sv.nom:disp;
   if($('hp').value||Date.now()-t2<2500){booked={d:selDay,t:selT,s:vis,m:+sv.m,v:+sv.v,ab,full,n,th:curTh().n,at:Date.now(),gc:gcB};step=3;selT=null;render();return}
   busy=true;$('send').disabled=true;er.textContent='';
   const d=selDay,s0=selT,dur=Math.max(5,+sv.m),paso=Math.max(10,+H().paso||30),tel=(x=>x.length>9?x.slice(-9):x)(t.replace(/\D/g,''));

@@ -244,6 +244,8 @@ input[type=checkbox]{min-height:0;width:auto}
 .madh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px}
 .madit textarea{width:100%}
 .madit .row{margin:4px 0}
+.nsq{margin:4px 0}.nsq .x{flex:0 0 40px;height:46px}
+.nsqh{margin:4px 0 0;font-size:12.5px;color:var(--mut)}.nsqh i{flex:0 0 40px}.nsqh:has(+#nsQ:empty){display:none}
 #pkBox[hidden]{display:none}
 /* --- editar horario de una cita --- */
 .hrbtn{white-space:nowrap;font-size:13px}
@@ -303,7 +305,7 @@ input[type=checkbox]{min-height:0;width:auto}
   <div class="row r3"><div><label class="f" for="time">Hora</label><select id="time" aria-describedby="timeHint"></select><input type="time" id="timeX" class="hide" aria-label="Otra hora" style="margin-top:6px"></div>
     <div><label class="f" for="dur">Duración (min)</label><input type="number" id="dur" min="5" step="5"></div>
     <div><label class="f" for="price">Valor ($)</label><input type="number" id="price" min="0" step="500"></div></div>
-  <div id="pkBox" hidden><label class="f" for="pk" style="margin-top:8px">Tipo de sesión</label><select id="pk"></select></div>
+  <div id="pkBox" hidden><label class="f" for="pk" style="margin-top:8px" id="pkLbl">Tipo de sesión</label><select id="pk"></select></div>
   <div class="defhint" id="defHint" hidden></div>
   <div class="row r2"><input id="client" placeholder="Nombre del cliente" aria-label="Nombre del cliente"><input id="phone" type="tel" placeholder="Teléfono (ej. 9 1234 5678)" aria-label="Teléfono"></div>
   <div class="mut" id="timeHint" style="font-size:12.5px;margin-top:6px"></div>
@@ -326,6 +328,12 @@ input[type=checkbox]{min-height:0;width:auto}
   <label class="f" for="nsN">Nombre del servicio</label><input id="nsN" maxlength="70" placeholder="Ej. Masaje relajante" autocomplete="off">
   <div class="row"><div><label class="f" for="nsC">Categoría</label><input id="nsC" list="catsDL" autocomplete="off"></div><div><label class="f" for="nsG">Grupo (opcional)</label><input id="nsG" list="grpDL" autocomplete="off" placeholder="Ej. Masajes localizados"></div></div>
   <div class="row"><div><label class="f" for="nsM">Duración (min)</label><input id="nsM" type="number" min="5" step="5"></div><div><label class="f" for="nsV">Valor ($)</label><input id="nsV" type="number" min="0" step="500"></div></div>
+  <label class="f" for="nsD">Descripción (opcional)</label><textarea id="nsD" rows="2" maxlength="220" placeholder="Ej. Hasta 2 lesiones."></textarea>
+  <div class="row"><div><label class="f" for="nsVo">Precio normal ($, opcional)</label><input id="nsVo" type="number" min="0" step="500" placeholder="Se muestra tachado"></div><div></div></div>
+  <label class="duosw" style="margin:4px 0 2px;font-size:14px"><input type="checkbox" id="nsEv"> Valor según evaluación (en reservas se muestra «Valor según evaluación»; si el valor es mayor a 0 se agrega «Desde»)</label>
+  <div class="lbl" style="margin-top:10px">Precios por cantidad (opcional)</div>
+  <div class="mut" style="font-size:12.5px;margin:0 0 6px">Tu clienta elige la cantidad al reservar (por ejemplo, extracción de milium). Si lo usas, el valor de arriba se reemplaza por el más bajo («Desde»).</div>
+  <div class="row nsqh"><span>Cantidad</span><span>Valor ($)</span><i></i></div><div id="nsQ"></div><button type="button" class="pill" data-nsqadd style="width:100%;margin:2px 0 8px">＋ Agregar cantidad</button>
   <label class="duosw" style="margin:4px 0 2px;font-size:14px"><input type="checkbox" id="nsW"> Se pide por WhatsApp (en la página de reservas no muestra horas; tú la agendas desde el panel)</label>
   <label class="duosw" style="margin:4px 0 2px;font-size:14px"><input type="checkbox" id="nsP"> Solo se agenda desde el panel (no aparece en la página de reservas)</label>
   <div class="mut" style="font-size:12.5px;margin:0 0 6px 32px">Si además el valor es 0, la duración y el valor se escriben al agendar la hora (por ejemplo, después de una evaluación).</div>
@@ -360,14 +368,15 @@ input[type=checkbox]{min-height:0;width:auto}
 </div>
 <div id="horaModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="horaTitle">
  <div class="mbox" style="max-width:440px">
-  <div class="mhead"><h3 id="horaTitle">Editar horario</h3><button type="button" class="x" data-horaclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <div class="mhead"><h3 id="horaTitle">Editar horario y valor</h3><button type="button" class="x" data-horaclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
   <p class="mut" id="horaWho" style="font-size:14px;margin:4px 0 6px"></p>
   <div class="row"><div><label class="f" for="hrIni">Inicio</label><input type="time" id="hrIni" step="300"></div><div><label class="f" for="hrFin">Término</label><input type="time" id="hrFin" step="300"></div></div>
   <label class="f" for="hrDur">Duración del servicio (min)</label><input type="number" id="hrDur" min="5" max="480" step="5" inputmode="numeric">
   <div class="hrq"><button type="button" class="pill" data-hrq="-15">− 15 min</button><button type="button" class="pill" data-hrq="15">+ 15 min</button></div>
+  <div id="hrValBox"><label class="f" for="hrVal">Valor del servicio ($)</label><input type="number" id="hrVal" min="0" step="500" inputmode="numeric"><div class="mut" style="font-size:12.5px;margin-top:4px" id="hrValTip"></div></div>
   <div class="hrinfo" id="hrInfo"></div>
   <div class="err" id="hrErr" role="alert"></div>
-  <button class="btn" style="width:100%;margin-top:6px" type="button" data-horasave>Guardar horario</button>
+  <button class="btn" style="width:100%;margin-top:6px" type="button" data-horasave>Guardar cambios</button>
   <button class="pill" style="width:100%;margin-top:8px" type="button" data-horaclose>Cancelar</button>
  </div>
 </div>
@@ -479,6 +488,17 @@ const MAD_DEF=[
  {n:'Maderoterapia Facial',m:40,v:30000,c:'Maderoterapia',g:'Tratamientos faciales',b:['Estimula la circulación','Mejora la firmeza y elasticidad de la piel','Favorece el drenaje linfático facial'],k:[{s:5,v:130000},{s:10,v:200000}]},
  {n:'Maderoterapia Papada',m:40,v:30000,c:'Maderoterapia',g:'Tratamientos faciales',b:['Favorece el drenaje de líquidos','Define el contorno facial','Mejora la apariencia de la piel'],k:[{s:5,v:130000},{s:10,v:200000}]}];
 const MAD_CFG={on:true,c:'Maderoterapia',sub:'Modelación corporal y facial',tags:'Drenaje · Modelación · Reducción',desc:'Maderoterapia manual + drenaje linfático manual. Terapia manual que combina el uso de instrumentos de madera con técnicas de drenaje linfático, estimulando la circulación, favoreciendo el bienestar, la modelación corporal y la mejora de la apariencia de la piel.',ev:'Definimos la zona y el número de sesiones ideales para ti.',full:true};
+// Lesiones de piel (antes «Acrocordones»): q = precios por cantidad, vo = precio normal (tachado),
+// ev = valor según evaluación (v > 0 se muestra «Desde»), ds = descripción
+const LP='Lesiones de piel';
+const LP_DEF=[
+ {n:'Extracción de milium',m:30,v:2000,c:LP,g:'',ds:'Pequeños quistes de queratina. Valor según cantidad y grosor.',q:[[1,2000],[2,4000],[3,5000],[4,6000],[5,8000],[6,10000],[7,11000],[8,13000],[9,15000],[10,17000]].map(([n,v])=>({n,v}))},
+ {n:'Acrocordones con Plasmapen · Básico',m:60,v:25000,vo:45000,c:LP,g:'',ds:'Hasta 2 lesiones.'},
+ {n:'Acrocordones con Plasmapen · Popular',m:60,v:45000,vo:80000,c:LP,g:'',ds:'Hasta 4 lesiones.'},
+ {n:'Acrocordones con Plasmapen · Completo',m:90,v:89000,vo:210000,c:LP,g:'',ds:'Hasta 10 lesiones.'},
+ {n:'Acrocordones con Plasmapen · Sin límites',m:90,v:129000,vo:210000,c:LP,g:'',ds:'De 11 a 35 lesiones en una sola sesión.'},
+ {n:'Verrugas',m:90,v:55000,ev:1,c:LP,g:'',ds:'El valor depende del tamaño y zona a tratar. Reserva tu hora de evaluación.'},
+ {n:'Cicatriz',m:90,v:0,ev:1,c:LP,g:'',ds:'Tratamiento estético localizado para mejorar la apariencia y textura de cicatrices. El valor depende del tamaño y zona a tratar. Reserva tu hora de evaluación.'}];
 let S={branches:['Catarsis Osorno'],thers:['Daniela Velásquez'],services:DEF,appts:[],branch:0,ther:0};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 function migrate(){
@@ -493,6 +513,12 @@ function migrate(){
   if(!S.cfg.acro){S.cfg.acro=1;needPush=true;if(!S.services.some(x=>/acrocord/i.test(x.n||'')))S.services.push({'n':'Evaluación de acrocordones','m':15,'v':10000,'c':'Acrocordones','g':'','w':1},{'n':'Tratamiento de acrocordones','m':30,'v':0,'c':'Acrocordones','g':'','p':1})}
   if(!S.cfg.acro2){S.cfg.acro2=1;needPush=true;const ev=S.services.find(x=>x.n==='Evaluación de acrocordones');if(ev)ev.w=1}
   if(!S.cfg.acro3){S.cfg.acro3=1;needPush=true;const ev=S.services.find(x=>x.n==='Evaluación de acrocordones');if(ev&&+ev.v===5000)ev.v=10000} // evaluación: $10.000
+  if(!S.cfg.lp1){S.cfg.lp1=1;needPush=true; // «Acrocordones» pasa a «Lesiones de piel» con los nuevos tratamientos
+    S.services.forEach(x=>{if((x.c||'')==='Acrocordones')x.c=LP});
+    S.services=S.services.filter(x=>x.n!=='Evaluación de acrocordones'&&!/^Extracción de milium \(/i.test(x.n||'')); // la extracción de milium pasa a precios por cantidad
+    const tr=S.services.find(x=>x.n==='Tratamiento de acrocordones');if(tr&&!S.services.some(x=>x.n==='Tratamiento de lesiones de piel'))tr.n='Tratamiento de lesiones de piel';
+    const nu=LP_DEF.filter(d=>!S.services.some(x=>String(x.n).toLowerCase()===d.n.toLowerCase())).map(x=>JSON.parse(JSON.stringify(x)));
+    if(nu.length){const j=S.services.findIndex(x=>(x.c||'')===LP);if(j<0)S.services.push(...nu);else S.services.splice(j,0,...nu)}}
   S.cfg.duo=Object.assign({on:true,ab:20000,m:50,d:{}},S.cfg.duo||{});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};
   {const h=S.cfg.duo.h,mm=t=>{const [a,b]=String(t).split(':').map(Number);return a*60+b},f=x=>String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');
    if(h&&!h.t&&h.d){const t={};Object.entries(h.d).forEach(([k,r])=>{const o=[];if(r&&r.a&&r.b)for(let x=mm(r.a);x+(+S.cfg.duo.m||50)<=mm(r.b);x+=30)o.push(f(x));if(o.length)t[k]=o});S.cfg.duo.h={on:!!h.on,t}}} // días y horas dúo: de rangos a horas específicas
@@ -524,8 +550,8 @@ function processReservas(){
       // reserva hecha con giftcard desde la página de reservas: queda pagada con la giftcard
       S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?+sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:ok?(sv?sv.n:gr.nm):String(r.s||'').slice(0,80),v:ok?(+gr.g.m||0):(sv?+sv.v:0),o:1,...(ok?{e:'confirmada',p:'pagado',sp:1,gc:1,gid:gr.g.id}:{e:'reservada',p:'pendiente'})});
       if(!ok)aviso=`Reserva online con la giftcard N° ${fmtN(gr.n)}, que ${gr.g?'ya fue cobrada':'no está registrada'}: revísala`;ch=true;return}
-    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s);
-    S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?sv.v:0,e:'reservada',p:'pendiente',o:1,...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{})});ch=true;
+    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s)||qtySvc(r.s);
+    S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?(sv.ev&&!(+sv.v>0)?(+S.cfg.abono||0):sv.v):0,e:'reservada',p:'pendiente',o:1,...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{}),...(sv&&sv.ev?{ev:1}:{})});ch=true;
   });
   reservas=later;
   if(ch)render();
@@ -541,7 +567,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Menú → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -559,12 +585,13 @@ const catList=()=>[...new Set(['Masoterapia','Limpiezas faciales',...S.services.
 let confFn=null,editSvc=-1;
 function askConfirm(title,msg,fn){confTitle.textContent=title;confMsg.textContent=msg;confFn=fn;confYes.hidden=!fn;confNo.textContent=fn?'Cancelar':'Entendido';confModal.hidden=false;confNo.focus()}
 const closeConf=()=>{confModal.hidden=true;confFn=null};
+function nsqRow(n,v){const r=document.createElement('div');r.className='row nsq';r.innerHTML=`<div><input type="number" data-qn min="1" step="1" inputmode="numeric" placeholder="Cantidad" aria-label="Cantidad" value="${n||''}"></div><div><input type="number" data-qv min="0" step="500" inputmode="numeric" placeholder="Valor ($)" aria-label="Valor" value="${v||''}"></div><button type="button" class="x" data-nsqx aria-label="Quitar cantidad">✕</button>`;nsQ.appendChild(r);return r}
 function openSvc(i){
   editSvc=Number.isInteger(i)&&i>=0?i:-1;const ed=editSvc>=0,x=ed?S.services[editSvc]:null;
   svcTitle.textContent=ed?'Editar servicio':'Nuevo servicio';svcSubmit.textContent=ed?'Guardar cambios':'Guardar servicio';
   catsDL.innerHTML=catList().map(c=>`<option value="${esc(c)}">`).join('');
   grpDL.innerHTML=[...new Set(S.services.map(x=>x.g).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('');
-  nsN.value=ed?x.n:'';nsC.value=ed?(x.c||''):(catList().includes(cat.value)?cat.value:'Masoterapia');nsG.value=ed?(x.g||''):'';nsM.value=ed?x.m:60;nsV.value=ed?x.v:'';nsP.checked=!!(ed&&x.p);nsW.checked=!!(ed&&x.w);nsErr.textContent='';
+  nsN.value=ed?x.n:'';nsC.value=ed?(x.c||''):(catList().includes(cat.value)?cat.value:'Masoterapia');nsG.value=ed?(x.g||''):'';nsM.value=ed?x.m:60;nsV.value=ed?x.v:'';nsP.checked=!!(ed&&x.p);nsW.checked=!!(ed&&x.w);nsErr.textContent='';nsD.value=ed?(x.ds||''):'';nsVo.value=ed&&+x.vo>0?x.vo:'';nsEv.checked=!!(ed&&x.ev);nsQ.innerHTML='';(ed&&Array.isArray(x.q)?x.q:[]).forEach(t=>nsqRow(t.n,t.v));
   svcModal.hidden=false;nsN.focus();
 }
 function saveSvc(e){
@@ -573,9 +600,15 @@ function saveSvc(e){
   if(n.length<2){nsErr.textContent='Escribe el nombre del servicio.';return}
   if(!c){nsErr.textContent='Elige o escribe una categoría.';return}
   if(!(m>=5)){nsErr.textContent='La duración debe ser de al menos 5 minutos.';return}
-  if(nsV.value===''||!(v>=0)){nsErr.textContent='Escribe el valor del servicio.';return}
+  if((nsV.value===''||!(v>=0))&&!nsQ.querySelector('.nsq')){nsErr.textContent='Escribe el valor del servicio.';return}
   if(S.services.some((x,i)=>i!==editSvc&&x.n.toLowerCase()===n.toLowerCase())){nsErr.textContent='Ya existe un servicio con ese nombre.';return}
-  const it={n,m,v,c,g,...(nsP.checked?{p:1}:{}),...(nsW.checked&&!nsP.checked?{w:1}:{})};
+  const q=[...nsQ.querySelectorAll('.nsq')].map(r=>({n:Math.round(+r.querySelector('[data-qn]').value),v:Math.round(+r.querySelector('[data-qv]').value)})).filter(t=>t.n>=1&&t.v>0).sort((a,b)=>a.n-b.n).filter((t,i,l)=>!i||t.n!==l[i-1].n);
+  if(nsQ.querySelector('.nsq')&&!q.length){nsErr.textContent='Completa la cantidad y el valor de los precios por cantidad, o quítalos.';return}
+  const vo=Math.round(+nsVo.value)||0,ds=nsD.value.trim().replace(/\s+/g,' ');
+  // conserva los demás datos del servicio (beneficios y packs de maderoterapia, etc.)
+  const it=Object.assign({},editSvc>=0?S.services[editSvc]:{},{n,m,v:q.length?Math.min(...q.map(t=>t.v)):v,c,g});
+  ['p','w','ds','vo','ev','q'].forEach(k=>delete it[k]);
+  Object.assign(it,nsP.checked?{p:1}:{},nsW.checked&&!nsP.checked?{w:1}:{},ds?{ds}:{},vo>it.v?{vo}:{},nsEv.checked?{ev:1}:{},q.length?{q}:{});
   if(editSvc>=0){const on=S.services[editSvc].n,dd=S.cfg.duo&&S.cfg.duo.d;if(on!==n&&dd&&on in dd){dd[n]=dd[on];delete dd[on]}S.services[editSvc]=it}
   else{
     let idx=-1;S.services.forEach((x,i)=>{if(x.c===c&&(x.g||'')===g)idx=i});
@@ -695,11 +728,12 @@ const waMsg=a=>{
   const du=esDuo(a),tot=pagoTotal(a),A=du?duoAbono():tot?+a.v:+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
   const L=['Hola'+(a.c?' '+a.c:'')+', te escribimos de Catarsis Estética y Bienestar.',''];
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
-  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),enPack(a)?'• Sesión '+a.ps+' de '+a.pn+' de tu pack (ya pagado)':'• Valor: '+money(a.v));
+  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),enPack(a)?'• Sesión '+a.ps+' de '+a.pn+' de tu pack (ya pagado)':a.ev?'• Valor: según evaluación':'• Valor: '+money(a.v));
   if(pag&&a.sp&&enPack(a)){}
   else if(pag&&a.sp&&a.gc)L.push('• Pagado con giftcard ✓');
   else if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
   else if(pag&&tot)L.push('• Pagado: '+money(ab));
+  else if(pag&&a.ev)L.push('• Abono recibido: '+money(ab)+' (se descuenta del valor del tratamiento)');
   else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
   else if(!conf){L.push('',tot?'Para confirmarla, transfiere el valor completo de '+money(ab)+' dentro de '+plz(S.cfg.plazoMin)+':':'Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);L.push('','Después envíanos el comprobante por este chat.')}
   L.push('','📍 Cochrane 450, Osorno','Cómo llegar: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('Cochrane 450, Osorno'));
@@ -780,15 +814,20 @@ const esMadSvc=x=>!!x&&(x.c||'')===MADC();
 // Nombre corto para la reserva (debe ser igual al de index.html)
 const cortoL=(n,L)=>{n=String(n||'');const B=t=>new TextEncoder().encode(t).length;if(B(n)<=L)return n;const c=Array.from(n);while(c.length&&B(c.join('').trimEnd()+'…')>L)c.pop();return c.join('').trimEnd()+'…'};
 const packCode=(n,k)=>cortoL(n,62)+' · Pack '+k;
+// Precio por cantidad (ej. extracción de milium): la reserva llega como «Nombre × 3». Debe ser igual al de index.html
+const qtyCode=(n,k)=>cortoL(n,66)+' × '+k;
+const qtySvc=n=>{for(const x of S.services)for(const t of (x.q||[]))if(qtyCode(x.n,t.n)===n)return{n:`${x.n} × ${t.n}`,m:+x.m,v:+t.v};return null};
 const packSvc=n=>{for(const x of S.services)for(const q of (x.k||[]))if(packCode(x.n,q.s)===n)return{n:`${x.n} · Pack ${q.s} (sesión 1 de ${q.s})`,m:+x.m,v:+q.v,pn:+q.s};return null};
 const baseSvcDe=t=>{t=String(t||'');const b=t.replace(/ · Pack \d+.*$/,'').replace(/ · sesión de pack$/,'');return S.services.find(x=>x.n===b)};
 const pagoTotal=a=>{const x=baseSvcDe(a&&a.s);return !!(x&&esMadSvc(x)&&(S.cfg.madera||{}).full!==false)};
-function pkFill(s){const k=(cat.value!==GCC&&s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.innerHTML='';return}
+function pkFill(s){const q=(cat.value!==GCC&&s&&!(s.k||[]).length&&s.q)||[];if(q.length){pkBox.hidden=false;pkLbl.textContent='Cantidad';pk.innerHTML=q.map(t=>`<option value="q${t.n}">${t.n} × · ${money(t.v)}</option>`).join('');return}
+  pkLbl.textContent='Tipo de sesión';const k=(cat.value!==GCC&&s&&s.k)||[];pkBox.hidden=!k.length;if(!k.length){pk.innerHTML='';return}
   pk.innerHTML=`<option value="">Sesión individual · ${money(s.v)}</option>`+k.map(q=>`<option value="${q.s}">Pack ${q.s} sesiones · ${money(q.v)} (1ª sesión)</option>`).join('')}
 // Nombre y datos del pack de la hora que se agrega
 function pkInfo(s,nid){const v=pkBox.hidden?'':pk.value;
   if(v==='use'){const p=packList().find(x=>x.id==madCli);if(p){const k=p.usadas+1;return{s:`${p.base} · Pack ${p.n} (sesión ${k} de ${p.n})`,v:0,x:{pk:p.id,ps:k,pn:p.n,p:'pagado',sp:1,...(estado.value==='reservada'?{e:'confirmada'}:{})}}}}
   if(v==='pp')return{s:s.n+' · sesión de pack',x:{}};
+  if(/^q\d+$/.test(v)){const t=(s.q||[]).find(x=>'q'+x.n===v);if(t)return{s:`${s.n} × ${t.n}`,x:{}}}
   const q=(s.k||[]).find(x=>String(x.s)===v);if(q)return{s:`${s.n} · Pack ${q.s} (sesión 1 de ${q.s})`,x:{pk:nid,ps:1,pn:+q.s}};
   return{s:s.n,x:{}}}
 // Packs de maderoterapia comprados y sesiones usadas (se calcula desde la agenda)
@@ -891,7 +930,8 @@ function saveDH(){
 let horaId=null;
 function openHora(id){const a=S.appts.find(x=>x.id==id);if(!a)return;horaId=a.id;
   horaWho.innerHTML=`<b>${esc(a.bq||a.e==='bloqueado'?'Horario bloqueado':a.c||'Sin nombre')}</b>${a.s&&a.e!=='bloqueado'?' · '+esc(a.s):''}<br>${fmtD(a.d).replace(/^./,c=>c.toUpperCase())}`;
-  hrIni.value=a.t;hrDur.value=+a.m||30;hrFin.value=hm(toMin(a.t)+(+a.m||30));hrErr.textContent='';horaInfo();horaModal.hidden=false;hrDur.focus()}
+  hrIni.value=a.t;hrDur.value=+a.m||30;hrFin.value=hm(toMin(a.t)+(+a.m||30));hrErr.textContent='';
+  {const sv=a.bq||a.e==='bloqueado'||enPack(a);hrValBox.hidden=!!sv;hrVal.value=sv?'':(+a.v||0);hrValTip.textContent=a.ev?'Valor según evaluación: escribe aquí el valor definido en la evaluación.':''}horaInfo();horaModal.hidden=false;hrDur.focus()}
 function horaInfo(){const a=S.appts.find(x=>x.id==horaId),s=toMin(hrIni.value),d=Math.round(+hrDur.value);
   if(!a||!hrIni.value||!(d>0)){hrInfo.innerHTML='';return}
   const cr=S.appts.filter(x=>x!==a&&x.k===a.k&&x.d===a.d&&x.e!=='disponible'&&toMin(x.t)<s+d&&s<toMin(x.t)+(+x.m||0));
@@ -901,6 +941,7 @@ function saveHora(){const a=S.appts.find(x=>x.id==horaId);if(!a){horaModal.hidde
   if(!hrIni.value||!(s>=0)){hrErr.textContent='Elige la hora de inicio.';return}
   if(!(d>=5&&d<=480)){hrErr.textContent='La duración debe estar entre 5 y 480 minutos.';return}
   if(s+d>24*60){hrErr.textContent='El servicio debe terminar antes de medianoche.';return}
+  if(!hrValBox.hidden&&hrVal.value!==''){const v=Math.round(+hrVal.value);if(!(v>=0)){hrErr.textContent='Escribe un valor válido.';return}if(v!==(+a.v||0)){a.v=v;delete a.ev}}
   a.t=hm(s);a.m=d;horaModal.hidden=true;horaId=null;render();showToast(`Horario actualizado ✓ · ${hm(s)} a ${hm(s+d)} (${d} min)`)}
 document.addEventListener('input',e=>{const id=e.target.id;
   if(id==='hrIni'||id==='hrDur'){const d=Math.round(+hrDur.value);if(hrIni.value&&d>0)hrFin.value=hm(toMin(hrIni.value)+d)}
@@ -952,7 +993,7 @@ const aDef=s=>!!(s&&s.p&&!(+s.v>0));
 const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
 function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
   return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
-const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
+const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.ev&&!(+s.v>0)?(+S.cfg.abono||0):s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 function render(){
   edBtn.textContent=editing?'Cerrar':'Menú';edBtn.setAttribute('aria-expanded',editing);
@@ -966,7 +1007,7 @@ function render(){
 ;
     pane.servicios=''
     +`<div class="lbl">Servicios</div><button class="btn" style="width:100%;margin-bottom:8px" data-svcopen>＋ Nuevo servicio</button>`
-    +S.services.map((s,i)=>`<div class="svcard"><div class="svi"><b>${esc(s.n)}</b><div class="mut">${esc(s.c||'Otros')}${s.g?' · '+esc(s.g):''}</div><div class="svm">${aDef(s)?'Duración y valor según evaluación':s.m+' min · '+money(s.v)}${s.p?' <span class="sotag">Solo panel</span>':s.w?' <span class="sotag">Por WhatsApp</span>':''}</div></div><div class="sva"><button class="pill" data-svcedit="${i}">Editar</button><button class="x" data-xs="${i}" aria-label="Eliminar servicio ${esc(s.n)}">✕</button></div></div>`).join('')
+    +S.services.map((s,i)=>`<div class="svcard"><div class="svi"><b>${esc(s.n)}</b><div class="mut">${esc(s.c||'Otros')}${s.g?' · '+esc(s.g):''}</div><div class="svm">${aDef(s)?'Duración y valor según evaluación':s.m+' min · '+(s.ev?(+s.v>0?'desde '+money(s.v):'valor según evaluación'):(s.q||[]).length?'desde '+money(s.v):money(s.v))}${s.p?' <span class="sotag">Solo panel</span>':s.w?' <span class="sotag">Por WhatsApp</span>':''}${(s.q||[]).length?` <span class="sotag">Por cantidad · ${s.q.length} precios</span>`:''}${+s.vo>+s.v?` <span class="sotag">Antes ${money(s.vo)}</span>`:''}</div></div><div class="sva"><button class="pill" data-svcedit="${i}">Editar</button><button class="x" data-xs="${i}" aria-label="Eliminar servicio ${esc(s.n)}">✕</button></div></div>`).join('')
 ;
     pane.reservas=''
     +`<div class="lbl">Reservas online</div><div class="mut" style="font-size:13px;margin-bottom:6px">Link para tus clientas: <b style="user-select:all;word-break:break-all">${esc(new URL('./',location.href).href)}</b></div>
@@ -990,7 +1031,7 @@ function render(){
   const cats=[...new Set(S.services.map(x=>x.c||'Otros')),GCC],cc=cats.includes(cat.value)?cat.value:cats[0];
   cat.innerHTML=cats.map(c=>`<option ${c===cc?'selected':''}>${esc(c)}</option>`).join('');
   const prev=svc.value,first=!svc.options.length,gr={};
-  S.services.forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+money(x.v)}</option>`)});
+  S.services.forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+(x.ev?(+x.v>0?'desde '+money(x.v):'valor según evaluación'):(x.q||[]).length?'desde '+money(x.v):money(x.v))}</option>`)});
   svc.innerHTML=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
   if([...svc.options].some(o=>o.value===prev))svc.value=prev;else{svc.selectedIndex=0;fill()}
   if(first)fill();
@@ -1007,7 +1048,7 @@ function render(){
   const pend=L.filter(a=>!['disponible','bloqueado'].includes(a.e)&&a.p==='pendiente').length;
   dayInfo.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} agendada${L.length==1?'':'s'}`+(pend?` · ${pend} abono${pend==1?'':'s'} pendiente${pend==1?'':'s'}`:''):'Sin horas agendadas.';
   viewbar.innerHTML=`<button data-view="lista" class="${dayView==='lista'?'on':''}">Lista</button><button data-view="linea" class="${dayView==='linea'?'on':''}">Línea de tiempo</button>`;
-  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
+  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
   slots.innerHTML=slotsHtml();blkDay.textContent=fmtD(sel);fillTimes();
   save();
 }
@@ -1054,6 +1095,8 @@ document.addEventListener('click',e=>{
   else if(el=g('data-gpclose')){gpModal.hidden=true;return}
   else if(e.target.id==='gpModal'){gpModal.hidden=true;return}
   else if(el=g('data-gcopen')){if(!readOnly)openGc();return}
+  else if(el=g('data-nsqadd')){const l=[...nsQ.querySelectorAll('[data-qn]')].map(x=>+x.value||0);const r=nsqRow(l.length?Math.max(...l)+1:1,'');r.querySelector('[data-qv]').focus();return}
+  else if(el=g('data-nsqx')){el.closest('.nsq').remove();return}
   else if(el=g('data-gcclose')){gcModal.hidden=true;return}
   else if(e.target.id==='gcModal'){gcModal.hidden=true;return}
   else if(el=g('data-gcsave')){saveGc();return}
@@ -1109,7 +1152,7 @@ document.addEventListener('click',e=>{
     let gcx={};if(cat.value===GCC){const gg=gcSel&&gcLista().find(x=>x.id===gcSel&&!x.usada);if(!gg){showToast('Elige la giftcard que se va a cobrar');gcBox.scrollIntoView({behavior:'smooth',block:'center'});return}
       gcx={gc:1,gid:gg.id,p:'pagado',sp:1,...(estado.value==='reservada'?{e:'confirmada'}:{})}}
     const nid=Date.now(),pi=pkInfo(s,nid);
-    S.appts.push({id:nid,k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pi.s,v:pi.v===0?0:(+price.value||0),e:estado.value,p:'pendiente',...pi.x,...gcx});
+    S.appts.push({id:nid,k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pi.s,v:pi.v===0?0:(+price.value||0),e:estado.value,p:'pendiente',...pi.x,...gcx,...(s.ev&&!gcx.gid?{ev:1}:{})});
     if(pi.x.pk&&pi.x.ps>1){madCli=null;showToast(`Sesión ${pi.x.ps} de ${pi.x.pn} agregada ✓ · quedan ${pi.x.pn-pi.x.ps}`)}
     if(gcx.gid){gcSel=null;showToast('Giftcard cobrada ✓')}
     client.value='';phone.value=''}
@@ -1207,7 +1250,7 @@ function gcMesDraw(){const mes=(gcF.value||hoyIso()).slice(0,7);gcMes.innerHTML=
   .catch(()=>{gcMes.innerHTML='<div class="mut">No se pudieron cargar las ventas del mes.</div>'})}
 function openGc(){
   const cats={};S.services.filter(x=>!x.p&&+x.v>0).forEach((x,i)=>{(cats[x.c||'Otros']=cats[x.c||'Otros']||[]).push(x)});
-  gcSvc.innerHTML='<option value="">Monto libre (sin servicio)</option>'+Object.entries(cats).map(([c,l])=>`<optgroup label="${esc(c)}">${l.map(x=>`<option value="${esc(x.n)}">${esc(x.n)} · ${money(x.v)}</option>`).join('')}</optgroup>`).join('');
+  gcSvc.innerHTML='<option value="">Monto libre (sin servicio)</option>'+Object.entries(cats).map(([c,l])=>`<optgroup label="${esc(c)}">${l.map(x=>`<option value="${esc(x.n)}" data-t="${esc(x.n)}">${esc(x.n)} · ${money(x.v)}</option>`).join('')}</optgroup>`).join('');
   gcM.value='';gcF.value=hoyIso();gcDe.value='';gcPara.value='';gcErr.textContent='';gcModal.hidden=false;gcMesDraw();
 }
 async function saveGc(){
@@ -1229,7 +1272,7 @@ const pickNorm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/
 function pickTitulo(sel){const w=sel.closest('.pk-w'),l=(sel.labels&&sel.labels[0])||(w&&w.previousElementSibling&&w.previousElementSibling.tagName==='LABEL'?w.previousElementSibling:null);return ((l?l.textContent:'')||sel.getAttribute('aria-label')||'Elige una opción').trim()}
 function pickDraw(){const q=pickNorm(pickQ.value),all=[...pickSel.options];let h='';
   [...pickSel.children].forEach(ch=>{const g=ch.tagName==='OPTGROUP',ops=g?[...ch.children]:[ch];let b='';
-    ops.forEach(o=>{if(o.tagName!=='OPTION')return;const t=o.textContent,i=all.indexOf(o),k=t.indexOf(' · ');if(q&&!pickNorm(t).includes(q))return;
+    ops.forEach(o=>{if(o.tagName!=='OPTION')return;const t=o.textContent,i=all.indexOf(o),k=o.dataset.t&&t.startsWith(o.dataset.t+' · ')?o.dataset.t.length:t.indexOf(' · ');if(q&&!pickNorm(t).includes(q))return;
       b+=`<button type="button" role="option" aria-selected="${i===pickSel.selectedIndex}" class="pko ${i===pickSel.selectedIndex?'on':''}" data-pko="${i}" ${o.disabled?'disabled':''}><span>${k>0?`${esc(t.slice(0,k))}<small>${esc(t.slice(k+3))}</small>`:esc(t)}</span></button>`});
     if(b)h+=(g?`<div class="pkg">${esc(ch.label)}</div>`:'')+b});
   pickList.innerHTML=h||'<p class="mut" style="padding:10px 8px">Sin resultados.</p>'}
@@ -1254,7 +1297,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='svc'){fill();return}
   else if(t.id==='gcSvc'){const x=S.services.find(s=>s.n===t.value);if(x)gcM.value=x.v;return}
   else if(t.id==='gcF'){gcMesDraw();return}
-  else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v);price.value=v==='pp'||v==='use'?0:k?k.v:s.v;return}
+  else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v),qt=(s.q||[]).find(x=>'q'+x.n===v);price.value=v==='pp'||v==='use'?0:k?k.v:qt?qt.v:s.v;return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
   else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}

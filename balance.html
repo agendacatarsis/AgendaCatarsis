@@ -158,8 +158,8 @@ const saldoOk=a=>!!(a.sp||F.saldos[a.id]);
 const cobrado=a=>a.gc||!real(a)||a.p!=='pagado'?0:(saldoOk(a)?(+a.v||0):abOf(a));
 const porCobrar=a=>a.gc||!real(a)||a.p!=='pagado'||saldoOk(a)?0:Math.max(0,(+a.v||0)-abOf(a));
 const sum=(L,f)=>L.reduce((t,x)=>t+f(x),0);
-const baseDe=t=>String(t||'').replace(/ · Pack \d+.*$/,'').replace(/ · sesión de pack$/,'');
-const catDe=a=>{const s=String(a.s||'');return s.startsWith('Promo: ')?'Promociones':s.startsWith('Dúo: ')?'Masajes dúo':(((D.services||[]).find(x=>x.n===baseDe(s))||{}).c)||'Otros'};
+const baseDe=t=>String(t||'').replace(/ · Pack \d+.*$/,'').replace(/ · sesión de pack$/,'').replace(/ × \d+$/,'');
+const catDe=a=>{const s=String(a.s||'');return s.startsWith('Promo: ')?'Promociones':s.startsWith('Dúo: ')?'Masajes dúo':(((D.services||[]).find(x=>x.n===baseDe(s))||{}).c)||(/acrocord/i.test(s)?'Lesiones de piel':'Otros')};
 const gifts=()=>Object.entries(F.gifts).map(([k,g])=>({...g,id:k}));
 // Giftcards: 30 días para cobrarlas desde la venta
 // orden de venta: fecha y hora en que se registró (más reciente primero)
