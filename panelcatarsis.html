@@ -1660,7 +1660,7 @@ function gcImagen(dat){
     if(dat.n){x.font=`600 ${12.5*k}px ${fam}`;try{x.letterSpacing=(1.6*k)+'px'}catch(_){}x.fillStyle='#86672b';x.textAlign='center';x.textBaseline='middle';x.fillText('N° '+dat.n,332*k,195*k);x.textAlign='left';try{x.letterSpacing='0px'}catch(_){}}
     return c});
 }
-const gcTexto=d=>[`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}!`,`Vale por: ${d.vale}`,`Válida hasta el ${d.hasta}`,...(d.n?[`🔢 Número de tu giftcard: ${d.n}`,'',`📅 Reserva tu hora aquí: elige la categoría «Giftcard» e ingresa tu número.`,d.link]:[]),'',`📍 Lord Cochrane 450, Osorno`].join('\n');
+const gcTexto=d=>[`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}!`,`Vale por: ${d.vale}`,`Válida hasta el ${d.hasta}`,`Una vez vencido el plazo, no se devuelve el dinero ni se agendan horas fuera de plazo.`,...(d.n?[`🔢 Número de tu giftcard: ${d.n}`,'',`📅 Reserva tu hora aquí: elige la categoría «Giftcard» e ingresa tu número.`,d.link]:[]),'',`📍 Lord Cochrane 450, Osorno`].join('\n');
 // Vista previa y envío por WhatsApp (en el celular abre el menú «Compartir»; en la app abre Chrome para compartir)
 let gpBlob=null,gpDat=null;
 const fLarga=d=>{const x=new Date(d+'T12:00');return x.getDate()+' de '+MES[x.getMonth()]+' de '+x.getFullYear()};
