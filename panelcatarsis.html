@@ -751,6 +751,8 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const key=()=>S.branches[S.branch]+'|'+S.thers[S.ther];
 const mine=()=>S.appts.filter(a=>a.k===key());
 const fmtD=s=>{const d=new Date(s+'T12:00');return `${DIA[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}`};
+// Link de pago: acepta el mensaje completo que comparte Mercado Pago y se queda solo con el link
+const mpLimpio=t=>{t=String(t||'').trim();let m=t.match(/https?:\/\/[^\s"<>]+/i);if(m)return m[0].replace(/^http:/i,'https:').replace(/[.,;:!?)]+$/,'');m=t.match(/(?:^|\s)((?:[a-z0-9-]+\.)*(?:mercadopago\.[a-z.]+|mpago\.la)\/[^\s"<>]+)/i);return m?'https://'+m[1].replace(/[.,;:!?)]+$/,''):''};
 const plz=m=>{m=+m>0?+m:15;if(m>=60&&m%60===0){const h=m/60;return h+(h===1?' hora':' horas')}return m+' minutos'};
 const money=n=>'$'+Number(n||0).toLocaleString('es-CL');
 const end=(t,m)=>{const [h,n]=t.split(':').map(Number);const x=h*60+n+m;return String(Math.floor(x/60)%24).padStart(2,'0')+':'+String(x%60).padStart(2,'0')};
@@ -1091,7 +1093,8 @@ function render(){
     <label class="f">Tu WhatsApp (con 56, sin +)</label><input data-c="wa" type="tel" placeholder="56912345678" value="${esc(S.cfg.wa)}">
     <label class="f" style="margin-top:8px">Datos de transferencia</label><textarea data-c="datos" rows="4" placeholder="Banco, tipo de cuenta, N°, RUT, correo">${esc(S.cfg.datos)}</textarea>
     <label class="f" style="margin-top:8px">Link de pago Mercado Pago (opcional)</label><input data-c="mp" type="url" inputmode="url" autocomplete="off" placeholder="https://link.mercadopago.cl/…" value="${esc(S.cfg.mp||'')}">
-    <div class="mut" style="font-size:12.5px;margin-top:4px">Créalo en tu Mercado Pago (Cobrar → Link de pago) con <b>monto abierto</b>, para que tu clienta pague el abono o el total con tarjeta de crédito o débito. Aparece al confirmar la reserva y en tus mensajes de WhatsApp.</div>`
+    <div class="mut" style="font-size:12.5px;margin-top:4px">Créalo en tu Mercado Pago (Cobrar → Link de pago) con <b>monto abierto</b>, para que tu clienta pague el abono o el total con tarjeta de crédito o débito. Aparece al confirmar la reserva y en tus mensajes de WhatsApp.</div>
+    <div style="font-size:13px;margin-top:6px;font-weight:600;color:${S.cfg.mp?'var(--grn)':'var(--red)'}">${S.cfg.mp?'✓ Link guardado: tus clientas ven «💳 Pagar con tarjeta» al confirmar su reserva.':'Sin link guardado: el botón de Mercado Pago no aparece en las reservas.'}</div>`
 ;
     pane.horario=''
     +`<div class="lbl">Horario de atención (lo que ven tus clientas)</div>
@@ -1397,7 +1400,7 @@ document.addEventListener('change',e=>{
   else if(d.dia!==undefined){const v=+d.dia,a=S.cfg.horario.dias;S.cfg.horario.dias=t.checked?[...new Set([...a,v])]:a.filter(x=>x!==v)}
   else if(d.h!==undefined){S.cfg.horario[d.h]=(d.h==='paso'||d.h==='adv')?(+t.value||0):t.value}
   else if(d.c!==undefined){let v=d.c==='abono'||d.c==='plazoMin'?(+t.value||0):t.value;if(d.c==='wa'){v=String(v).replace(/\D/g,'');if(v.length===9)v='56'+v}
-    if(d.c==='mp'){v=String(v).trim();if(v&&!/^https:\/\/[^\s"<>]+$/i.test(v)){showToast('El link de pago debe empezar con https://');return}if(v&&!/mercadopago|mpago\.la/i.test(v))showToast('Guardado ✓ · revisa que sea tu link de Mercado Pago')}S.cfg[d.c]=v}
+    if(d.c==='mp'){const raw=String(v).trim();v=mpLimpio(raw);if(raw&&!v){showToast('No encontré un link en lo que pegaste: copia el link de pago de Mercado Pago');return}t.value=v;showToast(v?(/mercadopago|mpago\.la/i.test(v)?'Link de pago guardado ✓ · aparece al confirmar una reserva':'Guardado ✓ · revisa que sea tu link de Mercado Pago'):'Link de pago quitado')}S.cfg[d.c]=v}
   else if(d.e!==undefined){S.appts.find(a=>a.id==d.e).e=t.value}
   else if(d.p!==undefined){S.appts.find(a=>a.id==d.p).p=t.value}
   else return;
