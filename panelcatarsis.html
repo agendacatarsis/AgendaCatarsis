@@ -378,6 +378,18 @@ input[type=checkbox]{min-height:0;width:auto}
     <button type="button" class="btn" data-ppadd style="width:100%">＋ Agregar pack</button>
    </div>
   </div>
+  <div class="ppbox" id="mpBox">
+   <div class="pcat">🪵 Maderoterapia por sesiones</div>
+   <p class="mut" style="font-size:13px;margin:0 0 6px">Elige el tratamiento y cuántas sesiones incluye la promoción. Tu clienta paga el valor completo al reservar y agenda su primera sesión; las demás quedan en su pack (Agregar hora → Maderoterapia).</p>
+   <div id="mpList"></div>
+   <div class="ppnew">
+    <label class="f" for="mpS">Tratamiento</label><select id="mpS"></select>
+    <div class="row"><div><label class="f" for="mpN">Sesiones</label><input id="mpN" type="number" min="2" max="30" step="1" inputmode="numeric"></div><div><label class="f" for="mpV">Valor promoción ($)</label><input id="mpV" type="number" min="0" step="1000" inputmode="numeric"></div></div>
+    <div class="mut" id="mpInfo" style="font-size:13px"></div>
+    <div class="err" id="mpErr" role="alert"></div>
+    <button type="button" class="btn" data-mpadd style="width:100%">＋ Agregar promoción de maderoterapia</button>
+   </div>
+  </div>
   <div class="pcat" style="margin-top:14px">Servicios en promoción</div>
   <div id="promoList"></div>
   <div class="err" id="promoErr" role="alert"></div>
@@ -588,7 +600,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{})})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Menú → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -809,8 +821,9 @@ function fillTimes(){
   if(prev&&[...time.options].some(o=>o.value===prev))time.value=prev;else{time.selectedIndex=0;timeX.classList.toggle('hide',time.value!=='__otra')}
 }
 // --- promociones ---
-const promoSvc=n=>{if(!String(n||'').startsWith('Promo: '))return null;const p=(S.cfg.promos||[]).find(x=>'Promo: '+x.n===n);return p?{n:'Promo: '+p.n,m:+p.m,v:+p.v}:null};
-const promoCuenta=()=>{const n=promoList.querySelectorAll('[data-pk]:checked').length,k=(S.cfg.promos||[]).filter(p=>p.combo).length;promoCount.textContent=(n?`${n} servicio${n==1?'':'s'} en promoción`:'Ningún servicio individual seleccionado')+(k?` · ${k} pack${k==1?'':'s'} masaje + limpieza facial`:'')};
+const promoSvc=n=>{if(!String(n||'').startsWith('Promo: '))return null;const p=(S.cfg.promos||[]).find(x=>'Promo: '+x.n===n);if(!p)return null;
+  if(p.mad&&+p.ses>1&&p.base)return{n:`${p.base} · Pack ${p.ses} (sesión 1 de ${p.ses})`,m:+p.m,v:+p.v,pn:+p.ses};return{n:'Promo: '+p.n,m:+p.m,v:+p.v}};
+const promoCuenta=()=>{const n=promoList.querySelectorAll('[data-pk]:checked').length,k=(S.cfg.promos||[]).filter(p=>p.combo).length,md=(S.cfg.promos||[]).filter(p=>p.mad).length;promoCount.textContent=(n?`${n} servicio${n==1?'':'s'} en promoción`:'Ningún servicio individual seleccionado')+(k?` · ${k} pack${k==1?'':'s'} masaje + limpieza facial`:'')+(md?` · ${md} de maderoterapia`:'')};
 // Packs masaje + limpieza facial: se guardan como promociones (combo) y se reservan como una sola hora
 const ppEsMas=x=>/masaj|masoter/i.test(x.c||'')||(/masaje/i.test(x.n||'')&&!/facial|limpieza/i.test(x.c||''));
 const ppEsFac=x=>/facial|limpieza/i.test(x.c||'');
@@ -824,6 +837,23 @@ function ppDraw(){const L=(S.cfg.promos||[]).filter(p=>p.combo);
     ||'<p class="mut" style="font-size:13px;margin:4px 2px">Aún no hay packs.</p>';promoCuenta()}
 // nombre automático «Masaje + Limpieza» (máx. 72 bytes: la reserva guarda «Promo: nombre» en menos de 80)
 function ppNombre(a,b){const B=t=>new TextEncoder().encode(t).length;if(B(a)+B(b)+3<=72)return a+' + '+b;if(B(a)<=34)return a+' + '+cortoL(b,69-B(a));if(B(b)<=34)return cortoL(a,69-B(b))+' + '+b;return cortoL(a,34)+' + '+cortoL(b,35)}
+// Maderoterapia por sesiones: promoción «Tratamiento · N sesiones»; al reservarse queda como pack (sesión 1 de N)
+function mpInfoUpd(){const x=S.services[mpS.value],n=Math.round(+mpN.value),v=Math.round(+mpV.value);if(!x||!(n>=1)){mpInfo.textContent='';return}
+  const vo=n*(+x.v||0),k=(x.k||[]).find(q=>+q.s===n);
+  mpInfo.innerHTML=`Normal: ${n} × ${money(x.v)} = ${money(vo)}${k?` · pack de ${n} actual: ${money(k.v)}`:''}${mpV.value!==''&&v>=0?` · <b>${money(Math.round(v/n))} por sesión</b>${v<vo?` · ahorro ${money(vo-v)}`:''}`:''}`}
+function mpFill(){const x=S.services[mpS.value];if(!x){mpInfo.textContent='';return}const k=(x.k||[])[0],n=k?+k.s:3;mpN.value=n;mpV.value=k?+k.v:n*(+x.v||0);mpInfoUpd()}
+function mpDraw(){const L=(S.cfg.promos||[]).filter(p=>p.mad);
+  mpList.innerHTML=L.map(p=>`<div class="prow on ppr"><div><b>${esc(p.n)}</b><small>${p.ses} sesiones de ${p.m} min · ${money(p.v)} (${money(Math.round(p.v/p.ses))} c/u)${+p.vo>+p.v?` · normal ${money(p.vo)}`:''}</small></div><button type="button" class="x" data-mpx="${esc(p.n)}" aria-label="Quitar promoción ${esc(p.n)}">✕</button></div>`).join('')
+    ||'<p class="mut" style="font-size:13px;margin:4px 2px">Aún no hay promociones de maderoterapia.</p>';promoCuenta()}
+function mpAdd(){const x=S.services[mpS.value];mpErr.textContent='';
+  if(!x){mpErr.textContent='Elige el tratamiento de maderoterapia.';return}
+  const n=Math.round(+mpN.value),v=Math.round(+mpV.value);
+  if(!(n>=2&&n<=30)){mpErr.textContent='Escribe entre 2 y 30 sesiones (para 1 sesión usa la lista de servicios de abajo).';return}
+  if(mpV.value===''||!(v>0)){mpErr.textContent='Escribe el valor de la promoción.';return}
+  const nm=cortoL(x.n,58)+' · '+n+' sesiones';
+  if((S.cfg.promos||[]).some(p=>String(p.n).toLowerCase()===nm.toLowerCase())){mpErr.textContent='Ya existe esa promoción: quítala primero para cambiar su valor.';return}
+  const L=S.cfg.promos||[];S.cfg.promos=[...L.filter(p=>p.combo),...L.filter(p=>p.mad),{n:nm,c:x.c||MADC(),m:+x.m||60,v,vo:n*(+x.v||0),mad:1,ses:n,base:x.n},...L.filter(p=>!p.combo&&!p.mad)];
+  mpDraw();render();showToast(`Promoción guardada ✓ · ${n} sesiones · ${money(v)}`)}
 function ppAdd(){const a=S.services[ppA.value],b=S.services[ppB.value];ppErr.textContent='';
   if(!a||!b){ppErr.textContent='Elige el masaje y la limpieza facial.';return}
   const m=Math.round(+ppM.value),v=Math.round(+ppV.value);
@@ -834,8 +864,9 @@ function ppAdd(){const a=S.services[ppA.value],b=S.services[ppB.value];ppErr.tex
   S.cfg.promos=[...(S.cfg.promos||[]).filter(p=>p.combo),{n,c:'Pack',m,v,vo:(+a.v||0)+(+b.v||0),combo:1,a:a.n,b:b.n},...(S.cfg.promos||[]).filter(p=>!p.combo)];
   ppN.value='';ppDraw();render();showToast(`Pack guardado ✓ · ${money(v)}`)}
 function openPromo(){
-  const P=new Map((S.cfg.promos||[]).filter(p=>!p.combo).map(p=>[p.n,p])),cats={};
+  const P=new Map((S.cfg.promos||[]).filter(p=>!p.combo&&!p.mad).map(p=>[p.n,p])),cats={};
   ppA.innerHTML=ppOpts(ppEsMas);ppB.innerHTML=ppOpts(ppEsFac);ppN.value='';ppErr.textContent='';ppFill();ppDraw();
+  mpS.innerHTML=ppOpts(esMadSvc);mpBox.hidden=!mpS.options.length;mpErr.textContent='';mpFill();mpDraw();
   S.services.forEach((x,i)=>{if(x.p||x.w)return;const c=x.c||'Otros',g=x.g||'';cats[c]=cats[c]||{};(cats[c][g]=cats[c][g]||[]).push(i)});
   promoList.innerHTML=Object.entries(cats).map(([c,gs])=>`<div class="pcat">${esc(c)}</div>`+Object.entries(gs).map(([g,ix])=>(g&&g!==c?`<div class="pgrp">${esc(g)}</div>`:'')+ix.map(i=>{const x=S.services[i],p=P.get(x.n);
     return `<div class="prow ${p?'on':''}"><label class="pk"><input type="checkbox" data-pk="${i}" ${p?'checked':''}><span class="pn">${esc(x.n)}<small>Normal: ${x.m} min · ${money(x.v)}</small></span></label><div class="pin"><label>Duración promo (min)<input type="number" inputmode="numeric" min="5" max="480" step="5" data-pm="${i}" value="${p?p.m:x.m}"></label><label>Valor promo ($)<input type="number" inputmode="numeric" min="0" step="500" data-pv="${i}" value="${p?p.v:x.v}"></label></div></div>`}).join('')).join('')).join('');
@@ -849,8 +880,8 @@ function savePromo(){
     if(!(v>=0)||promoList.querySelector(`[data-pv="${i}"]`).value===''){bad=`Revisa el valor de "${x.n}".`;return}
     out.push({n:x.n,c:x.c||'Otros',m,v,vo:+x.v||0})});
   if(bad){promoErr.textContent=bad;return}
-  const k=(S.cfg.promos||[]).filter(p=>p.combo);S.cfg.promos=[...k,...out];promoModal.hidden=true;render();
-  showToast(out.length||k.length?`Promoción guardada ✓ · ${out.length} servicio${out.length==1?'':'s'}${k.length?` · ${k.length} pack${k.length==1?'':'s'}`:''}`:'Promociones quitadas');
+  const k=(S.cfg.promos||[]).filter(p=>p.combo),md=(S.cfg.promos||[]).filter(p=>p.mad);S.cfg.promos=[...k,...md,...out];promoModal.hidden=true;render();
+  showToast(out.length||k.length||md.length?`Promoción guardada ✓ · ${out.length} servicio${out.length==1?'':'s'}${k.length?` · ${k.length} pack${k.length==1?'':'s'}`:''}${md.length?` · ${md.length} de maderoterapia`:''}`:'Promociones quitadas');
 }
 // --- maderoterapia: tratamientos con sesiones y packs ---
 const MADC=()=>((S.cfg.madera||{}).c)||'Maderoterapia';
@@ -987,7 +1018,7 @@ function saveHora(){const a=S.appts.find(x=>x.id==horaId);if(!a){horaModal.hidde
   if(s+d>24*60){hrErr.textContent='El servicio debe terminar antes de medianoche.';return}
   if(!hrValBox.hidden&&hrVal.value!==''){const v=Math.round(+hrVal.value);if(!(v>=0)){hrErr.textContent='Escribe un valor válido.';return}if(v!==(+a.v||0)){a.v=v;delete a.ev}}
   a.t=hm(s);a.m=d;horaModal.hidden=true;horaId=null;render();showToast(`Horario actualizado ✓ · ${hm(s)} a ${hm(s+d)} (${d} min)`)}
-document.addEventListener('input',e=>{if(e.target.id==='ppV')ppInfoUpd()});
+document.addEventListener('input',e=>{if(e.target.id==='ppV')ppInfoUpd();else if(e.target.id==='mpN'||e.target.id==='mpV')mpInfoUpd()});
 document.addEventListener('input',e=>{const id=e.target.id;
   if(id==='hrIni'||id==='hrDur'){const d=Math.round(+hrDur.value);if(hrIni.value&&d>0)hrFin.value=hm(toMin(hrIni.value)+d)}
   else if(id==='hrFin'){if(hrIni.value&&hrFin.value){const d=toMin(hrFin.value)-toMin(hrIni.value);if(d>0)hrDur.value=d}}
@@ -1066,7 +1097,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-gcopen>🎁 Vender giftcard</button><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${(n=>n?` · ${n} servicio${n==1?'':'s'}`:'')(S.cfg.promos.filter(p=>!p.combo).length)}${(n=>n?` · ${n} pack${n==1?'':'s'}`:'')(S.cfg.promos.filter(p=>p.combo).length)}</button><button type="button" class="btn finbtn promobtn" data-madopen>Maderoterapia${(n=>` · ${n} tratamiento${n==1?'':'s'}`)(S.services.filter(esMadSvc).length)}${S.cfg.madera.on===false?' · oculto':''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
+    edit.innerHTML=`<a class="btn finbtn" href="balance.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin:0 0 14px">📊 Balance y gastos</a><button type="button" class="btn finbtn promobtn" data-gcopen>🎁 Vender giftcard</button><button type="button" class="btn finbtn promobtn" data-promoopen>🏷️ Crear promoción${(n=>n?` · ${n} activa${n==1?'':'s'}`:'')(S.cfg.promos.length)}</button><button type="button" class="btn finbtn promobtn" data-madopen>Maderoterapia${(n=>` · ${n} tratamiento${n==1?'':'s'}`)(S.services.filter(esMadSvc).length)}${S.cfg.madera.on===false?' · oculto':''}</button><button type="button" class="btn finbtn promobtn" data-duoopen>👥 Descuentos dúo${S.cfg.duo.on?((n=>n?` · ${n} con descuento`:'')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):' · oculto en reservas'}</button><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.negocio);
   }
   const single=S.branches.length===1&&S.thers.length===1;
   who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
@@ -1093,7 +1124,7 @@ function render(){
   const pend=L.filter(a=>!['disponible','bloqueado'].includes(a.e)&&a.p==='pendiente').length;
   dayInfo.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} agendada${L.length==1?'':'s'}`+(pend?` · ${pend} abono${pend==1?'':'s'} pendiente${pend==1?'':'s'}`:''):'Sin horas agendadas.';
   viewbar.innerHTML=`<button data-view="lista" class="${dayView==='lista'?'on':''}">Lista</button><button data-view="linea" class="${dayView==='linea'?'on':''}">Línea de tiempo</button>`;
-  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
+  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':esc(a.c||'Sin nombre')}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':pagoTotal(a)?'Pago pendiente':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'&&!pagoTotal(a)?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
   slots.innerHTML=slotsHtml();blkDay.textContent=fmtD(sel);fillTimes();
   save();
 }
@@ -1132,6 +1163,8 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='promoModal'){promoModal.hidden=true;return}
   else if(el=g('data-promosave')){savePromo();return}
   else if(el=g('data-ppadd')){if(!readOnly)ppAdd();return}
+  else if(el=g('data-mpadd')){if(!readOnly)mpAdd();return}
+  else if(el=g('data-mpx')){const n=el.dataset.mpx;S.cfg.promos=(S.cfg.promos||[]).filter(p=>!(p.mad&&p.n===n));mpDraw();render();showToast('Promoción quitada');return}
   else if(el=g('data-ppx')){const n=el.dataset.ppx;S.cfg.promos=(S.cfg.promos||[]).filter(p=>!(p.combo&&p.n===n));ppDraw();render();showToast('Pack quitado');return}
   else if(el=g('data-promoclear')){if(!(S.cfg.promos||[]).length&&!promoList.querySelector('[data-pk]:checked')){promoModal.hidden=true;return}
     askConfirm('Quitar promociones','¿Seguro que quieres quitar todas las promociones, incluidos los packs? Dejarán de verse en tu página de reservas. Las horas ya agendadas no cambian.',()=>{S.cfg.promos=[];promoModal.hidden=true;render();showToast('Promociones quitadas')});return}
@@ -1347,6 +1380,8 @@ document.addEventListener('change',e=>{
   else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v),qt=(s.q||[]).find(x=>'q'+x.n===v);price.value=v==='pp'||v==='use'?0:k?k.v:qt?qt.v:s.v;return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(t.id==='ppA'||t.id==='ppB'){ppFill();return}
+  else if(t.id==='mpS'){mpFill();return}
+  else if(t.id==='mpN'||t.id==='mpV'){mpInfoUpd();return}
   else if(t.id==='ppM'||t.id==='ppV'||t.id==='ppN'){return}
   else if(d.pm!==undefined||d.pv!==undefined){return}
   else if(d.dd!==undefined||t.id==='duoShow'||t.id==='duoAbIn'||t.id==='duoMinIn'){return}
