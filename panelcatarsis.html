@@ -304,6 +304,9 @@ input[type=checkbox]{min-height:0;width:auto}
 .dch{font:600 12.5px Barlow,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:16px 0 4px}
 #dcModal .tabsb{margin:12px 0 4px}
 #fiSub a{color:var(--teal)}
+/* ventana emergente abierta: la página de fondo no se mueve */
+body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+.modal,.mbox,.lb{overscroll-behavior:contain}
 </style></head><body>
 <div id="login"><div class="lbox">
 <div class="lhead"><img class="logo" id="loginLogo" alt="Catarsis"><h2>Agenda Catarsis</h2><p class="mut">Entra para ver tu agenda. Tus horas y reservas se guardan en tu base de datos de Firebase y las ves en el celular y en el computador. Solo las cuentas autorizadas pueden verlas.</p></div>
@@ -1584,7 +1587,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-ficha')){const a=S.appts.find(x=>x.id==el.dataset.ficha);if(a&&ckA(a))openFicha(ckA(a));return}
   else if(el=g('data-fisave')){fiSave();return}
   else if(el=g('data-ficlose')){fiModal.hidden=true;return}
-  else if(el=g('data-fiagendar')){const o=clientas()[fiK]||FICHAS()[fiK]||{};fiModal.hidden=true;clModal.hidden=true;editing=false;render();client.value=o.nm||'';phone.value=o.f||'';const ad=document.querySelector('.add');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'});showToast('Elige el servicio y la hora para '+(o.nm||'la clienta'));return}
+  else if(el=g('data-fiagendar')){const o=clientas()[fiK]||FICHAS()[fiK]||{};fiModal.hidden=true;clModal.hidden=true;editing=false;render();client.value=o.nm||'';phone.value=o.f||'';setTimeout(()=>{const ad=document.querySelector('.add');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'})},80);showToast('Elige el servicio y la hora para '+(o.nm||'la clienta'));return}
   else if(el=g('data-bkjson')){bkJson();return}
   else if(el=g('data-bkcsv')){bkCsv();return}
   else if(el=g('data-bkcli')){bkCli();return}
@@ -1760,4 +1763,14 @@ document.addEventListener('change',e=>{
 });
 render();
 initDB();
-</script></body></html>
+</script><script>
+// Mientras haya una ventana emergente abierta, la página de fondo queda fija (también en iPhone y Android)
+(function(){const SEL='.modal',B=document.body,H=document.documentElement;let y=0,on=false;
+  const abierta=()=>Array.prototype.some.call(document.querySelectorAll(SEL),m=>!m.hidden);
+  function upd(){const a=abierta();if(a===on)return;on=a;
+    if(a){y=window.scrollY||H.scrollTop||0;const sb=window.innerWidth-H.clientWidth;B.style.top=(-y)+'px';if(sb>0)B.style.paddingRight=sb+'px';B.classList.add('mlock')}
+    else{B.classList.remove('mlock');B.style.top='';B.style.paddingRight='';window.scrollTo(0,y)}}
+  try{new MutationObserver(upd).observe(B,{subtree:true,attributes:true,attributeFilter:['hidden']})}catch(_){}
+  upd()})();
+</script>
+</body></html>

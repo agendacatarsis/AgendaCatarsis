@@ -86,6 +86,9 @@ a.lnk{color:var(--ink)}
 .deny{background:var(--card);border:2px solid var(--red);border-radius:20px;padding:14px 16px;margin-top:16px;font-size:14.5px;line-height:1.4}
 .deny code{display:block;margin:8px 0 2px;user-select:all;background:var(--tint);padding:8px 10px;border-radius:10px;word-break:break-all;font-size:13.5px}
 .deny .row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}.deny .pill{min-height:42px}
+/* ventana emergente abierta: la página de fondo no se mueve */
+body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+.modal,.mbox,.lb{overscroll-behavior:contain}
 </style></head><body class="locked">
 <div id="login"><div class="lbox">
 <div class="lhead"><img class="logo" id="loginLogo" alt="Catarsis" src="icon-192.png"><h2>Balance Catarsis</h2><p class="mut">Entra para ver tus finanzas. Solo la cuenta administradora puede verlas.</p></div>
@@ -347,4 +350,14 @@ const FAIL_CFG='Falta el archivo firebase-config.js o sus datos no son válidos.
     u2=db.collection('masajes').doc('finanzas').onSnapshot(s=>{const d=s.exists?s.data():{};F={gastos:d.gastos||{},saldos:d.saldos||{},fijos:d.fijos||{},gifts:d.gifts||{},meta:+d.meta||0};if(document.activeElement!==$('metaI'))$('metaI').value=F.meta||'';gotF=true;draw()},e=>{$('sync').textContent='No se pudo leer los gastos ('+(e.code||'error')+'). Revisa las reglas de Firestore.'});
   });
 })();
-</script></body></html>
+</script><script>
+// Mientras haya una ventana emergente abierta, la página de fondo queda fija (también en iPhone y Android)
+(function(){const SEL='.modal',B=document.body,H=document.documentElement;let y=0,on=false;
+  const abierta=()=>Array.prototype.some.call(document.querySelectorAll(SEL),m=>!m.hidden);
+  function upd(){const a=abierta();if(a===on)return;on=a;
+    if(a){y=window.scrollY||H.scrollTop||0;const sb=window.innerWidth-H.clientWidth;B.style.top=(-y)+'px';if(sb>0)B.style.paddingRight=sb+'px';B.classList.add('mlock')}
+    else{B.classList.remove('mlock');B.style.top='';B.style.paddingRight='';window.scrollTo(0,y)}}
+  try{new MutationObserver(upd).observe(B,{subtree:true,attributes:true,attributeFilter:['hidden']})}catch(_){}
+  upd()})();
+</script>
+</body></html>

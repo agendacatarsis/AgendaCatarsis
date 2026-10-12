@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#ede1cb;--card:#f8f2e6;--ink:#1f1b16;--acc:#6b5a45;--tint:#e3d4b8;--line:#d6c7aa;--mut:#574d41;--btn:#1f1b16;--btnink:#f8f2e6;--onacc:#fff;--red:#b8392b;--grn:#256b41;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--card:#282420;--ink:#f1e7d3;--acc:#d2bb94;--tint:#3a3328;--line:#443c30;--mut:#c4b9a6;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16;--grn:#5cc08a}.logo{filter:invert(1)}}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--red:#ff8f80;--card:#282420;--ink:#f1e7d3;--acc:#d2bb94;--tint:#3a3328;--line:#443c30;--mut:#c4b9a6;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16;--grn:#5cc08a}.logo{filter:invert(1)}}
 :root{color-scheme:light dark}
 textarea{color:var(--ink)}
 ::placeholder{color:var(--mut);opacity:1}
@@ -202,6 +202,9 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .madnote .ico{font-size:22px;line-height:1}
 .madnote b{display:block;font-size:13px;letter-spacing:1px;text-transform:uppercase}
 .madnote .rbtn{margin-top:8px;padding:8px 14px;min-height:40px;font-size:14px}
+/* ventana emergente abierta: la página de fondo no se mueve */
+body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+.modal,.mbox,.lb{overscroll-behavior:contain}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
 <div id="app"><p class="mut">Cargando servicios…</p></div>
@@ -673,7 +676,7 @@ document.addEventListener('submit',async e=>{
   if(MAIL_ON&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){er.textContent='Escribe un correo válido.';return}
   const disp=sv.duo||sv.pack||sv.gcard||sv.qty||sv.dc?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv),gcB=sv.gcard?{n:gcV.n,p:gcV.p||'',dif:sv.dif}:null,vis=sv.gcard?sv.nom:disp;
   if($('hp').value||Date.now()-t2<2500){booked={d:selDay,t:selT,s:vis,m:+sv.m,v:+sv.v,ab,full,n,th:curTh().n,at:Date.now(),gc:gcB};step=3;selT=null;render();return}
-  busy=true;$('send').disabled=true;er.textContent='';
+  busy=true;$('send').disabled=true;$('send').textContent='Enviando…';er.textContent='';
   const d=selDay,s0=selT,dur=Math.max(5,+sv.m),paso=Math.max(10,+H().paso||30),tel=(x=>x.length>9?x.slice(-9):x)(t.replace(/\D/g,''));
   try{
     const b=db.batch(),rr=db.collection('reservas').doc();
@@ -681,12 +684,12 @@ document.addEventListener('submit',async e=>{
     b.set(rr,{nombre:nomR,telefono:t,creada:firebase.firestore.FieldValue.serverTimestamp(),d,t:fmt(s0),s:sv.n,m:dur,tel,tid});
     b.set(db.collection('pendientes').doc(tel),{r:rr.id});
     for(let x=s0;x<s0+dur;x+=paso)b.set(db.collection('bloques').doc(tid+'_'+d+'_'+hhmm(x)),{d,t:fmt(x),r:rr.id,tid});
-    await b.commit();
+    await Promise.race([b.commit(),new Promise((_,no)=>setTimeout(()=>no({code:'sin-respuesta'}),25000))]);
     booked={d,t:s0,s:vis,m:dur,v:+sv.v,ab,full,n,th:curTh().n,mail,at:Date.now(),gc:gcB,dc:sv.dc||null};if(gcB){gcUsados.add(gcB.n);gcMode=false}if(sv.dc){dcV=null;dcTxt='';dcOpen=false}Object.assign(fd,{nom:'',tel:'',mail:'',dia:'',mes:''});step=3;busy=false;selT=null;render();
     sendMails(booked,t,mail);
     avisar({id:rr.id,b:tid+'_'+d+'_'+hhmm(s0),tel,nombre:n,telefono:t,servicio:disp,fecha:cap(fmtD(d)),hora:fmt(s0)+' a '+fmt(s0+dur),valor:money(+sv.v),terapeuta:TH().length>1?curTh().n:'',panel:new URL('panelcatarsis.html',location.href).href});
   }catch(x){
-    busy=false;$('send').disabled=false;
+    busy=false;$('send').disabled=false;$('send').textContent='Confirmar reserva';
     let msg='No se pudo enviar. Revisa tu conexión e intenta de nuevo.';
     if(x.code==='permission-denied'){
       try{const q=await db.collection('bloques').doc(tid+'_'+d+'_'+hhmm(s0)).get();
@@ -694,9 +697,20 @@ document.addEventListener('submit',async e=>{
         else{const pq=await db.collection('pendientes').doc(tel).get();msg=pq.exists?'Ya tienes una solicitud pendiente de pago con este teléfono. Cuando pagues el abono podrás reservar otra, o escríbenos por WhatsApp.':'No se pudo registrar la reserva (permiso denegado). Escríbenos por WhatsApp para reservar.'}}
       catch(y){msg='La reserva online aún no está activada en la base de datos. Escríbenos por WhatsApp para reservar.'}
     }
-    er.textContent=msg+' ['+(x.code||'error')+']';
+    if(x.code==='sin-respuesta')msg='La conexión está muy lenta y no recibimos respuesta. Revisa tu internet y vuelve a intentarlo; si sigue igual, escríbenos por WhatsApp.';
+    er.textContent=msg+' ['+(x.code||'error')+']';try{er.scrollIntoView({behavior:'smooth',block:'center'})}catch(_){}
   }
 });
 stepper();
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
-</script></body></html>
+</script><script>
+// Mientras haya una ventana emergente abierta, la página de fondo queda fija (también en iPhone y Android)
+(function(){const SEL='.modal,#lb',B=document.body,H=document.documentElement;let y=0,on=false;
+  const abierta=()=>Array.prototype.some.call(document.querySelectorAll(SEL),m=>!m.hidden);
+  function upd(){const a=abierta();if(a===on)return;on=a;
+    if(a){y=window.scrollY||H.scrollTop||0;const sb=window.innerWidth-H.clientWidth;B.style.top=(-y)+'px';if(sb>0)B.style.paddingRight=sb+'px';B.classList.add('mlock')}
+    else{B.classList.remove('mlock');B.style.top='';B.style.paddingRight='';window.scrollTo(0,y)}}
+  try{new MutationObserver(upd).observe(B,{subtree:true,attributes:true,attributeFilter:['hidden']})}catch(_){}
+  upd()})();
+</script>
+</body></html>
