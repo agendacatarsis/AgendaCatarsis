@@ -293,6 +293,16 @@ input[type=checkbox]{min-height:0;width:auto}
 .clrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:52px}
 .clrow small{display:block;color:var(--mut);font-size:12.5px}
 .bkst{font-size:13px;margin-top:6px;font-weight:600}
+.mgrid .mt:last-child:nth-child(odd){grid-column:1/-1}
+.dct{color:var(--teal);font-weight:600;white-space:nowrap}
+.dcw{color:var(--amb);font-size:13px;font-weight:600;margin-top:2px}.dcw .und{min-height:32px;color:var(--amb)}
+.dcrow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.dcrow .ri{flex:1;min-width:0}.dcrow .ri small{display:block;color:var(--mut);font-size:12.5px}
+.dcrow .acts{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+.dccod{font:700 15px 'Barlow Condensed',sans-serif;letter-spacing:1px}
+.dcnote{font-size:13px;color:var(--mut);margin:8px 0 4px;line-height:1.45}
+.dch{font:600 12.5px Barlow,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:16px 0 4px}
+#dcModal .tabsb{margin:12px 0 4px}
 #fiSub a{color:var(--teal)}
 </style></head><body>
 <div id="login"><div class="lbox">
@@ -533,15 +543,25 @@ input[type=checkbox]{min-height:0;width:auto}
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-clclose>Cerrar</button>
  </div>
 </div>
+<div id="dcModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dcTitle">
+ <div class="mbox" style="max-width:520px">
+  <div class="mhead"><h3 id="dcTitle">Códigos de descuento</h3><button type="button" class="x" data-dcclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <div class="tabsb" id="dcSeg" role="tablist"><button type="button" role="tab" data-dctab="cum">🎂 Cumpleaños</button><button type="button" role="tab" data-dctab="fiel">💝 Clientas fieles</button><button type="button" role="tab" data-dctab="ref">📣 Recomendación</button><button type="button" role="tab" data-dctab="cods">🏷️ Códigos creados</button></div>
+  <div id="dcBody"></div>
+  <button class="pill" style="width:100%;margin-top:12px" type="button" data-dcclose>Cerrar</button>
+ </div>
+</div>
 <div id="fiModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="fiTitle" style="z-index:25">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="fiTitle">Ficha</h3><button type="button" class="x" data-ficlose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
   <div class="mut" id="fiSub" style="font-size:14px;margin-top:2px"></div>
   <div class="fstats" id="fiStats"></div>
+  <label class="f" for="fiDia">Cumpleaños</label><div class="row" style="margin:6px 0 0"><select id="fiDia" aria-label="Día del cumpleaños"></select><select id="fiMes" aria-label="Mes del cumpleaños"></select></div>
   <label class="f" for="fiNota">Notas (alergias, tipo de piel, contraindicaciones, preferencias)</label>
   <textarea id="fiNota" rows="4" maxlength="1500" placeholder="Ej. Alérgica al látex. Piel sensible. Prefiere presión suave."></textarea>
-  <div class="row" style="margin-top:8px"><button class="btn" type="button" data-fisave>Guardar notas</button><button class="pill" type="button" data-fiagendar>＋ Agendar hora</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn" type="button" data-fisave>Guardar</button><button class="pill" type="button" data-fiagendar>＋ Agendar hora</button></div>
   <div class="mut" id="fiOk" role="status" style="font-size:13px;min-height:18px;margin-top:4px"></div>
+  <div id="fiCods"></div>
   <div class="lbl" style="margin-top:10px">Historial</div>
   <div id="fiHist"></div>
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-ficlose>Cerrar</button>
@@ -637,13 +657,16 @@ function processReservas(){
     if(!r.d||!r.t||S.appts.some(x=>x.rid===r.id))return;
     const gr=gcDeRes(r.s);
     if(gr&&!gotFin){later.push(r);return} // espera a cargar las giftcards
+    // el cumpleaños llega al final del nombre ("Ana Pérez #N0315"): se guarda en su ficha
+    {const nn=nomNac(r.nombre);r=Object.assign({},r,{nombre:nn.n});if(nn.cu){const k=ckDe(r.telefono,nn.n);if(k){const F=FICHAS(),x=F[k]||{};F[k]=Object.assign(x,{cu:nn.cu,nm:x.nm||nn.n,f:x.f||String(r.telefono||'')})}}}
     const nid=Date.now()+i,k0=S.branches[0]+'|'+S.thers[0];
     if(gr){const sv=gr.sv,ok=!!(gr.g&&!gr.g.usada);
       // reserva hecha con giftcard desde la página de reservas: queda pagada con la giftcard
       S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?+sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:ok?(sv?sv.n:gr.nm):String(r.s||'').slice(0,80),v:ok?(+gr.g.m||0):(sv?+sv.v:0),o:1,...(ok?{e:'confirmada',p:'pagado',sp:1,gc:1,gid:gr.g.id}:{e:'reservada',p:'pendiente'})});
       if(!ok)aviso=`Reserva online con la giftcard N° ${fmtN(gr.n)}, que ${gr.g?'ya fue cobrada':'no está registrada'}: revísala`;avisoNuevo(r,(ok?(sv?sv.n:gr.nm):String(r.s||''))+' (giftcard)');ch=true;return}
-    const sv=S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s)||qtySvc(r.s);
-    S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(r.s||'').slice(0,80),v:sv?(sv.ev&&!(+sv.v>0)?(+S.cfg.abono||0):sv.v):0,e:'reservada',p:'pendiente',o:1,...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{}),...(sv&&sv.ev?{ev:1}:{})});avisoNuevo(r,sv?sv.n:String(r.s||''));ch=true;
+    const dr=dcDeRes(r.s),sv=dr?dr.sv:S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s)||qtySvc(r.s);
+    const dx=dr?dcUsar(dr,r,nid):null;if(dx&&dx.dc.w)aviso=`Reserva de ${r.nombre||'una clienta'} con el código ${dr.c}: ${dx.dc.w}. Revísala.`;
+    S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(dr?dr.nm:r.s||'').slice(0,80),v:dx?dx.v:sv?(sv.ev&&!(+sv.v>0)?(+S.cfg.abono||0):sv.v):0,e:'reservada',p:'pendiente',o:1,...(dx?{dc:dx.dc}:{}),...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{}),...(sv&&sv.ev?{ev:1}:{})});avisoNuevo(r,sv?sv.n:String(r.s||''));ch=true;
   });
   reservas=later;
   if(ch)render();
@@ -659,7 +682,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),pol:String(S.cfg.pol||'').trim().slice(0,600),ocupado:oc,av:(S.cfg.av||[]).filter(a=>a&&a.i&&a.at>Date.now()-3*864e5).map(a=>({i:a.i,x:a.x})),...(gotFin?{gc:gcPub()}:{})};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),pol:String(S.cfg.pol||'').trim().slice(0,600),dc:dcPub(),ocupado:oc,av:(S.cfg.av||[]).filter(a=>a&&a.i&&a.at>Date.now()-3*864e5).map(a=>({i:a.i,x:a.x})),...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Menú → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -726,7 +749,7 @@ function blockAll(on){
   else S.appts=S.appts.filter(a=>!(a.bq&&a.d===sel&&a.k===key()));
 }
 var needPush=false; // migraciones (ej. categoría Acrocordones) que deben guardarse en la nube
-function afterSync(){if(!gotMain||!gotRes)return;if(needPush&&ref&&!readOnly){needPush=false;push()}processReservas();syncPublic();if(!bkTry&&gotFin)setTimeout(bkAuto,4000)}
+function afterSync(){if(!gotMain||!gotRes)return;if(needPush&&ref&&!readOnly){needPush=false;push()}processReservas();syncPublic();if(!bkTry&&gotFin)setTimeout(bkAuto,4000);if(!dcAseg0){dcAseg0=true;setTimeout(dcAsegurar,2500)}}
 let unsub=null;
 const lock=on=>document.body.classList.toggle('locked',on);
 /* ---------- inicio de sesión ---------- */
@@ -823,7 +846,7 @@ const waMsg=a=>{
   const du=esDuo(a),tot=pagoTotal(a),A=du?duoAbono():tot?+a.v:+S.cfg.abono||0,ab=Math.min(+a.v,A),pag=a.p==='pagado',conf=pag||a.e==='confirmada';
   const L=['Hola'+(a.c?' '+a.c:'')+', te escribimos de Catarsis Estética y Bienestar.',''];
   L.push(conf?'Tu hora está *confirmada* ✅':'Recibimos tu solicitud de hora:');
-  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),enPack(a)?'• Sesión '+a.ps+' de '+a.pn+' de tu pack (ya pagado)':a.ev?'• Valor: según evaluación':'• Valor: '+money(a.v));
+  L.push('• Servicio: '+(du?String(a.s).replace(/^Dúo: /,'Masaje dúo (dos personas al mismo tiempo): '):a.s)+(a.gc?' (giftcard)':''),'• Fecha: '+fmtD(a.d),'• Hora: '+a.t+' a '+end(a.t,a.m),enPack(a)?'• Sesión '+a.ps+' de '+a.pn+' de tu pack (ya pagado)':a.ev?'• Valor: según evaluación':'• Valor: '+money(a.v)+(a.dc&&a.dc.p?` (con ${a.dc.p}% de descuento, código ${a.dc.c})`:''));
   if(pag&&a.sp&&enPack(a)){}
   else if(pag&&a.sp&&a.gc)L.push('• Pagado con giftcard ✓');
   else if(pag&&a.sp)L.push('• Pagado completo: '+money(a.v));
@@ -879,7 +902,7 @@ function clientas(){
     if(!pas&&(!o.prox||a.d+a.t<o.prox+o.proxT)){o.prox=a.d;o.proxT=a.t}
     if(a.d+a.t>=o.ld){o.ld=a.d+a.t;if(a.c)o.nm=String(a.c).trim();if(a.f)o.f=a.f}
     if(!o.nm&&a.c)o.nm=String(a.c).trim();if(!o.pri||a.d<o.pri)o.pri=a.d});
-  Object.entries(FICHAS()).forEach(([k,x])=>{if(!m[k]&&x&&x.nt)m[k]={k,nm:x.nm||'',f:x.f||'',n:0,tot:0,ult:'',prox:'',proxT:'',ld:'',pri:''}});
+  Object.entries(FICHAS()).forEach(([k,x])=>{if(!m[k]&&x&&(x.nt||x.cu))m[k]={k,nm:x.nm||'',f:x.f||'',n:0,tot:0,ult:'',prox:'',proxT:'',ld:'',pri:''}});
   return m;
 }
 function clDraw(){
@@ -896,15 +919,18 @@ function openFicha(k){
   fiSub.innerHTML=o.f?`<a href="${wa(o.f)}" target="_blank" rel="noopener">💬 ${esc(o.f)}</a>${o.pri?' · clienta desde '+fCorta(o.pri):''}`:'Sin teléfono registrado';
   fiStats.innerHTML=[['Visitas realizadas',o.n],['Total en servicios',money(o.tot)],['Última visita',o.ult?capi(fmtD(o.ult)):'—'],['Próxima hora',o.prox?capi(fmtD(o.prox))+', '+o.proxT:'—']].map(([l,v])=>`<div><small>${l}</small><b>${v}</b></div>`).join('');
   fiNota.value=notaDe(k);fiNota.readOnly=readOnly;fiOk.textContent='';
+  {const cu=String(F.cu||'').split('-');fiDia.innerHTML='<option value="">Día</option>'+Array.from({length:31},(_,i)=>`<option value="${i+1}" ${+cu[1]===i+1?'selected':''}>${i+1}</option>`).join('');fiMes.innerHTML='<option value="">Mes</option>'+MES.map((m,i)=>`<option value="${i+1}" ${+cu[0]===i+1?'selected':''}>${m}</option>`).join('');fiDia.disabled=fiMes.disabled=readOnly}
+  fiCodsDraw();
   fiHist.innerHTML=H.map(a=>{const fut=a.d>t0||(a.d===t0&&a.t>=new Date().toTimeString().slice(0,5));
     return `<div class="gcrow"><span>${esc(a.s)}<small>${capi(fmtD(a.d))}, ${a.t} · ${fut?'próxima · ':''}${a.gc?'giftcard':a.sp?'pagado completo':a.p==='pagado'?'abono pagado':a.e==='confirmada'?'confirmada':'abono pendiente'}</small></span><b>${enPack(a)?'pack':a.ev&&!(+a.v>0)?'—':money(a.v)}</b></div>`}).join('')||'<p class="mut">Sin horas registradas.</p>';
   fiModal.hidden=false;
 }
 function fiSave(){
   if(readOnly||!fiK){showToast('No tienes permiso para guardar');return}
-  const t=String(fiNota.value||'').trim().slice(0,1500),F=FICHAS(),o=clientas()[fiK]||F[fiK]||{};
-  if(t)F[fiK]={nt:t,nm:o.nm||'',f:o.f||'',at:Date.now()};else delete F[fiK];
-  fiOk.textContent=t?'Notas guardadas ✓':'Notas borradas';render();if(!clModal.hidden)clDraw();
+  const t=String(fiNota.value||'').trim().slice(0,1500),F=FICHAS(),o=clientas()[fiK]||F[fiK]||{},dd=+fiDia.value,mm=+fiMes.value,cu=dd&&mm?String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0'):'';
+  if((dd||mm)&&!cu){fiOk.textContent='Elige el día y el mes del cumpleaños, o deja los dos vacíos.';return}
+  if(t||cu)F[fiK]={nm:o.nm||'',f:o.f||'',at:Date.now(),...(t?{nt:t}:{}),...(cu?{cu}:{})};else delete F[fiK];
+  fiOk.textContent='Ficha guardada ✓';render();if(!clModal.hidden)clDraw();if(!dcModal.hidden)dcDraw();
 }
 // --- respaldo ---
 const ENAPP=/CatarsisApp/.test(navigator.userAgent);
@@ -953,7 +979,97 @@ async function bkAuto(){
 // --- política de cambios y cancelaciones ---
 const POL_SUG='Si necesitas cambiar o cancelar tu hora, avísanos por WhatsApp con al menos 24 horas de anticipación y tu abono queda guardado para la nueva fecha. Si cancelas con menos de 24 horas o no asistes, el abono no se devuelve.';
 let polDraft=null;
-document.addEventListener('input',e=>{if(e.target.id==='polTxt')polDraft=e.target.value;else if(e.target.id==='clQ')clDraw()});
+document.addEventListener('input',e=>{if(e.target.id==='polTxt')polDraft=e.target.value;else if(e.target.id==='clQ')clDraw();else if(e.target.id==='dcRefQ')dcRefDraw()});
+
+/* ---------- códigos de descuento: cumpleaños, clientas fieles y recomendación ----------
+   Cada código (6 letras y números) se guarda en cfg.codigos y se publica cifrado en publico/agenda.dc (como las giftcards):
+   sin el código no se puede leer ni ubicar. La clienta lo escribe al reservar y viaja en el servicio: "<servicio> · Dcto ABC123". */
+const DC_SAL='catarsis-descuento-v1',DC_AB='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',DC_RX=/^(.+) · Dcto ([A-Z0-9]{6})$/;
+const dcValor=(v,p)=>Math.round((+v||0)*(100-(+p||0))/10000)*100;   // igual al de index.html
+const DCT={c:'Cumpleaños',f:'Clienta fiel',r:'Para recomendar',p:'Premio por recomendar'};
+const CODS=()=>{const c=S.cfg.codigos;if(!c||typeof c!=='object'||Array.isArray(c))S.cfg.codigos={};return S.cfg.codigos};
+const DCF=()=>{const d=S.cfg.dcfg&&typeof S.cfg.dcfg==='object'?S.cfg.dcfg:(S.cfg.dcfg={});d.cum=Object.assign({p:15,d:30},d.cum);d.fiel=Object.assign({n:5,p:10,d:60},d.fiel);d.ref=Object.assign({pa:10,pr:15,d:60},d.ref);return d};
+const primerN=n=>String(n||'').trim().split(/\s+/)[0]||'';
+const isoL=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+let dcTab='cum',dcAseg0=false;
+// cumpleaños que llega en el nombre de la reserva: "Ana Pérez #N0315" (marzo 15)
+function nomNac(s){s=String(s||'');const m=/\s#N(\d{2})(\d{2})$/.exec(s);if(!m)return{n:s,cu:''};const mm=+m[1],dd=+m[2];return{n:s.slice(0,m.index).trim(),cu:mm>=1&&mm<=12&&dd>=1&&dd<=31?m[1]+'-'+m[2]:''}}
+async function dcKdf(c){const te=new TextEncoder(),base=await crypto.subtle.importKey('raw',te.encode(c),'PBKDF2',false,['deriveBits']);
+  const b=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:te.encode(DC_SAL),iterations:GC_IT},base,320));
+  return{k:Array.from(b.slice(0,8),x=>x.toString(16).padStart(2,'0')).join(''),key:await crypto.subtle.importKey('raw',b.slice(8,40),'AES-GCM',false,['encrypt','decrypt'])}}
+function dcNuevo(pref){const C=CODS();pref=String(pref||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);let c;
+  do{c=(pref+Array.from(crypto.getRandomValues(new Uint32Array(6)),x=>DC_AB[x%32]).join('')).slice(0,6)}while(C[c]);return c}
+function dcCrear(t,o,p,dias,extra){const c=dcNuevo(t==='r'?primerN(o.nm):'');
+  CODS()[c]=Object.assign({t,k:o.k||'',nm:String(o.nm||'').slice(0,60),f:String(o.f||''),p:Math.max(1,Math.min(90,Math.round(+p)||10)),h:+dias>0?masDias(hoyIso(),+dias):'',at:Date.now()},extra||{});
+  dcCifra(c);return c}
+async function dcCifra(c){const x=CODS()[c];if(!x||(x.pub&&x.pub.k)||!(window.crypto&&crypto.subtle))return;
+  try{const{k,key}=await dcKdf(c),iv=crypto.getRandomValues(new Uint8Array(12)),dat={t:x.t,p:x.p,h:x.h||'',nm:primerN(x.nm)};
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(dat)));const y=CODS()[c];if(y){y.pub={k,i:b64(iv),c:b64(ct)};render()}}catch(e){}}
+async function dcAsegurar(){if(readOnly||!ref)return;const C=CODS(),lim=masDias(hoyIso(),-365);
+  Object.keys(C).forEach(c=>{const x=C[c];if(!x||(x.t!=='r'&&((x.u&&x.u.d<lim)||(!x.u&&x.h&&x.h<lim))))delete C[c]});   // limpia códigos de hace más de un año
+  for(const c of Object.keys(C))if(!(C[c].pub&&C[c].pub.k)&&(!C[c].h||C[c].h>=hoyIso()))await dcCifra(c)}
+const dcPub=()=>{const o={},lim=masDias(hoyIso(),-30);Object.values(CODS()).forEach(x=>{if(x&&x.pub&&x.pub.k&&(!x.h||x.h>=lim))o[x.pub.k]={i:x.pub.i,c:x.pub.c,...(x.t!=='r'&&x.u?{u:1}:{})}});return o};
+const dcDe=(k,t)=>{const L=Object.entries(CODS()).filter(([,x])=>x&&x.k===k&&x.t===t).sort((a,b)=>(b[1].at||0)-(a[1].at||0));return L.length?L[0][0]:''};
+const dcEstado=x=>x.t==='r'?`${x.usos||0} uso${x.usos==1?'':'s'}`:x.u?`Usado el ${fCorta(x.u.d)}${x.u.nm?' · '+primerN(x.u.nm):''}`:x.h&&x.h<hoyIso()?`Vencido el ${fCorta(x.h)}`:x.h?`Disponible hasta el ${fCorta(x.h)}`:'Disponible';
+const dcVigente=x=>!!x&&x.t!=='r'&&!x.u&&!(x.h&&x.h<hoyIso());
+function dcDeRes(s){const m=DC_RX.exec(String(s||''));if(!m)return null;const nm=m[1];return{c:m[2],nm,sv:S.services.find(x=>x.n===nm||cortoL(x.n,60)===nm)||null}}
+// aplica el código de una reserva online: valida, calcula el valor y lo marca usado
+function dcUsar(dr,r,nid){
+  const x=CODS()[dr.c],base=dr.sv?(+dr.sv.v||0):0,cr=r.creada,f0=cr&&typeof cr.toDate==='function'?cr.toDate():typeof cr==='number'?new Date(cr):new Date(),fecha=isoL(f0);
+  if(!x)return{dc:{c:dr.c,w:'el código no existe; quedó con el valor normal'},v:base};
+  if(x.t!=='r'&&x.u)return{dc:{c:dr.c,t:x.t,w:'el código ya estaba usado; quedó con el valor normal'},v:base};
+  if(x.h&&x.h<fecha)return{dc:{c:dr.c,t:x.t,w:'el código estaba vencido; quedó con el valor normal'},v:base};
+  const dc={c:dr.c,t:x.t,p:+x.p||0,vo:base},k=ckDe(r.telefono,r.nombre);
+  if(x.t==='r'){dc.ref=x.k;dc.rn=x.nm;if(k&&k===x.k)dc.w='es su propio código de recomendación';else if(k&&S.appts.some(a=>esCita(a)&&ckA(a)===k))dc.w='ya había venido antes y el descuento es para la primera visita';x.usos=(x.usos||0)+1}
+  else x.u={d:fecha,id:nid,nm:String(r.nombre||'').slice(0,60)};
+  return{dc,v:dcValor(base,dc.p)}}
+function dcLibera(a){if(!a||!a.dc)return;const x=CODS()[a.dc.c];if(!x)return;if(x.t==='r'){if(a.dc.p)x.usos=Math.max(0,(x.usos||0)-1)}else if(x.u&&x.u.id==a.id)delete x.u}
+function dcMsgUrl(c){const x=CODS()[c];if(!x||!x.f)return '';const nom=primerN(x.nm),R=DCF().ref,L=[];
+  if(x.t==='c')L.push(`🎂 ¡Feliz cumpleaños${nom?', '+nom:''}! En Catarsis Estética y Bienestar queremos celebrarte con un ${x.p}% de descuento en tu próxima visita.`);
+  else if(x.t==='f')L.push(`💝 Hola${nom?' '+nom:''}, gracias por confiar en Catarsis Estética y Bienestar. Por ser una de nuestras clientas más fieles, te regalamos un ${x.p}% de descuento en tu próxima visita.`);
+  else if(x.t==='p')L.push(`🎁 Hola${nom?' '+nom:''}, ¡gracias por recomendarnos${x.rn?' a '+primerN(x.rn):''}! Como agradecimiento, tienes un ${x.p}% de descuento en tu próxima visita.`);
+  else L.push(`📣 Hola${nom?' '+nom:''}, ¿conoces a alguien que quiera atenderse en Catarsis Estética y Bienestar? Comparte tu código personal: quien reserve con él tiene un ${x.p}% de descuento en su primera visita, y cuando venga te regalamos un ${R.pr}% de descuento a ti 🎁`);
+  L.push('',x.t==='r'?`🏷️ Tu código para compartir: *${c}*`:`🏷️ Tu código: *${c}*${x.h?` (válido hasta el ${fmtD(x.h)}, un solo uso)`:''}`);
+  L.push('',x.t==='r'?'Quien lo use reserva aquí y el descuento se aplica solo:':'📅 Reserva aquí y el descuento se aplica solo:',LINK()+'?codigo='+c,'','No acumulable con promociones, packs, masajes dúo ni giftcards.');
+  return wa(x.f)+'?text='+encodeURIComponent(L.join('\n'))}
+// cumpleaños de los próximos días (y de la última semana, por si se pasó)
+function cumples(dias){const hoy=new Date();hoy.setHours(12,0,0,0);const cl=clientas(),out=[];
+  Object.entries(FICHAS()).forEach(([k,x])=>{if(!x||!x.cu)return;const [mm,dd]=x.cu.split('-').map(Number);let d=new Date(hoy.getFullYear(),mm-1,dd,12),n=Math.round((d-hoy)/864e5);
+    if(n<-7){d=new Date(hoy.getFullYear()+1,mm-1,dd,12);n=Math.round((d-hoy)/864e5)}
+    if(n<=dias){const o=cl[k]||{};out.push({k,nm:o.nm||x.nm||'',f:o.f||x.f||'',cu:x.cu,d:isoL(d),dias:n})}});
+  return out.sort((a,b)=>a.dias-b.dias)}
+const dcCfg=(a,campos)=>`<div class="row">${campos.map(([b,l])=>`<div><label class="f">${l}</label><input type="number" inputmode="numeric" data-dcf="${a}.${b}" value="${DCF()[a][b]}"></div>`).join('')}</div>`;
+const dcBtn=(t,k,o,lbl)=>o.f?`<button type="button" class="pill" data-dcsend="${t}" data-k="${esc(k)}"${readOnly?' disabled':''}>${lbl}</button>`:'<span class="mut" style="font-size:12.5px">Sin teléfono</span>';
+function dcDraw(){
+  dcSeg.querySelectorAll('button').forEach(b=>{const on=b.dataset.dctab===dcTab;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
+  const D=DCF(),C=CODS();let h='';
+  if(dcTab==='cum'){const L=cumples(30),nCu=Object.values(FICHAS()).filter(x=>x&&x.cu).length;
+    h=dcCfg('cum',[['p','Descuento (%)'],['d','Válido por (días)']])
+     +`<p class="dcnote">${nCu} clienta${nCu==1?'':'s'} con cumpleaños registrado. Lo escriben al reservar (opcional) o lo agregas en su ficha.</p><div class="dch">Próximos 30 días</div>`
+     +(L.map(x=>{const c=dcDe(x.k,'c'),y=c&&C[c],env=y&&Date.now()-(y.at||0)<300*864e5;
+       return `<div class="dcrow"><div class="ri"><b>${esc(x.nm||'Sin nombre')}</b><small>🎂 ${capi(fmtD(x.d))} · ${x.dias===0?'<b style="color:var(--amb)">¡hoy!</b>':x.dias>0?'en '+x.dias+' día'+(x.dias==1?'':'s'):'hace '+(-x.dias)+' día'+(x.dias==-1?'':'s')}</small>${env?`<span class="rcok">✓ Código <span class="dccod">${c}</span> enviado el ${fCorta(isoL(new Date(y.at)))}</span>`:''}</div><div class="acts">${env?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:dcBtn('c',x.k,x,'🎂 Enviar código')}</div></div>`}).join('')||'<p class="mut" style="font-size:14px">No hay cumpleaños en los próximos 30 días.</p>')}
+  else if(dcTab==='fiel'){const L=Object.values(clientas()).filter(o=>o.n>=D.fiel.n).sort((a,b)=>b.n-a.n||b.tot-a.tot);
+    h=dcCfg('fiel',[['n','Desde (visitas)'],['p','Descuento (%)'],['d','Válido (días)']])
+     +`<p class="dcnote">Clientas con ${D.fiel.n} visitas o más (confirmadas o pagadas).</p>`
+     +(L.map(o=>{const c=dcDe(o.k,'f'),y=c&&C[c];
+       return `<div class="dcrow"><div class="ri"><b>${esc(o.nm||'Sin nombre')}</b><small>${o.n} visitas · ${money(o.tot)}${o.ult?' · última '+fCorta(o.ult):''}</small>${y?`<span class="${dcVigente(y)?'rcok':'mut'}" style="font-size:12.5px;display:block">Último código <span class="dccod">${c}</span>: ${dcEstado(y)}</span>`:''}</div><div class="acts">${dcVigente(y)?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:dcBtn('f',o.k,o,'💝 Enviar código')}</div></div>`}).join('')||`<p class="mut" style="font-size:14px">Aún no hay clientas con ${D.fiel.n} visitas o más.</p>`)}
+  else if(dcTab==='ref'){const P=S.appts.filter(a=>a.dc&&a.dc.t==='r'&&a.dc.p).sort((a,b)=>(b.d+b.t).localeCompare(a.d+a.t)),t0=hoyIso();
+    h=dcCfg('ref',[['pa','Descuento para quien llega (%)'],['pr','Premio para quien recomienda (%)'],['d','Validez del premio (días)']])
+     +`<p class="dcnote">Cada clienta tiene su código para recomendar. Quien reserva con él tiene un ${D.ref.pa}% en su primera visita; cuando viene, le envías a quien la recomendó un premio del ${D.ref.pr}%.</p>`
+     +`<div class="dch">Premios por enviar</div>`
+     +(P.map(a=>{const lista=(a.d<t0||(a.d===t0&&toMin(a.t)+(+a.m||0)<=new Date().getHours()*60+new Date().getMinutes()))&&(a.p==='pagado'||a.sp||a.e==='confirmada'),rx=C[a.dc.c]||{};
+       return `<div class="dcrow"><div class="ri"><b>${esc(a.c||'Sin nombre')}</b><small>Recomendada por ${esc(a.dc.rn||'—')} · ${fCorta(a.d)} ${a.t}</small>${a.dc.w?`<span class="dcw" style="display:block">⚠ ${esc(a.dc.w)}</span>`:''}${a.dc.pr?`<span class="rcok">✓ Premio <span class="dccod">${a.dc.pr}</span> enviado</span>`:''}</div><div class="acts">${a.dc.pr?(C[a.dc.pr]?`<button type="button" class="pill" data-dcre="${a.dc.pr}">Reenviar</button>`:''):lista&&rx.f?`<button type="button" class="pill" data-dcprem="${a.id}"${readOnly?' disabled':''}>🎁 Premio a ${esc(primerN(a.dc.rn))}</button>`:`<span class="mut" style="font-size:12.5px">${lista?'Sin teléfono':'Aún no viene'}</span>`}</div></div>`}).join('')||'<p class="mut" style="font-size:14px">Todavía nadie ha reservado con un código de recomendación.</p>')
+     +`<div class="dch">Enviar código para recomendar</div><input id="dcRefQ" type="search" placeholder="Buscar clienta por nombre o teléfono" autocomplete="off" aria-label="Buscar clienta"><div id="dcRefList"></div>`}
+  else{const L=Object.entries(C).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+    h=`<p class="dcnote">${L.length} código${L.length==1?'':'s'}. Los de cumpleaños, clientas fieles y premios se usan una sola vez; los de recomendación, una vez por cada clienta nueva.</p>`
+     +(L.map(([c,x])=>`<div class="dcrow"><div class="ri"><span class="dccod">${c}</span> · ${DCT[x.t]||'Descuento'} ${x.p}%<small>${esc(x.nm||'Sin nombre')} · ${dcEstado(x)}</small></div><div class="acts">${x.f&&(x.t==='r'||dcVigente(x))?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:''}<button type="button" class="x" style="flex-basis:38px;height:38px" data-dcx="${c}" aria-label="Eliminar código ${c}"${readOnly?' disabled':''}>✕</button></div></div>`).join('')||'<p class="mut" style="font-size:14px">Aún no has creado códigos.</p>')}
+  dcBody.innerHTML=h;if(dcTab==='ref')dcRefDraw();
+}
+function dcRefDraw(){const el=document.getElementById('dcRefList');if(!el)return;const q=String((document.getElementById('dcRefQ')||{}).value||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
+  const L=Object.values(clientas()).filter(o=>!q||o.nm.toLowerCase().includes(q)||(qd.length>=3&&String(o.f).replace(/\D/g,'').includes(qd))).sort((a,b)=>b.n-a.n||b.ld.localeCompare(a.ld)).slice(0,8);
+  el.innerHTML=L.map(o=>{const c=dcDe(o.k,'r'),x=c&&CODS()[c];return `<div class="dcrow"><div class="ri"><b>${esc(o.nm||'Sin nombre')}</b><small>${o.n} visita${o.n==1?'':'s'}${x?` · código <span class="dccod">${c}</span> · ${dcEstado(x)}`:''}</small></div><div class="acts">${dcBtn('r',o.k,o,x?'📣 Reenviar':'📣 Enviar')}</div></div>`}).join('')||'<p class="mut" style="font-size:14px">No encontramos clientas con esa búsqueda.</p>'}
+function fiCodsDraw(){const L=Object.entries(CODS()).filter(([,x])=>x&&x.k===fiK).sort((a,b)=>(b[1].at||0)-(a[1].at||0)),o=Object.assign({},FICHAS()[fiK]||{},clientas()[fiK]||{}),r=dcDe(fiK,'r');
+  fiCods.innerHTML=`<div class="lbl" style="margin-top:12px">Códigos de descuento</div>${L.map(([c,x])=>`<div class="gcrow"><span><span class="dccod">${c}</span> · ${DCT[x.t]||'Descuento'} ${x.p}%<small>${dcEstado(x)}</small></span>${x.f&&(x.t==='r'||dcVigente(x))?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:''}</div>`).join('')||'<p class="mut" style="font-size:13.5px;margin:4px 0">Sin códigos todavía.</p>'}${r?'':`<div style="margin-top:8px">${dcBtn('r',fiK,o,'📣 Enviar su código para recomendar')}</div>`}`}
 const EDT=[['servicios','Servicios'],['horario','Horario'],['reservas','Reservas online'],['pagos','Pagos'],['negocio','Sucursal y terapeuta'],['respaldo','Respaldo']];
 let edTab='servicios',dayView='lista';
 try{dayView=localStorage.getItem('masajes-view')==='linea'?'linea':'lista'}catch(e){}
@@ -1299,6 +1415,7 @@ function render(){
     +mt('data-gcopen','🎁 Vender giftcard','Con número único')
     +mt('data-clopen','👩 Clientas',nCl?`${nCl} · fichas y notas`:'Fichas y notas')
     +mt('data-rcopen','🔔 Recordatorios',rcN?`${rcN} por recordar mañana`:'Avisos del día siguiente',rcN?'dot':'')
+    +((n=>mt('data-dcmodal','💝 Códigos de descuento',n?`🎂 ${n} cumpleaños esta semana`:'Cumpleaños, clientas fieles y recomendación',n?'dot':''))(cumples(7).filter(x=>x.dias>=0).length))
     +`</div><div class="mgh">Servicios y promociones</div><div class="mgrid">`
     +mt('data-promoopen','🏷️ Promociones',nPromo?`${nPromo} activa${nPromo==1?'':'s'}`:'Crear promoción o pack')
     +mt('data-madopen','🌿 Maderoterapia',`${nMad} tratamiento${nMad==1?'':'s'}${S.cfg.madera.on===false?' · oculto':''}`)
@@ -1331,7 +1448,7 @@ function render(){
   const pend=L.filter(a=>!['disponible','bloqueado'].includes(a.e)&&a.p==='pendiente').length;
   dayInfo.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} agendada${L.length==1?'':'s'}`+(pend?` · ${pend} abono${pend==1?'':'s'} pendiente${pend==1?'':'s'}`:''):'Sin horas agendadas.';
   viewbar.innerHTML=`<button data-view="lista" class="${dayView==='lista'?'on':''}">Lista</button><button data-view="linea" class="${dayView==='linea'?'on':''}">Línea de tiempo</button>`;
-  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':`<button type="button" class="cname" data-ficha="${a.id}" aria-label="Ver ficha de ${esc(a.c||'la clienta')}">${esc(a.c||'Sin nombre')}</button>${notaDe(ckA(a))?'<span class="fnote" title="Tiene notas en su ficha">📝 Notas</span>':''}`}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}</div></div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':pagoTotal(a)?'Pago pendiente':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'&&!pagoTotal(a)?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
+  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':`<button type="button" class="cname" data-ficha="${a.id}" aria-label="Ver ficha de ${esc(a.c||'la clienta')}">${esc(a.c||'Sin nombre')}</button>${notaDe(ckA(a))?'<span class="fnote" title="Tiene notas en su ficha">📝 Notas</span>':''}`}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?'<b class="gct">🎁 Giftcard</b> · ':''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}${a.dc&&a.dc.p?` · <span class="dct">🏷️ ${esc(a.dc.c)} −${a.dc.p}%</span>${a.dc.t==='r'&&a.dc.rn?` (recomendada por ${esc(primerN(a.dc.rn))})`:''}`:''}</div>${a.dc&&a.dc.w?`<div class="dcw">⚠ Código ${esc(a.dc.c)}: ${esc(a.dc.w)}.${a.dc.p?` <button type="button" class="und" data-dcquitar="${a.id}">Quitar descuento</button>`:''}</div>`:''}</div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':pagoTotal(a)?'Pago pendiente':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'&&!pagoTotal(a)?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
   slots.innerHTML=slotsHtml();blkDay.textContent=fmtD(sel);fillTimes();
   {const n=rcPend();rcQuick.hidden=!n;rcQuick.textContent=`🔔 Recordar mañana · ${n}`}
   if(!rcModal.hidden)rcDraw();
@@ -1430,7 +1547,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-goto')){const i=document.getElementById('pick');try{i.showPicker()}catch(_){i.focus();i.click()}return}
   else if(el=g('data-wk')){const k=7*+el.dataset.wk,d=new Date(sel+'T12:00');d.setDate(d.getDate()+k);sel=iso(d);wkS.setDate(wkS.getDate()+k)}
   else if(el=g('data-xa')){const a=S.appts.find(x=>x.id==el.dataset.xa);if(!a)return;const id=a.id,nm=a.e==='bloqueado'?'el horario bloqueado':a.e==='disponible'?'el horario disponible':(a.c?'la hora de '+a.c:'esta hora');
-    askConfirm('Eliminar hora',`¿Seguro que quieres eliminar ${nm} del ${fmtD(a.d)} a las ${a.t}? Esta acción no se puede deshacer.`,()=>{S.appts=S.appts.filter(x=>x.id!==id);render()});return}
+    askConfirm('Eliminar hora',`¿Seguro que quieres eliminar ${nm} del ${fmtD(a.d)} a las ${a.t}? Esta acción no se puede deshacer.`,()=>{dcLibera(S.appts.find(x=>x.id===id));S.appts=S.appts.filter(x=>x.id!==id);render()});return}
   else if(el=g('data-xb')){if(S.branches.length>1){S.branches.splice(+el.dataset.xb,1);S.branch=0}}
   else if(el=g('data-xt')){if(S.thers.length>1){S.thers.splice(+el.dataset.xt,1);S.ther=0}}
   else if(el=g('data-xs')){if(S.services.length>1){S.services.splice(+el.dataset.xs,1);svc.innerHTML=''}}
@@ -1446,6 +1563,17 @@ document.addEventListener('click',e=>{
     if(pi.x.pk&&pi.x.ps>1){madCli=null;showToast(`Sesión ${pi.x.ps} de ${pi.x.pn} agregada ✓ · quedan ${pi.x.pn-pi.x.ps}`)}
     if(gcx.gid){gcSel=null;showToast('Giftcard cobrada ✓')}
     client.value='';phone.value=''}
+  else if(el=g('data-dcmodal')){dcDraw();dcModal.hidden=false;return}
+  else if(el=g('data-dctab')){dcTab=el.dataset.dctab;dcDraw();return}
+  else if(el=g('data-dcclose')){dcModal.hidden=true;return}
+  else if(el=g('data-dcsend')){if(readOnly)return;const t=el.dataset.dcsend,k=el.dataset.k,o=Object.assign({k},FICHAS()[k]||{},clientas()[k]||{}),D=DCF();if(!o.f)return;
+    let c=t==='r'?dcDe(k,'r'):'';if(!c)c=dcCrear(t,o,t==='c'?D.cum.p:t==='f'?D.fiel.p:D.ref.pa,t==='c'?D.cum.d:t==='f'?D.fiel.d:0);
+    window.open(dcMsgUrl(c),'_blank','noopener');render();dcDraw();if(!fiModal.hidden)fiCodsDraw();showToast('Código '+c+' creado ✓');return}
+  else if(el=g('data-dcre')){const u=dcMsgUrl(el.dataset.dcre);if(u)window.open(u,'_blank','noopener');return}
+  else if(el=g('data-dcprem')){if(readOnly)return;const a=S.appts.find(x=>x.id==el.dataset.dcprem);if(!a||!a.dc||a.dc.pr)return;const rx=CODS()[a.dc.c]||{},o={k:a.dc.ref,nm:a.dc.rn||rx.nm||'',f:rx.f||''};if(!o.f)return;
+    const c=dcCrear('p',o,DCF().ref.pr,DCF().ref.d,{rn:a.c||''});a.dc.pr=c;window.open(dcMsgUrl(c),'_blank','noopener');render();dcDraw();showToast('Premio '+c+' creado ✓');return}
+  else if(el=g('data-dcx')){const c=el.dataset.dcx,x=CODS()[c];if(!x)return;askConfirm('Eliminar código',`¿Eliminar el código ${c}${x.nm?' de '+x.nm:''}? Ya no se podrá usar en la página de reservas.`,()=>{delete CODS()[c];render();dcDraw()});return}
+  else if(el=g('data-dcquitar')){const a=S.appts.find(x=>x.id==el.dataset.dcquitar);if(a&&a.dc){askConfirm('Quitar descuento',`¿Quitar el descuento del código ${a.dc.c}? La hora vuelve a su valor normal (${money(+a.dc.vo||a.v)}).`,()=>{if(a.dc.p&&+a.dc.vo>0)a.v=+a.dc.vo;dcLibera(a);delete a.dc;render();showToast('Descuento quitado')})}return}
   else if(el=g('data-rcopen')){rcDia=1;rcDraw();rcModal.hidden=false;return}
   else if(el=g('data-rcdia')){rcDia=+el.dataset.rcdia;rcDraw();return}
   else if(el=g('data-rcsend')){const a=S.appts.find(x=>x.id==el.dataset.rcsend);if(a&&!readOnly){a.rc=a.d;setTimeout(()=>{render();rcDraw()},400)}return}
@@ -1596,9 +1724,10 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
   const b=e.target.closest('[data-pko]');if(b){choosePick(+b.dataset.pko);return}
   if(e.target.closest('[data-pickclose]')||e.target.id==='pickModal')closePick()});
 pickQ.addEventListener('input',pickDraw);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
   const t=e.target,d=t.dataset;
+  if(d.dcf!==undefined){const [a,b]=d.dcf.split('.'),D=DCF(),mx=b==='d'?365:b==='n'?100:90;D[a][b]=Math.max(1,Math.min(mx,Math.round(+t.value)||D[a][b]));t.value=D[a][b];render();dcDraw();showToast('Guardado ✓');return}
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
   else if(t.id==='cat'){render();fill();return}
   else if(t.id==='svc'){fill();return}

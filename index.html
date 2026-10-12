@@ -172,6 +172,11 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .foot{text-align:center;color:var(--mut);font-size:13px;margin:30px 0 0}
 .sumh{font-size:21px;margin:0}
 .lnk{border:0;background:none;color:var(--acc);font-weight:600;padding:12px 0 0;cursor:pointer;font-size:14.5px;text-decoration:underline;min-height:44px}
+.cum{display:flex;gap:8px}.cum select{flex:1;min-width:0}
+.dcbox{margin-top:14px;padding:10px 12px;border:1px dashed var(--acc);border-radius:12px}
+.dcbox .gcin input{font-size:17px}
+.dcok{color:var(--grn);font-weight:600}.dcbox .lnk{padding-top:4px}
+.dcban{margin:12px 0 0;padding:10px 12px;border:1px dashed var(--acc);border-radius:12px;font-size:14px;line-height:1.4}
 .tgrp{font:600 13px Barlow,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin:16px 0 8px}
 .ctabar{position:sticky;bottom:0;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(0,0,0,0),var(--bg) 35%);margin-top:6px}
 .ctabar .cta{margin-top:0}
@@ -240,7 +245,7 @@ const H=()=>Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,
 // Servicios + promociones (las promociones se eligen en el panel: Menú → Crear promoción)
 const PROMO='Promociones';
 const SV=()=>{const sv=(ag&&ag.services)||[],pr=((ag&&ag.promos)||[]).filter(x=>x&&x.n&&+x.m>=5).map(x=>({n:'Promo: '+x.n,nom:x.n,m:+x.m,v:+x.v||0,vo:+x.vo||0,c:PROMO,g:'',promo:1,...(x.combo?{combo:1,ca:x.a||'',cb:x.b||''}:{}),...(x.mad&&+x.ses>1?{madp:1,ses:+x.ses,base:x.base||''}:{})}));return pr.concat(sv)};
-const nomS=s=>s.pack||s.qty?s.nom:s.promo||s.duo?s.nom:s.n;
+const nomS=s=>s.dc||s.pack||s.qty?s.nom:s.promo||s.duo?s.nom:s.n;
 // Masajes dúo: dos personas al mismo tiempo, cada una elige su masaje (descuentos y abono en el panel: Menú → Descuentos dúo)
 const DUO='Masajes dúo';
 const DL=()=>{const d=ag&&ag.duo;return d&&d.on&&Array.isArray(d.l)?d.l.filter(x=>x&&x.n&&+x.m>=5):[]};
@@ -276,13 +281,48 @@ async function gcKdf(num){const te=new TextEncoder(),base=await crypto.subtle.im
   return{k:Array.from(b.slice(0,8),x=>x.toString(16).padStart(2,'0')).join(''),key:await crypto.subtle.importKey('raw',b.slice(8,40),'AES-GCM',false,['encrypt','decrypt'])}}
 async function gcAbre(num){const{k,key}=await gcKdf(num),e=((ag&&ag.gc)||{})[k];if(!e||!e.i||!e.c)return null;
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(e.i)},key,unb64(e.c));return Object.assign(JSON.parse(new TextDecoder().decode(pt)),{u:!!e.u,n:num})}
+// Códigos de descuento (cumpleaños, clientas fieles, recomendación): se crean en el panel y se publican cifrados en publico/agenda.dc.
+// El código viaja en el servicio de la reserva ("<servicio> · Dcto ABC123"), igual que la giftcard.
+const DC_SAL='catarsis-descuento-v1',DCQ=String(GCQ.get('codigo')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+let dcTxt=DCQ,dcV=null,dcMsg='',dcBusy=false,dcAuto=!!DCQ,dcOpen=!!DCQ,ent2=false;
+const fd={nom:'',tel:'',mail:'',dia:'',mes:''};
+const dcValor=(v,p)=>Math.round((+v||0)*(100-(+p||0))/10000)*100;   // igual al de panelcatarsis.html
+const dcCode=(n,c)=>cortoL(n,60)+' · Dcto '+c;   // igual al de panelcatarsis.html
+const dcElig=b=>!!b&&!b.promo&&!b.w&&!b.duo&&!b.gcard&&!b.madp&&!b.ev&&!b.pack&&!b.qty;
+const dcTipo=t=>t==='c'?'Cumpleaños':t==='f'?'Clienta fiel':t==='r'?'Recomendación':t==='p'?'Premio':'Descuento';
+async function dcKdf(c){const te=new TextEncoder(),base=await crypto.subtle.importKey('raw',te.encode(c),'PBKDF2',false,['deriveBits']);
+  const b=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:te.encode(DC_SAL),iterations:GC_IT},base,320));
+  return{k:Array.from(b.slice(0,8),x=>x.toString(16).padStart(2,'0')).join(''),key:await crypto.subtle.importKey('raw',b.slice(8,40),'AES-GCM',false,['encrypt','decrypt'])}}
+async function dcAbre(c){const{k,key}=await dcKdf(c),e=((ag&&ag.dc)||{})[k];if(!e||!e.i||!e.c)return null;
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(e.i)},key,unb64(e.c));return Object.assign(JSON.parse(new TextDecoder().decode(pt)),{u:!!e.u,c})}
+async function dcVerifica(){
+  if(dcBusy)return;const inp=$('dcNum');if(inp)dcTxt=inp.value;const c=String(dcTxt).toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(c.length!==6){dcMsg='El código tiene 6 letras y números (por ejemplo ANA4K7).';render();return}
+  if(!(window.crypto&&crypto.subtle)){dcMsg='Tu navegador no permite verificar el código. Escríbenos por WhatsApp.';render();return}
+  dcBusy=true;dcMsg='';render();let r=null;
+  try{r=await dcAbre(c)}catch(e){r=null}
+  dcBusy=false;
+  if(!r)dcMsg='No encontramos ese código. Revisa que esté bien escrito.';
+  else if(r.u)dcMsg='Este código ya fue usado.';
+  else if(r.h&&r.h<t0)dcMsg=`Este código venció el ${fLarga(r.h)}.`;
+  else{dcV={c,p:+r.p||0,t:r.t||'',nm:r.nm||'',h:r.h||''};dcTxt=c;dcMsg=''}
+  render();
+}
+function dcHtml(){
+  if(gcMode)return '';const b=svc0();
+  if(dcV){const ok=dcElig(b);return `<div class="dcbox" role="status"><div class="dcok">✓ Código ${esc(dcV.c)}: ${dcV.p}% de descuento</div><p class="hint">${dcV.t==='r'?`Recomendación${dcV.nm?' de '+esc(dcV.nm):''}: válido en tu primera visita. `:dcV.t==='c'?'¡Feliz cumpleaños! 🎂 ':''}${ok?`Valor con descuento: <b>${money(dcValor(b.v,dcV.p))}</b> <s>${money(b.v)}</s>`:'<b>Este servicio no tiene descuento</b>: los códigos no se usan en promociones, packs, masajes dúo, giftcards ni servicios con valor según evaluación.'}${dcV.h?` · válido hasta el ${fLarga(dcV.h)}`:''}</p><button type="button" class="lnk" data-dcquitar>Quitar código</button></div>`}
+  if(!dcOpen)return `<button type="button" class="lnk" data-dcopen>🏷️ ¿Tienes un código de descuento?</button>`;
+  return `<div class="dcbox"><label class="f" for="dcNum" style="margin-top:0">Código de descuento</label><div class="gcin"><input id="dcNum" autocomplete="off" autocapitalize="characters" maxlength="8" placeholder="ABC123" aria-describedby="dcErr" value="${esc(dcTxt)}"><button type="button" class="rbtn" data-dcver ${dcBusy?'disabled':''}>${dcBusy?'Verificando…':'Aplicar'}</button></div><div class="err" id="dcErr" role="alert">${esc(dcMsg)}</div></div>`;
+}
 const gcIdx=()=>{if(!gcV)return -1;const L=SV(),j=gcV.s?L.findIndex(x=>!x.promo&&!x.w&&x.n===gcV.s):-1;return j>=0?j:gcPick};
 const gcSvc=()=>{const b=SV()[gcIdx()];if(!gcV||!b)return null;const pre='Giftcard '+fmtN(gcV.n)+' · ',fijo=!!gcV.s&&b.n===gcV.s;
   return Object.assign({},b,{n:pre+cortoL(b.n,56),nom:b.n,txt:pre+b.n,gcard:1,gm:+gcV.m||0,dif:fijo?0:Math.max(0,(+b.v||0)-(+gcV.m||0)),hasta:gcV.h,k:null})};
-const svc=()=>{if(gcMode)return gcSvc();if(duo)return duoSvc();const b=SV()[svcIdx]||null;if(!b)return null;
+const svc0=()=>{if(gcMode)return gcSvc();if(duo)return duoSvc();const b=SV()[svcIdx]||null;if(!b)return null;
   const qt=mq>0&&Array.isArray(b.q)?b.q.find(x=>+x.n===mq):null;if(qt)return Object.assign({},b,{n:qtyCode(b.n,qt.n),nom:b.n,txt:`${b.n} × ${qt.n}`,v:+qt.v,qty:+qt.n});
   const q=mk>1&&Array.isArray(b.k)?b.k.find(x=>+x.s===mk):null;
   return q?Object.assign({},b,{n:packCode(b.n,q.s),nom:b.n,txt:`${b.n} · Pack ${q.s} sesiones`,v:+q.v,pack:+q.s,unit:Math.round(q.v/q.s),base:+b.v}):b};
+const svc=()=>{const b=svc0();if(!b||!dcV||gcMode||!dcElig(b))return b;
+  return Object.assign({},b,{n:dcCode(b.n,dcV.c),nom:b.n,txt:b.n,v:dcValor(b.v,dcV.p),vo:Math.max(+b.vo||0,+b.v||0),dc:{c:dcV.c,p:dcV.p,t:dcV.t}})};
 function timesFor(d,sv){
   const h=H(),paso=Math.max(10,+h.paso||30),dur=Math.max(5,+sv.m||paso),wd=toD(d).getDay(),dh=sv.duo?DH():null;
   const src=tid==='admin'?(ag.ocupado||{}):(oc2[tid]||{});const oc=(src[d]||[]).map(s=>s.split('-').map(Number));
@@ -353,7 +393,7 @@ function card(){
   let dl='';
   if(sv&&sv.duo)dl=`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`;
   else if(sv&&sv.gcard)dl=`<dl><dt>Servicio</dt><dd>${esc(sv.nom)}<span class="pz">Giftcard</span></dd><dt>Giftcard</dt><dd>N° ${fmtN(gcV.n)}${gcV.p?' · para '+esc(gcV.p):''}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Pago</dt><dd>${sv.dif>0?`Giftcard ${money(sv.gm)} · diferencia ${money(sv.dif)} en el local`:'Pagado con tu giftcard ✓'}</dd></dl>${step===1?`<p class="pnote">Puedes reservar hasta el ${fLarga(sv.hasta)}, fecha en que vence tu giftcard.</p>`:''}`;
-  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?`<span class="pz">${sv.combo?'Pack':'Promoción'}</span>`:''}</dd>${sv.combo&&sv.nom!==sv.ca+' + '+sv.cb?`<dt>Incluye</dt><dd>${esc(sv.ca)}<br>+ ${esc(sv.cb)}</dd>`:''}${sv.madp?`<dt>Plan</dt><dd>Pack ${sv.ses} sesiones <span class="mut" style="font-weight:400">(${money(Math.round(sv.v/sv.ses))} c/u)</span></dd>`:esMad(sv)?`<dt>Plan</dt><dd>${sv.pack?`Pack ${sv.pack} sesiones <span class="mut" style="font-weight:400">(${money(sv.unit)} c/u)</span>`:'1 sesión'}</dd>`:''}<dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos${sv.pack||sv.madp?' por sesión':''}</dd>${sv.qty?`<dt>Cantidad</dt><dd>${sv.qty}</dd>`:''}<dt>Valor</dt><dd>${sv.ev?(+sv.v>0?`Según evaluación <span class="mut" style="font-weight:400">(desde ${money(sv.v)})</span>`:'Según evaluación'):money(sv.v)}${!sv.ev&&!sv.pack&&!sv.qty&&+sv.vo>+sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}${sv.pack&&sv.base*sv.pack>sv.v?` <s class="mut" style="font-weight:400">${money(sv.base*sv.pack)}</s>`:''}</dd>${sv.w?'':`<dt>${pagaTodo(sv)?'Pago al reservar':'Abono'}</dt><dd>${money(abonoSv(sv))}${pagaTodo(sv)?' <span class="mut" style="font-weight:400">(valor completo)</span>':''}</dd>`}</dl>${sv.pack||sv.madp?`<p class="pnote">Reservas tu primera sesión; las ${(sv.pack||sv.ses)-1} siguientes las coordinamos contigo.</p>`:''}`;
+  else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?`<span class="pz">${sv.combo?'Pack':'Promoción'}</span>`:''}</dd>${sv.combo&&sv.nom!==sv.ca+' + '+sv.cb?`<dt>Incluye</dt><dd>${esc(sv.ca)}<br>+ ${esc(sv.cb)}</dd>`:''}${sv.madp?`<dt>Plan</dt><dd>Pack ${sv.ses} sesiones <span class="mut" style="font-weight:400">(${money(Math.round(sv.v/sv.ses))} c/u)</span></dd>`:esMad(sv)?`<dt>Plan</dt><dd>${sv.pack?`Pack ${sv.pack} sesiones <span class="mut" style="font-weight:400">(${money(sv.unit)} c/u)</span>`:'1 sesión'}</dd>`:''}<dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos${sv.pack||sv.madp?' por sesión':''}</dd>${sv.qty?`<dt>Cantidad</dt><dd>${sv.qty}</dd>`:''}${sv.dc?`<dt>Descuento</dt><dd>${sv.dc.p}% · código ${esc(sv.dc.c)}<span class="pz">${dcTipo(sv.dc.t)}</span></dd>`:''}<dt>Valor</dt><dd>${sv.ev?(+sv.v>0?`Según evaluación <span class="mut" style="font-weight:400">(desde ${money(sv.v)})</span>`:'Según evaluación'):money(sv.v)}${!sv.ev&&!sv.pack&&!sv.qty&&+sv.vo>+sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}${sv.pack&&sv.base*sv.pack>sv.v?` <s class="mut" style="font-weight:400">${money(sv.base*sv.pack)}</s>`:''}</dd>${sv.w?'':`<dt>${pagaTodo(sv)?'Pago al reservar':'Abono'}</dt><dd>${money(abonoSv(sv))}${pagaTodo(sv)?' <span class="mut" style="font-weight:400">(valor completo)</span>':''}</dd>`}</dl>${sv.pack||sv.madp?`<p class="pnote">Reservas tu primera sesión; las ${(sv.pack||sv.ses)-1} siguientes las coordinamos contigo.</p>`:''}`;
   return `<aside class="card"><h3 class="sumh">Tu reserva</h3>${thSel}${step===1&&duo?duoCtl(sv):''}${notes}${dl}${step===1?'<button type="button" class="lnk" data-go="svc">← Cambiar servicio</button>':''}</aside>`;
 }
 function duoCtl(sv){
@@ -366,7 +406,7 @@ function duoCtl(sv){
 function render(){
   stepper();
   if(ag===null)return;
-  if(step!==lastStep){if(lastStep!==-1)window.scrollTo(0,0);lastStep=step}
+  if(step!==lastStep){if(lastStep!==-1)window.scrollTo(0,0);if(step===2)ent2=true;lastStep=step}
   if(step===0)return view0($('app'));
   if(step===1)return view1($('app'));
   if(step===2)return view2($('app'));
@@ -480,7 +520,7 @@ function view0(app){
   app.innerHTML=`<header class="hero">${galHtml()}<div class="hb"><div class="lgc"><img class="logo" alt="Catarsis" src="${LOGO}"></div>
   <h1>${NEGOCIO}</h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
   <p class="inf">📍 <a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a>${horarioTxt()?`<br>🕒 ${horarioTxt()}`:''}</p>
-  <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">📸 Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">🗺️ Cómo llegar</a></div></div></header>
+  <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">📸 Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">🗺️ Cómo llegar</a></div>${DCQ&&!GC_ON?`<p class="dcban">🏷️ Tienes el código <b>${esc(DCQ)}</b>. Elige tu servicio: el descuento se aplica al confirmar tu reserva.</p>`:''}</div></header>
   <div class="cat-wrap"><div class="ptabs" role="tablist"><button role="tab" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button><button role="tab" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
   <div class="pane" ${ptab==='svc'?'':'hidden'}>
    <div class="srch"><span>🔍</span><input id="q" type="search" placeholder="Buscar servicio" autocomplete="off" aria-label="Buscar servicio" value="${esc(qTxt)}"></div>
@@ -539,13 +579,16 @@ function view1(app){
 }
 function view2(app){
   app.innerHTML=`<div class="grid">${card()}<form id="form" novalidate><h3>Tus datos</h3><p class="mut" style="margin:0 0 6px">${MAIL_ON?'Te enviaremos el detalle de tu reserva por correo.':'Los usaremos solo para contactarte por tu reserva.'}</p>
-  <label class="f" for="nom">Nombre</label><input id="nom" placeholder="Tu nombre y apellido" autocomplete="name" maxlength="70" required value="${gcMode&&gcV&&gcV.p?esc(gcV.p):''}">
-  <label class="f" for="tel">Teléfono</label><input id="tel" type="tel" placeholder="9 1234 5678" autocomplete="tel" maxlength="20" required>
-  ${MAIL_ON?`<label class="f" for="mail">Correo</label><input id="mail" type="email" inputmode="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" maxlength="80" required>`:''}
+  <label class="f" for="nom">Nombre</label><input id="nom" placeholder="Tu nombre y apellido" autocomplete="name" maxlength="70" required value="${esc(fd.nom||(gcMode&&gcV&&gcV.p?gcV.p:''))}">
+  <label class="f" for="tel">Teléfono</label><input id="tel" type="tel" placeholder="9 1234 5678" autocomplete="tel" maxlength="20" required value="${esc(fd.tel)}">
+  ${MAIL_ON?`<label class="f" for="mail">Correo</label><input id="mail" type="email" inputmode="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" maxlength="80" required value="${esc(fd.mail)}">`:''}
+  <label class="f" for="cuDia">Tu cumpleaños (opcional)</label><div class="cum"><select id="cuDia" aria-label="Día de tu cumpleaños"><option value="">Día</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}" ${+fd.dia===i+1?'selected':''}>${i+1}</option>`).join('')}</select><select id="cuMes" aria-label="Mes de tu cumpleaños"><option value="">Mes</option>${MES.map((m,i)=>`<option value="${i+1}" ${+fd.mes===i+1?'selected':''}>${m}</option>`).join('')}</select></div><p class="hint">Para enviarte un regalo en tu cumpleaños 🎂</p>
+  ${dcHtml()}
   <input id="hp" name="sitio_web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   ${POL()?`<div class="polbox"><b>Cambios y cancelaciones</b>${polHtml()}</div>`:''}
   <div class="err" id="err" role="alert"></div><div class="acts"><button class="cta alt" type="button" data-go="back">Volver</button><button class="cta" id="send" type="submit">Confirmar reserva</button></div></form></div>`;
-  t2=Date.now();$('nom').focus();
+  if(ent2){ent2=false;t2=Date.now();$('nom').focus()}
+  if(dcAuto&&dcTxt&&!dcV&&!gcMode){dcAuto=false;setTimeout(dcVerifica,0)}
 }
 let cdT=null;
 const PMIN=()=>{const m=+(ag&&ag.plazoMin);return m>0?m:15};
@@ -575,6 +618,7 @@ function view3(app){
   const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)}. Te envío el comprobante ${a.full?'del pago':'del abono'}.`);
   app.innerHTML=`<div class="ok"><h3 style="color:var(--grn)">Solicitud enviada</h3><p><b>${esc(a.s)}</b>${a.th?' con '+esc(a.th):''}<br>${cap(fmtD(a.d))} · ${fmt(a.t)} a ${fmt(a.t+a.m)}</p>
   <p style="margin:0 0 10px">📍 <b>Dirección:</b> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Cochrane 450, Osorno')}" target="_blank" rel="noopener">Cochrane 450, Osorno</a></p>
+  ${a.dc?`<p class="mut" style="margin:0 0 10px">🏷️ Código <b>${esc(a.dc.c)}</b> aplicado: ${a.dc.p}% de descuento. Valor: <b>${money(a.v)}</b>.</p>`:''}
   ${MAIL_ON&&a.mail?`<p class="mut" style="margin:0 0 8px">Te enviamos el detalle a <b>${esc(a.mail)}</b>. Si no lo ves, revisa la carpeta de spam.</p>`:''}
   <p>Tu hora queda <b>pendiente hasta que se pague ${a.full?'el valor completo':'el abono'}</b>${ab?` de <b>${money(ab)}</b>${a.full?'':' (se descuenta del valor del servicio)'}`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para ${mpPara(ab)?'pagarlo':'transferirlo'}; pasado ese plazo la hora puede liberarse.</p>
   <div class="timer" id="timer" role="timer"><span>${mpPara(ab)?(a.full?'Tiempo para pagar':'Tiempo para pagar el abono'):(a.full?'Tiempo para transferir el pago':'Tiempo para transferir el abono')}</span><b id="cd">--:--</b></div>
@@ -586,6 +630,9 @@ function view3(app){
 document.addEventListener('click',e=>{
   const g=k=>e.target.closest('['+k+']');let el;
   if(el=g('data-gcver')){gcVerifica();return}
+  else if(el=g('data-dcver')){dcVerifica();return}
+  else if(el=g('data-dcopen')){dcOpen=true;render();const i=$('dcNum');if(i)i.focus();return}
+  else if(el=g('data-dcquitar')){dcV=null;dcTxt='';dcMsg='';dcOpen=true}
   else if(el=g('data-gcotra')){gcV=null;gcMode=false;gcTxt='';gcMsg='';gcPick=-1}
   else if(el=g('data-gcres')){if(gcIdx()<0)return;gcMode=true;duo=false;mk=1;mq=0;step=1;selT=null;notice='';recompute()}
   else if(el=g('data-res')){gcMode=false;const v=el.dataset.res,art=el.closest('article'),r=art&&art.querySelector('.opts input:checked'),r2=art&&art.querySelector('.qopts input:checked');mk=r?+r.value:1;mq=r2?+r2.value:0;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
@@ -599,8 +646,9 @@ document.addEventListener('click',e=>{
   else return;
   render();
 });
-document.addEventListener('input',e=>{if(e.target.id==='q'){qTxt=e.target.value;applyF()}else if(e.target.id==='gcNum'){gcTxt=e.target.value;if(gcMsg){gcMsg='';const er=$('gcErr');if(er)er.textContent=''}}});
-document.addEventListener('keydown',e=>{if(e.target.id==='gcNum'&&e.key==='Enter'){e.preventDefault();gcVerifica()}});
+document.addEventListener('input',e=>{const id=e.target.id;if(id==='nom'||id==='tel'||id==='mail'){fd[id]=e.target.value;return}if(id==='dcNum'){dcTxt=e.target.value;if(dcMsg){dcMsg='';const er=$('dcErr');if(er)er.textContent=''}return}if(e.target.id==='q'){qTxt=e.target.value;applyF()}else if(e.target.id==='gcNum'){gcTxt=e.target.value;if(gcMsg){gcMsg='';const er=$('gcErr');if(er)er.textContent=''}}});
+document.addEventListener('keydown',e=>{if(e.target.id==='gcNum'&&e.key==='Enter'){e.preventDefault();gcVerifica()}else if(e.target.id==='dcNum'&&e.key==='Enter'){e.preventDefault();dcVerifica()}});
+document.addEventListener('change',e=>{const id=e.target.id;if(id==='cuDia')fd.dia=e.target.value;else if(id==='cuMes')fd.mes=e.target.value});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('.qopts'))return;const art=t.closest('article'),s=SV()[+art.querySelector('[data-res]').dataset.res];if(!s)return;
   const q=(s.q||[]).find(x=>+x.n===+t.value),pr=art.querySelector('[data-prc]');if(pr&&q)pr.textContent=money(q.v)});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('.opts'))return;const art=t.closest('article'),s=SV()[+art.querySelector('[data-res]').dataset.res];if(!s)return;
@@ -617,17 +665,18 @@ document.addEventListener('submit',async e=>{
   if(t.replace(/\D/g,'').length<8){er.textContent='Escribe un teléfono válido.';return}
   const mail=MAIL_ON?$('mail').value.trim():'';
   if(MAIL_ON&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){er.textContent='Escribe un correo válido.';return}
-  const disp=sv.duo||sv.pack||sv.gcard||sv.qty?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv),gcB=sv.gcard?{n:gcV.n,p:gcV.p||'',dif:sv.dif}:null,vis=sv.gcard?sv.nom:disp;
+  const disp=sv.duo||sv.pack||sv.gcard||sv.qty||sv.dc?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv),gcB=sv.gcard?{n:gcV.n,p:gcV.p||'',dif:sv.dif}:null,vis=sv.gcard?sv.nom:disp;
   if($('hp').value||Date.now()-t2<2500){booked={d:selDay,t:selT,s:vis,m:+sv.m,v:+sv.v,ab,full,n,th:curTh().n,at:Date.now(),gc:gcB};step=3;selT=null;render();return}
   busy=true;$('send').disabled=true;er.textContent='';
   const d=selDay,s0=selT,dur=Math.max(5,+sv.m),paso=Math.max(10,+H().paso||30),tel=(x=>x.length>9?x.slice(-9):x)(t.replace(/\D/g,''));
   try{
     const b=db.batch(),rr=db.collection('reservas').doc();
-    b.set(rr,{nombre:n,telefono:t,creada:firebase.firestore.FieldValue.serverTimestamp(),d,t:fmt(s0),s:sv.n,m:dur,tel,tid});
+    const cu=+fd.dia>=1&&+fd.mes>=1?String(+fd.mes).padStart(2,'0')+String(+fd.dia).padStart(2,'0'):'',nomR=cu?Array.from(n).slice(0,62).join('').trim()+' #N'+cu:n;  // cumpleaños: el panel lo saca del nombre y lo guarda en la ficha
+    b.set(rr,{nombre:nomR,telefono:t,creada:firebase.firestore.FieldValue.serverTimestamp(),d,t:fmt(s0),s:sv.n,m:dur,tel,tid});
     b.set(db.collection('pendientes').doc(tel),{r:rr.id});
     for(let x=s0;x<s0+dur;x+=paso)b.set(db.collection('bloques').doc(tid+'_'+d+'_'+hhmm(x)),{d,t:fmt(x),r:rr.id,tid});
     await b.commit();
-    booked={d,t:s0,s:vis,m:dur,v:+sv.v,ab,full,n,th:curTh().n,mail,at:Date.now(),gc:gcB};if(gcB){gcUsados.add(gcB.n);gcMode=false}step=3;busy=false;selT=null;render();
+    booked={d,t:s0,s:vis,m:dur,v:+sv.v,ab,full,n,th:curTh().n,mail,at:Date.now(),gc:gcB,dc:sv.dc||null};if(gcB){gcUsados.add(gcB.n);gcMode=false}if(sv.dc){dcV=null;dcTxt='';dcOpen=false}Object.assign(fd,{nom:'',tel:'',mail:'',dia:'',mes:''});step=3;busy=false;selT=null;render();
     sendMails(booked,t,mail);
     avisar({id:rr.id,b:tid+'_'+d+'_'+hhmm(s0),tel,nombre:n,telefono:t,servicio:disp,fecha:cap(fmtD(d)),hora:fmt(s0)+' a '+fmt(s0+dur),valor:money(+sv.v),terapeuta:TH().length>1?curTh().n:'',panel:new URL('panelcatarsis.html',location.href).href});
   }catch(x){
