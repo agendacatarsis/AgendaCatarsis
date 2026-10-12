@@ -313,6 +313,8 @@ const WA=()=>{let d=String((ag&&ag.wa)||legacy.wa||'').replace(/\D/g,'');if(d.le
 const DATOS=()=>(ag&&ag.datos)||legacy.datos||'';
 // Link de pago de Mercado Pago (monto abierto) para pagar con tarjeta de crédito o débito (panel → Menú → Reservas online)
 const MP=()=>{const u=String((ag&&ag.mp)||'').trim();return /^https:\/\/[^\s"<>]+$/i.test(u)?u:''};
+const MPMIN=()=>Math.max(0,+(ag&&ag.mpMin)||0);  // solo en pagos desde este monto
+const mpPara=m=>!!MP()&&+m>0&&+m>=MPMIN();
 db.collection('publico').doc('config').get().then(d=>{if(d.exists){legacy=d.data()||{};if(step===3)render()}}).catch(()=>{});
 db.collection('publico').doc('agenda').onSnapshot(d=>{ag=d.exists?d.data():{};onData()},()=>{$('app').innerHTML='<p class="mut">No se pudo cargar la agenda. Intenta de nuevo más tarde.</p>'});
 db.collection('ocupados').onSnapshot(q=>{oc2={};q.docs.forEach(d=>{oc2[d.id]=d.data().ocupado||{}});onData()},()=>{});
@@ -489,7 +491,7 @@ function view0(app){
    <h3>Atiende</h3><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
    <h3>Contacto</h3><p>${WA()?`<a href="${waLink()}" target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a><br>`:''}<a href="${IG}" target="_blank" rel="noopener">📸 Síguenos en Instagram</a></p>
    ${WA()?`<h3>Giftcards</h3><p>Regala un masaje o tratamiento: <a href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">compra tu giftcard por WhatsApp</a>.</p>`:''}
-   <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?' o pagarlo con tarjeta de crédito o débito (Mercado Pago)':''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
+   <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
   <p class="foot">${NEGOCIO} · ${ADDR}</p></div>`;
   applyF();
@@ -569,9 +571,9 @@ function view3(app){
   app.innerHTML=`<div class="ok"><h3 style="color:var(--grn)">Solicitud enviada</h3><p><b>${esc(a.s)}</b>${a.th?' con '+esc(a.th):''}<br>${cap(fmtD(a.d))} · ${fmt(a.t)} a ${fmt(a.t+a.m)}</p>
   <p style="margin:0 0 10px">📍 <b>Dirección:</b> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Cochrane 450, Osorno')}" target="_blank" rel="noopener">Cochrane 450, Osorno</a></p>
   ${MAIL_ON&&a.mail?`<p class="mut" style="margin:0 0 8px">Te enviamos el detalle a <b>${esc(a.mail)}</b>. Si no lo ves, revisa la carpeta de spam.</p>`:''}
-  <p>Tu hora queda <b>pendiente hasta que se pague ${a.full?'el valor completo':'el abono'}</b>${ab?` de <b>${money(ab)}</b>${a.full?'':' (se descuenta del valor del servicio)'}`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para ${MP()?'pagarlo':'transferirlo'}; pasado ese plazo la hora puede liberarse.</p>
-  <div class="timer" id="timer" role="timer"><span>Tiempo para ${MP()?'pagar':'transferir'} ${a.full?'el pago':'el abono'}</span><b id="cd">--:--</b></div>
-  ${DATOS()?`<pre>${esc(DATOS())}</pre>`:''}${MP()&&ab?`<a class="cta mp" href="${esc(MP())}" target="_blank" rel="noopener">💳 Pagar ${money(ab)} con tarjeta</a><p class="hint" style="text-align:center;margin:6px 0 0">Mercado Pago · crédito o débito. Ingresa <b>${money(ab)}</b> y después envíanos el comprobante.</p>`:''}${WA()?`<a class="cta" href="https://wa.me/${WA()}?text=${msg}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>`:''}
+  <p>Tu hora queda <b>pendiente hasta que se pague ${a.full?'el valor completo':'el abono'}</b>${ab?` de <b>${money(ab)}</b>${a.full?'':' (se descuenta del valor del servicio)'}`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para ${mpPara(ab)?'pagarlo':'transferirlo'}; pasado ese plazo la hora puede liberarse.</p>
+  <div class="timer" id="timer" role="timer"><span>${mpPara(ab)?(a.full?'Tiempo para pagar':'Tiempo para pagar el abono'):(a.full?'Tiempo para transferir el pago':'Tiempo para transferir el abono')}</span><b id="cd">--:--</b></div>
+  ${DATOS()?`<pre>${esc(DATOS())}</pre>`:''}${mpPara(ab)?`<a class="cta mp" href="${esc(MP())}" target="_blank" rel="noopener">💳 Pagar ${money(ab)} con tarjeta</a><p class="hint" style="text-align:center;margin:6px 0 0">Mercado Pago · crédito o débito. Ingresa <b>${money(ab)}</b> y después envíanos el comprobante.</p>`:''}${WA()?`<a class="cta" href="https://wa.me/${WA()}?text=${msg}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>`:''}
   <button class="cta alt" data-go="again">Reservar otra hora</button></div>`;
   startCd(a);
   window.scrollTo({top:0,behavior:'smooth'});

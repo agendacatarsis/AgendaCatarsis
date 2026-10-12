@@ -538,7 +538,7 @@ function migrate(){
   S.branches=S.branches.map(b=>b==='Mi sucursal'?'Catarsis Osorno':b);
   S.thers=S.thers.map(t=>t==='Terapeuta 1'?'Daniela Velásquez':t);
   if(!S.services||!S.services.length||S.services.some(x=>!x.c))S.services=DEF.map(x=>({...x}));
-  S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:''},S.cfg||{});
+  S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:'',mpMin:90000},S.cfg||{});
   S.cfg.promos=Array.isArray(S.cfg.promos)?S.cfg.promos:[];
   S.cfg.madera=Object.assign({},MAD_CFG,S.cfg.madera||{});
   if(!S.cfg.made2){S.cfg.made2=1;needPush=true;if(S.cfg.madera.tags==='Bienestar · Drenaje · Tonificación · Armonía')S.cfg.madera.tags=MAD_CFG.tags}
@@ -600,7 +600,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:S.cfg.mp||'',horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),ocupado:oc,...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Menú → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -752,6 +752,7 @@ const key=()=>S.branches[S.branch]+'|'+S.thers[S.ther];
 const mine=()=>S.appts.filter(a=>a.k===key());
 const fmtD=s=>{const d=new Date(s+'T12:00');return `${DIA[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}`};
 // Link de pago: acepta el mensaje completo que comparte Mercado Pago y se queda solo con el link
+const mpActivo=()=>S.cfg.mpOn!==false&&!!S.cfg.mp;
 const mpLimpio=t=>{t=String(t||'').trim();let m=t.match(/https?:\/\/[^\s"<>]+/i);if(m)return m[0].replace(/^http:/i,'https:').replace(/[.,;:!?)]+$/,'');m=t.match(/(?:^|\s)((?:[a-z0-9-]+\.)*(?:mercadopago\.[a-z.]+|mpago\.la)\/[^\s"<>]+)/i);return m?'https://'+m[1].replace(/[.,;:!?)]+$/,''):''};
 const plz=m=>{m=+m>0?+m:15;if(m>=60&&m%60===0){const h=m/60;return h+(h===1?' hora':' horas')}return m+' minutos'};
 const money=n=>'$'+Number(n||0).toLocaleString('es-CL');
@@ -770,7 +771,7 @@ const waMsg=a=>{
   else if(pag&&tot)L.push('• Pagado: '+money(ab));
   else if(pag&&a.ev)L.push('• Abono recibido: '+money(ab)+' (se descuenta del valor del tratamiento)');
   else if(pag)L.push('• Abono recibido: '+money(ab),'• Saldo a pagar en el local: '+money(a.v-ab));
-  else if(!conf){L.push('',tot?'Para confirmarla, transfiere el valor completo de '+money(ab)+' dentro de '+plz(S.cfg.plazoMin)+':':'Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);if(S.cfg.mp)L.push('','O paga con tarjeta de crédito o débito (Mercado Pago), ingresando '+money(ab)+':',S.cfg.mp);L.push('','Después envíanos el comprobante por este chat.')}
+  else if(!conf){L.push('',tot?'Para confirmarla, transfiere el valor completo de '+money(ab)+' dentro de '+plz(S.cfg.plazoMin)+':':'Para confirmarla, transfiere el abono de '+money(ab)+' (se descuenta del valor del servicio) dentro de '+plz(S.cfg.plazoMin)+':');if(S.cfg.datos)L.push(S.cfg.datos);if(mpActivo()&&ab>=(+S.cfg.mpMin||0))L.push('','O paga con tarjeta de crédito o débito (Mercado Pago), ingresando '+money(ab)+':',S.cfg.mp);L.push('','Después envíanos el comprobante por este chat.')}
   L.push('','📍 Cochrane 450, Osorno','Cómo llegar: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('Cochrane 450, Osorno'));
   return wa(a.f)+'?text='+encodeURIComponent(L.join('\n'));
 };
@@ -1092,9 +1093,13 @@ function render(){
     <div class="row"><div><label class="f">Abono ($, se descuenta del valor)</label><input type="number" data-c="abono" min="0" step="1000" value="${S.cfg.abono}"></div><div><label class="f">Plazo para pagar (minutos)</label><input type="number" data-c="plazoMin" min="1" value="${S.cfg.plazoMin}"></div></div>
     <label class="f">Tu WhatsApp (con 56, sin +)</label><input data-c="wa" type="tel" placeholder="56912345678" value="${esc(S.cfg.wa)}">
     <label class="f" style="margin-top:8px">Datos de transferencia</label><textarea data-c="datos" rows="4" placeholder="Banco, tipo de cuenta, N°, RUT, correo">${esc(S.cfg.datos)}</textarea>
-    <label class="f" style="margin-top:8px">Link de pago Mercado Pago (opcional)</label><input data-c="mp" type="url" inputmode="url" autocomplete="off" placeholder="https://link.mercadopago.cl/…" value="${esc(S.cfg.mp||'')}">
+    <div class="lbl" style="margin-top:14px">Pago con tarjeta (Mercado Pago)</div>
+    <label class="duosw" style="margin:2px 0 4px;font-size:14px"><input type="checkbox" id="mpOnChk" ${S.cfg.mpOn!==false?'checked':''}> Ofrecer pago con tarjeta en las reservas</label>
+    <label class="f" style="margin-top:4px">Link de pago Mercado Pago</label><div class="row" style="margin:6px 0 0"><input data-c="mp" type="url" inputmode="url" autocomplete="off" placeholder="https://link.mercadopago.cl/…" value="${esc(S.cfg.mp||'')}">${S.cfg.mp?'<button type="button" class="pill" data-mpquitar style="flex:0 0 auto">Quitar link</button>':''}</div>
     <div class="mut" style="font-size:12.5px;margin-top:4px">Créalo en tu Mercado Pago (Cobrar → Link de pago) con <b>monto abierto</b>, para que tu clienta pague el abono o el total con tarjeta de crédito o débito. Aparece al confirmar la reserva y en tus mensajes de WhatsApp.</div>
-    <div style="font-size:13px;margin-top:6px;font-weight:600;color:${S.cfg.mp?'var(--grn)':'var(--red)'}">${S.cfg.mp?'✓ Link guardado: tus clientas ven «💳 Pagar con tarjeta» al confirmar su reserva.':'Sin link guardado: el botón de Mercado Pago no aparece en las reservas.'}</div>`
+    <label class="f" style="margin-top:8px">Mostrar solo en pagos desde ($)</label><input data-c="mpMin" type="number" min="0" step="1000" inputmode="numeric" value="${+S.cfg.mpMin||0}">
+    <div class="mut" style="font-size:12.5px;margin-top:4px">Se compara con lo que la clienta paga al reservar (abono o valor completo). Escribe 0 para mostrarlo en todas las reservas.</div>
+    <div style="font-size:13px;margin-top:6px;font-weight:600;color:${mpActivo()?'var(--grn)':'var(--red)'}">${mpActivo()?`✓ Activo${+S.cfg.mpMin>0?` en pagos desde ${money(S.cfg.mpMin)}`:''}: tus clientas ven «💳 Pagar con tarjeta» al confirmar su reserva.`:S.cfg.mp?'Desactivado: el botón de Mercado Pago no aparece en las reservas (tu link queda guardado).':'Sin link guardado: el botón de Mercado Pago no aparece en las reservas.'}</div>`
 ;
     pane.horario=''
     +`<div class="lbl">Horario de atención (lo que ven tus clientas)</div>
@@ -1180,6 +1185,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-gpclose')){gpModal.hidden=true;return}
   else if(e.target.id==='gpModal'){gpModal.hidden=true;return}
   else if(el=g('data-gcopen')){if(!readOnly)openGc();return}
+  else if(el=g('data-mpquitar')){askConfirm('Quitar link de pago','¿Quitar tu link de Mercado Pago? El botón «Pagar con tarjeta» dejará de aparecer en las reservas.',()=>{S.cfg.mp='';render();showToast('Link de pago quitado')});return}
   else if(el=g('data-nsqadd')){const l=[...nsQ.querySelectorAll('[data-qn]')].map(x=>+x.value||0);const r=nsqRow(l.length?Math.max(...l)+1:1,'');r.querySelector('[data-qv]').focus();return}
   else if(el=g('data-nsqx')){el.closest('.nsq').remove();return}
   else if(el=g('data-gcclose')){gcModal.hidden=true;return}
@@ -1397,9 +1403,10 @@ document.addEventListener('change',e=>{
   else if(d.b!==undefined){const o=S.branches[+d.b];S.branches[+d.b]=t.value;S.appts.forEach(a=>{const [b,r]=a.k.split('|');if(b===o)a.k=t.value+'|'+r})}
   else if(d.t!==undefined){const o=S.thers[+d.t];S.thers[+d.t]=t.value;S.appts.forEach(a=>{const [b,r]=a.k.split('|');if(r===o)a.k=b+'|'+t.value})}
   else if(d.sv!==undefined){const dd=S.cfg.duo&&S.cfg.duo.d,on=S.services[+d.sv].n;if(d.f==='n'&&dd&&on in dd){dd[t.value]=dd[on];delete dd[on]}S.services[+d.sv][d.f]=['n','c','g'].includes(d.f)?t.value:(+t.value||0);svc.innerHTML=''}
+  else if(t.id==='mpOnChk'){S.cfg.mpOn=t.checked;showToast(t.checked?(S.cfg.mp?'Pago con tarjeta activado ✓':'Activado: pega tu link de Mercado Pago'):'Pago con Mercado Pago desactivado: ya no aparece en las reservas')}
   else if(d.dia!==undefined){const v=+d.dia,a=S.cfg.horario.dias;S.cfg.horario.dias=t.checked?[...new Set([...a,v])]:a.filter(x=>x!==v)}
   else if(d.h!==undefined){S.cfg.horario[d.h]=(d.h==='paso'||d.h==='adv')?(+t.value||0):t.value}
-  else if(d.c!==undefined){let v=d.c==='abono'||d.c==='plazoMin'?(+t.value||0):t.value;if(d.c==='wa'){v=String(v).replace(/\D/g,'');if(v.length===9)v='56'+v}
+  else if(d.c!==undefined){let v=d.c==='abono'||d.c==='plazoMin'||d.c==='mpMin'?Math.max(0,Math.round(+t.value||0)):t.value;if(d.c==='wa'){v=String(v).replace(/\D/g,'');if(v.length===9)v='56'+v}
     if(d.c==='mp'){const raw=String(v).trim();v=mpLimpio(raw);if(raw&&!v){showToast('No encontré un link en lo que pegaste: copia el link de pago de Mercado Pago');return}t.value=v;showToast(v?(/mercadopago|mpago\.la/i.test(v)?'Link de pago guardado ✓ · aparece al confirmar una reserva':'Guardado ✓ · revisa que sea tu link de Mercado Pago'):'Link de pago quitado')}S.cfg[d.c]=v}
   else if(d.e!==undefined){S.appts.find(a=>a.id==d.e).e=t.value}
   else if(d.p!==undefined){S.appts.find(a=>a.id==d.p).p=t.value}
