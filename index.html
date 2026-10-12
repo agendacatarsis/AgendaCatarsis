@@ -176,6 +176,7 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .ctabar{position:sticky;bottom:0;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(0,0,0,0),var(--bg) 35%);margin-top:6px}
 .ctabar .cta{margin-top:0}
 .hint{margin:4px 0 0;font-size:13.5px;color:var(--mut)}
+.polbox{margin:14px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:14px;font-size:13.5px;line-height:1.45;color:var(--mut)}.polbox b{display:block;color:var(--ink);margin-bottom:2px}
 /* ===== Maderoterapia (formato experiencia) ===== */
 .madintro{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:6px 0 4px;text-align:center}
 .madintro .msub{font:600 13px Barlow,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--acc);margin:0}
@@ -311,8 +312,10 @@ function onData(){
 }
 const WA=()=>{let d=String((ag&&ag.wa)||legacy.wa||'').replace(/\D/g,'');if(d.length===9)d='56'+d;return d.length>=10?d:''};
 const DATOS=()=>(ag&&ag.datos)||legacy.datos||'';
-// Link de pago de Mercado Pago (monto abierto) para pagar con tarjeta de crédito o débito (panel → Menú → Reservas online)
+// Link de pago de Mercado Pago (monto abierto) para pagar con tarjeta de crédito o débito (panel → Menú → Pagos)
 const MP=()=>{const u=String((ag&&ag.mp)||'').trim();return /^https:\/\/[^\s"<>]+$/i.test(u)?u:''};
+const POL=()=>String((ag&&ag.pol)||'').trim().slice(0,600);  // política de cambios y cancelaciones (panel → Menú → Reservas online)
+const polHtml=()=>esc(POL()).replace(/\n/g,'<br>');
 const MPMIN=()=>Math.max(0,+(ag&&ag.mpMin)||0);  // solo en pagos desde este monto
 const mpPara=m=>!!MP()&&+m>0&&+m>=MPMIN();
 db.collection('publico').doc('config').get().then(d=>{if(d.exists){legacy=d.data()||{};if(step===3)render()}}).catch(()=>{});
@@ -491,6 +494,7 @@ function view0(app){
    <h3>Atiende</h3><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
    <h3>Contacto</h3><p>${WA()?`<a href="${waLink()}" target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a><br>`:''}<a href="${IG}" target="_blank" rel="noopener">📸 Síguenos en Instagram</a></p>
    ${WA()?`<h3>Giftcards</h3><p>Regala un masaje o tratamiento: <a href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">compra tu giftcard por WhatsApp</a>.</p>`:''}
+   ${POL()?`<h3>Cambios y cancelaciones</h3><p>${polHtml()}</p>`:''}
    <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
   <p class="foot">${NEGOCIO} · ${ADDR}</p></div>`;
@@ -539,6 +543,7 @@ function view2(app){
   <label class="f" for="tel">Teléfono</label><input id="tel" type="tel" placeholder="9 1234 5678" autocomplete="tel" maxlength="20" required>
   ${MAIL_ON?`<label class="f" for="mail">Correo</label><input id="mail" type="email" inputmode="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" maxlength="80" required>`:''}
   <input id="hp" name="sitio_web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+  ${POL()?`<div class="polbox"><b>Cambios y cancelaciones</b>${polHtml()}</div>`:''}
   <div class="err" id="err" role="alert"></div><div class="acts"><button class="cta alt" type="button" data-go="back">Volver</button><button class="cta" id="send" type="submit">Confirmar reserva</button></div></form></div>`;
   t2=Date.now();$('nom').focus();
 }
