@@ -173,6 +173,9 @@ input[type=checkbox]{min-height:0;width:auto}
 .linfo{color:var(--grn);font-size:14px;font-weight:500;margin:0 0 8px}.linfo:empty{display:none}
 .llinks{display:flex;justify-content:center}
 .linkish{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;min-height:44px;padding:0 8px}
+.fidel{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}.fidelbtn{color:var(--red)!important;padding:0!important}
+.fidelbox{border:1px solid var(--red);border-radius:14px;padding:12px 14px;margin-top:4px;font-size:14px}.fidelbox p{margin:6px 0}.fidelbox .mut{font-size:13px}
+.fidelchk{display:flex;gap:8px;align-items:flex-start;margin:8px 0 2px;font-size:14px;cursor:pointer}.fidelchk input{margin-top:3px}
 .lnote{background:var(--tint);border-radius:14px;padding:10px 12px;font-size:13.5px}
 #login [hidden]{display:none!important}
 #login button:disabled,#login input:disabled{opacity:.6;cursor:progress}
@@ -568,6 +571,15 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
   <div id="fiCods"></div>
   <div class="lbl" style="margin-top:10px">Historial</div>
   <div id="fiHist"></div>
+  <div class="fidel" id="fiDel"><button type="button" class="linkish fidelbtn" data-fidel>Eliminar clienta</button>
+   <div id="fiDelBox" class="fidelbox" hidden role="group" aria-labelledby="fiDelT">
+    <b id="fiDelT">¿Eliminar a esta clienta?</b>
+    <p id="fiDelMsg"></p>
+    <label class="fidelchk" id="fiDelHistL"><input type="checkbox" id="fiDelHist"> <span id="fiDelHistT"></span></label>
+    <p class="mut" id="fiDelHint"></p>
+    <div class="row" style="margin-top:8px"><button class="pill" type="button" data-fidelno>Cancelar</button><button class="btn" type="button" data-fidelok style="background:var(--red);color:#fff">Eliminar</button></div>
+   </div>
+  </div>
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-ficlose>Cerrar</button>
  </div>
 </div>
@@ -870,7 +882,7 @@ const fmtFH=t=>{const d=new Date(+t);return d.getDate()+' de '+MES[d.getMonth()]
 const masDias=(s,n)=>{const d=new Date(s+'T12:00');d.setDate(d.getDate()+n);return iso(d)};
 // clienta: por teléfono (últimos 9 dígitos) o, si no tiene, por nombre
 const ckDe=(f,c)=>{const t=nd(f);if(t.length>=8)return 't'+t;const n=String(c||'').trim().toLowerCase().replace(/\s+/g,' ');return n?'n'+n:''};
-const ckA=a=>ckDe(a.f,a.c);
+const ckA=a=>a.del?'':ckDe(a.f,a.c);
 const esCita=a=>!!a&&!a.bq&&a.e!=='disponible'&&a.e!=='bloqueado'&&!!(a.c||a.f);
 const FICHAS=()=>{const f=S.cfg.fichas;if(!f||typeof f!=='object'||Array.isArray(f))S.cfg.fichas={};return S.cfg.fichas};
 const notaDe=k=>{const x=k&&FICHAS()[k];return x&&x.nt?String(x.nt):''};
@@ -928,6 +940,7 @@ function openFicha(k){
   fiCodsDraw();
   fiHist.innerHTML=H.map(a=>{const fut=a.d>t0||(a.d===t0&&a.t>=new Date().toTimeString().slice(0,5));
     return `<div class="gcrow"><span>${esc(a.s)}<small>${capi(fmtD(a.d))}, ${a.t} · ${fut?'próxima · ':''}${a.gc?'giftcard':a.sp?'pagado completo':a.p==='pagado'?'abono pagado':a.e==='confirmada'?'confirmada':'abono pendiente'}</small></span><b>${enPack(a)?'pack':a.ev&&!(+a.v>0)?'—':money(a.v)}</b></div>`}).join('')||'<p class="mut">Sin horas registradas.</p>';
+  fiDelBox.hidden=true;fiDel.hidden=readOnly;
   fiModal.hidden=false;
 }
 function fiSave(){
@@ -936,6 +949,29 @@ function fiSave(){
   if((dd||mm)&&!cu){fiOk.textContent='Elige el día y el mes del cumpleaños, o deja los dos vacíos.';return}
   if(t||cu)F[fiK]={nm:o.nm||'',f:o.f||'',at:Date.now(),...(t?{nt:t}:{}),...(cu?{cu}:{})};else delete F[fiK];
   fiOk.textContent='Ficha guardada ✓';render();if(!clModal.hidden)clDraw();if(!dcModal.hidden)dcDraw();
+}
+// --- eliminar clienta ---
+function fiFut(a){const t0=hoyIso(),n=new Date(),nm=n.getHours()*60+n.getMinutes();return a.d>t0||(a.d===t0&&toMin(a.t)+(+a.m||0)>nm)}
+function fiDelInfo(k){const H=S.appts.filter(a=>esCita(a)&&ckA(a)===k),fut=H.filter(fiFut),pas=H.filter(a=>!fiFut(a)),cods=Object.keys(CODS()).filter(c=>CODS()[c]&&CODS()[c].k===k);return{H,fut,pas,cods}}
+function fiDelDraw(){const i=fiDelInfo(fiK),nm=fiTitle.textContent||'esta clienta',n1=i.fut.length,n2=i.cods.length,ex=[];
+  if(n1)ex.push(n1==1?'su próxima hora':`sus ${n1} próximas horas`);if(n2)ex.push(n2==1?'su código de descuento':`sus ${n2} códigos de descuento`);
+  fiDelT.textContent=`¿Eliminar a ${nm}?`;
+  fiDelMsg.textContent=`Se borrará su ficha, con sus notas y cumpleaños${ex.length?', y también '+ex.join(' y '):''}.${n1?(n1==1?' Esa hora queda libre para otras clientas.':' Esas horas quedan libres para otras clientas.'):''} No se puede deshacer.`;
+  fiDelHistL.hidden=!i.pas.length;fiDelHist.checked=false;fiDelHistT.textContent=`Borrar también ${i.pas.length==1?'su visita pasada':'sus '+i.pas.length+' visitas pasadas'}`;
+  fiDelHintDraw(i)}
+function fiDelHintDraw(i){i=i||fiDelInfo(fiK);const u=i.pas.length==1;fiDelHint.textContent=!i.pas.length?'':fiDelHist.checked?(u?'Esa visita dejará':'Esas visitas dejarán')+' de contar en Balance. Úsalo para borrar reservas de prueba o duplicadas.':`Si no lo marcas, ${u?'su visita pasada sigue':'sus visitas pasadas siguen'} contando en Balance, como «Clienta eliminada» y sin teléfono.`}
+fiDelHist.addEventListener('change',()=>fiDelHintDraw());
+function fiDelete(){
+  if(readOnly||!fiK){showToast('No tienes permiso para eliminar');return}
+  const k=fiK,nm=fiTitle.textContent||'Clienta',hist=fiDelHist.checked,i=fiDelInfo(k);
+  const quitar=new Set([...i.fut,...(hist?i.pas:[])]);
+  quitar.forEach(a=>dcLibera(a));
+  S.appts=S.appts.filter(a=>!quitar.has(a));
+  i.pas.forEach(a=>{if(!quitar.has(a)){a.c='Clienta eliminada';a.f='';a.del=1}});
+  i.cods.forEach(c=>{delete CODS()[c]});
+  delete FICHAS()[k];
+  fiModal.hidden=true;fiDelBox.hidden=true;render();if(!clModal.hidden)clDraw();if(!dcModal.hidden)dcDraw();
+  showToast(`${nm} fue eliminada`);
 }
 // --- respaldo ---
 const ENAPP=/CatarsisApp/.test(navigator.userAgent);
@@ -1588,6 +1624,9 @@ document.addEventListener('click',e=>{
   else if(el=g('data-clclose')){clModal.hidden=true;return}
   else if(el=g('data-ficha')){const a=S.appts.find(x=>x.id==el.dataset.ficha);if(a&&ckA(a))openFicha(ckA(a));return}
   else if(el=g('data-fisave')){fiSave();return}
+  else if(el=g('data-fidel')){fiDelDraw();fiDelBox.hidden=false;fiDelBox.scrollIntoView({block:'nearest'});return}
+  else if(el=g('data-fidelno')){fiDelBox.hidden=true;return}
+  else if(el=g('data-fidelok')){fiDelete();return}
   else if(el=g('data-ficlose')){fiModal.hidden=true;return}
   else if(el=g('data-fiagendar')){const o=clientas()[fiK]||FICHAS()[fiK]||{};fiModal.hidden=true;clModal.hidden=true;editing=false;render();client.value=o.nm||'';phone.value=o.f||'';setTimeout(()=>{const ad=document.querySelector('.add');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'})},80);showToast('Elige el servicio y la hora para '+(o.nm||'la clienta'));return}
   else if(el=g('data-bkjson')){bkJson();return}
