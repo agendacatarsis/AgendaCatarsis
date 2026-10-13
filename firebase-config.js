@@ -26,7 +26,7 @@ const firebaseConfig = {
 
 // Clave de reCAPTCHA v3 para App Check (opcional, contra bots).
 // Déjala vacía ('') si no la usas.
-const appCheckKey = '';
+const appCheckKey = '6LdHOOstAAAAABXjTe9HB6pNpr-m3ZQmJnJyMfHd';
 
 // Aviso por correo de nuevas reservas (opcional).
 // Pega aquí la URL de tu Google Apps Script (termina en /exec).
