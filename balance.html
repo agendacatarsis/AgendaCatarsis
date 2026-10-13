@@ -89,6 +89,7 @@ a.lnk{color:var(--ink)}
 /* ventana emergente abierta: la página de fondo no se mueve */
 body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 .modal,.mbox,.lb{overscroll-behavior:contain}
+.grecaptcha-badge{visibility:hidden!important}.rcap{text-align:center;color:var(--mut);font-size:11.5px;margin:12px 0 0}.rcap a{color:inherit}#login .rcap{font-size:12px;line-height:1.4;margin:14px 0 0}
 </style></head><body class="locked">
 <div id="login"><div class="lbox">
 <div class="lhead"><img class="logo" id="loginLogo" alt="Catarsis" src="icon-192.png"><h2>Balance Catarsis</h2><p class="mut">Entra para ver tus finanzas. Solo la cuenta administradora puede verlas.</p></div>
@@ -103,7 +104,7 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 <label class="f" for="lPass" style="margin-top:10px">Contraseña</label><input id="lPass" type="password" autocomplete="current-password">
 <div class="err" id="loginErr" role="alert"></div><div class="linfo" id="loginInfo" role="status"></div>
 <button class="btn" style="width:100%" type="submit">Entrar</button></form>
-<div class="llinks"><button type="button" class="linkish" id="lReset">Olvidé mi contraseña</button></div>
+<div class="llinks"><button type="button" class="linkish" id="lReset">Olvidé mi contraseña</button></div><p class="rcap" id="rcapL" hidden>Protegido por reCAPTCHA de Google · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacidad</a> · <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Términos</a></p>
 </div></div></div>
 <div id="gate" class="box"><h1>Sin acceso</h1><p class="mut">El balance es solo para la administradora.</p><div id="gateInfo" class="deny" style="text-align:left"></div><div class="row" style="justify-content:center;flex-wrap:wrap"><a class="back" href="panelcatarsis.html">‹ Volver a la agenda</a><button class="pill" id="gateOut">Salir y entrar con otra cuenta</button></div></div>
 <div class="top"><div><h1>Balance</h1><div class="sub">Catarsis Estética y Bienestar</div></div><a class="back" href="panelcatarsis.html">‹ Agenda</a></div>
@@ -138,6 +139,7 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 // La configuración de Firebase está en el archivo firebase-config.js (misma carpeta)
 const FIREBASE_CONFIG=(c=>c&&typeof c==='object'&&['apiKey','authDomain','projectId','appId'].every(k=>typeof c[k]==='string'&&c[k].trim()&&!/PEGA_AQUI/i.test(c[k]))?c:null)(window.FIREBASE_CONFIG);
 const APPCHECK_KEY=window.APPCHECK_KEY||'';
+function acActivar(){if(!APPCHECK_KEY||!firebase.appCheck)return;try{const P=firebase.appCheck.ReCaptchaEnterpriseProvider;firebase.appCheck().activate(P?new P(APPCHECK_KEY):APPCHECK_KEY,true)}catch(e){console.warn('App Check',e)}}
 const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIA=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const $=id=>document.getElementById(id);
@@ -335,7 +337,7 @@ const FAIL_CFG='Falta el archivo firebase-config.js o sus datos no son válidos.
   if(!window.firebase){loginFail(FAIL_SDK);return}
   if(!FIREBASE_CONFIG){loginFail(FAIL_CFG);return}
   firebase.initializeApp(FIREBASE_CONFIG);
-  if(APPCHECK_KEY&&firebase.appCheck)firebase.appCheck().activate(APPCHECK_KEY,true);
+  acActivar();if(APPCHECK_KEY){const r=document.getElementById('rcapL');if(r)r.hidden=false}
   const auth=firebase.auth();db=firebase.firestore();
   setupLogin(auth);
   $('outBtn').addEventListener('click',async()=>{await auth.signOut();location.reload()});
