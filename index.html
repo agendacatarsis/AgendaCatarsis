@@ -127,6 +127,24 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .lbc{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#f1e7d3;font-size:14px}
 .ptabs{display:flex;border-bottom:1px solid var(--line);margin:22px 0 16px}
 .ptabs button{flex:1;border:0;background:none;padding:12px 6px;font-weight:600;font-size:15.5px;color:var(--mut);border-bottom:3px solid transparent;margin-bottom:-1px;cursor:pointer;min-height:48px}
+.ptabs.t3 button{flex:1 1 auto;padding:12px 4px;font-size:15px;white-space:nowrap}
+.balist{display:grid;gap:18px}
+.bacard{margin:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.baimg{position:relative;aspect-ratio:4/5;background:var(--tint);overflow:hidden;touch-action:pan-y;cursor:ew-resize;user-select:none;-webkit-user-select:none}
+.baimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.ba-aw{position:absolute;inset:0;clip-path:inset(0 calc(100% - var(--p,50%)) 0 0)}
+.ba-h{position:absolute;top:0;bottom:0;left:var(--p,50%);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.35)}
+.ba-h::after{content:'';position:absolute;top:50%;left:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f1b16' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 7l-5 5 5 5M15 7l5 5-5 5'/%3E%3C/svg%3E") center/22px no-repeat;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.ba-l,.ba-r{position:absolute;top:10px;background:rgba(31,27,22,.72);color:#fff;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+.ba-l{left:10px}.ba-r{right:10px}
+.bacard:not(.ba-ok) .ba-h,.bacard:not(.ba-ok) .ba-l,.bacard:not(.ba-ok) .ba-r{display:none}
+.ba-st{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:14px;text-align:center;padding:20px}
+.bacard.ba-ok .ba-st{display:none}
+.ba-rg{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.bacard figcaption{padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bacard figcaption span{flex:1 1 160px;min-width:0}
+.bacard figcaption small{display:block;color:var(--mut);font-size:13.5px}
+.banote{color:var(--mut);font-size:13px;margin:14px 2px 0}
 .ptabs button.on{color:var(--ink);border-bottom-color:var(--acc)}
 .srch{position:relative;margin:0 0 12px}
 .srch input{padding-left:42px;margin:0}
@@ -372,6 +390,9 @@ const WA=()=>{let d=String((ag&&ag.wa)||legacy.wa||'').replace(/\D/g,'');if(d.le
 const DATOS=()=>(ag&&ag.datos)||legacy.datos||'';
 // Link de pago de Mercado Pago (monto abierto) para pagar con tarjeta de crédito o débito (panel → Menú → Pagos)
 const MP=()=>{const u=String((ag&&ag.mp)||'').trim();return /^https:\/\/[^\s"<>]+$/i.test(u)?u:''};
+// Antes y después (panel → Menú → Antes y después). La lista viene en publico/agenda.gal; cada par de fotos está en publico/ga_<id>
+// y se descarga solo cuando la clienta abre la pestaña y la foto aparece en pantalla.
+const GALX=()=>Array.isArray(ag&&ag.gal)?ag.gal.filter(x=>x&&x.id&&/^[a-z0-9]{4,24}$/.test(String(x.id))).slice(0,12):[];
 const POL=()=>String((ag&&ag.pol)||'').trim().slice(0,600);  // política de cambios y cancelaciones (panel → Menú → Reservas online)
 const polHtml=()=>esc(POL()).replace(/\n/g,'<br>');
 const MPMIN=()=>Math.max(0,+(ag&&ag.mpMin)||0);  // solo en pagos desde este monto
@@ -430,8 +451,9 @@ function errBox(m){try{let b=document.getElementById('errBox');if(!b){b=document
   b.innerHTML='<button type="button" aria-label="Cerrar aviso" onclick="this.parentNode.remove()" style="float:right;border:0;background:none;color:#fff;font-size:20px;line-height:1;padding:0 0 6px 10px;cursor:pointer">✕</button>No pudimos continuar. Recarga la página e inténtalo de nuevo, o escríbenos por WhatsApp.<br><small style="opacity:.85">Detalle: '+String(m||'error').replace(/[<>&]/g,'').slice(0,220)+' · paso '+step+'</small>'}catch(_){}}
 window.addEventListener('error',e=>errBox((e.message||'error')+(e.lineno?' (línea '+e.lineno+':'+e.colno+')':'')));
 window.addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&/firebase|firestore|network|unavailable|serviceworker/i.test(String(r.code||'')+' '+String(r.message||r)))return;errBox(r&&r.message?r.message:String(r))});
-function render(){try{render0()}catch(err){errBox((err&&err.message||String(err))+(err&&err.stack?' · '+String(err.stack).split('\n').slice(0,2).join(' '):''));throw err}}
+function render(){try{render0();abCargar()}catch(err){errBox((err&&err.message||String(err))+(err&&err.stack?' · '+String(err.stack).split('\n').slice(0,2).join(' '):''));throw err}}
 function render0(){
+  if(ptab==='ab'&&!GALX().length)ptab='svc';
   stepper();
   if(ag===null)return;
   if(step!==lastStep){if(lastStep!==-1)window.scrollTo(0,0);if(step===2)ent2=true;lastStep=step}
@@ -443,6 +465,36 @@ function render0(){
 // ===== Collage de fotos (archivos galeria-1.jpg … galeria-6.jpg en la misma carpeta) =====
 const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje a cuatro manos','50% 40%'],['galeria-3.jpg','Masaje de espalda','72% 40%'],['galeria-4.jpg','Masaje facial con piedras de jade','50% 35%'],['galeria-5.jpg','Masaje cervical','40% 40%'],['galeria-6.jpg','Masaje descontracturante','45% 35%']];
 const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-m.jpg')}" alt="${a}" style="object-position:${pos}" decoding="async" onerror="if(!this.dataset.o){this.dataset.o=1;this.src='${f}'}else this.parentNode.remove()"></button>`).join('')}</div>`;
+function abHtml(){const L=GALX();
+  return `<div class="balist">${L.map(x=>{const t=esc(String(x.t||'Antes y después').slice(0,60)),d=esc(String(x.x||'').slice(0,60)),si=x.s?SV().findIndex(v=>v&&v.n===x.s&&!v.w):-1;
+    return `<figure class="bacard" data-gid="${esc(x.id)}"><div class="baimg"><img class="ba-d" alt="Después: ${t}"><div class="ba-aw"><img class="ba-a" alt="Antes: ${t}"></div><span class="ba-st">Cargando fotos…</span><span class="ba-l">Antes</span><span class="ba-r">Después</span><span class="ba-h" aria-hidden="true"></span><input type="range" class="ba-rg" min="0" max="100" value="50" aria-label="Comparar antes y después: ${t}"></div>
+    <figcaption><span><b>${t}</b>${d?`<small>${d}</small>`:''}</span>${si>=0?`<button type="button" class="pill" data-res="${si}">Reservar</button>`:''}</figcaption></figure>`}).join('')}</div>
+  <p class="banote">Desliza sobre cada foto para comparar. Son resultados reales de clientas de Catarsis, publicados con su autorización; cada piel y cada cuerpo responden distinto.</p>`}
+const galImg={},galPend=new Set();let galIO=null,baDrag=null;
+const okImg=s=>typeof s==='string'&&s.length<900000&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(s);
+function galPinta(id){const c=document.querySelector('.bacard[data-gid="'+id+'"]');if(!c)return;const g=galImg[id];
+  if(!g){c.querySelector('.ba-st').textContent='No se pudo cargar esta foto. Revisa tu conexión.';return}
+  c.querySelector('img.ba-d').src=g.d;c.querySelector('img.ba-a').src=g.a;c.classList.add('ba-ok')}
+function galFetch(id){if(galImg[id]||galPend.has(id))return;galPend.add(id);
+  const url='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FIREBASE_CONFIG.projectId)+'/databases/(default)/documents/publico/ga_'+id+'?key='+encodeURIComponent(FIREBASE_CONFIG.apiKey);
+  fetch(url).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>restM(j.fields))
+    .catch(()=>sdkP.then(()=>db.collection('publico').doc('ga_'+id).get()).then(d=>d.exists?d.data():null))
+    .then(x=>{galPend.delete(id);galImg[id]=x&&okImg(x.a)&&okImg(x.d)?{a:x.a,d:x.d}:null;galPinta(id)})
+    .catch(()=>{galPend.delete(id);galPinta(id)})}
+function abCargar(){const cs=[...document.querySelectorAll('.bacard[data-gid]')];if(!cs.length)return;
+  if(galIO)galIO.disconnect();
+  const pend=cs.filter(c=>{const id=c.dataset.gid;if(id in galImg){galPinta(id);return false}return true});
+  if(!('IntersectionObserver' in window)){pend.forEach(c=>galFetch(c.dataset.gid));return}
+  galIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){galIO.unobserve(e.target);galFetch(e.target.dataset.gid)}}),{rootMargin:'400px 0px'});
+  pend.forEach(c=>galIO.observe(c))}
+function baSet(card,p){p=Math.max(0,Math.min(100,p));card.style.setProperty('--p',p+'%');const rg=card.querySelector('.ba-rg');if(rg)rg.value=Math.round(p)}
+document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('.bacard.ba-ok .baimg');if(!b)return;baDrag={b,id:e.pointerId,x0:e.clientX,y0:e.clientY,on:false}});
+document.addEventListener('pointermove',e=>{const d=baDrag;if(!d||e.pointerId!==d.id)return;
+  if(!d.on){if(Math.abs(e.clientX-d.x0)<6||Math.abs(e.clientX-d.x0)<Math.abs(e.clientY-d.y0))return;d.on=true;try{d.b.setPointerCapture(e.pointerId)}catch(_){}}
+  const r=d.b.getBoundingClientRect();baSet(d.b.parentNode,(e.clientX-r.left)/r.width*100)});
+document.addEventListener('pointerup',e=>{const d=baDrag;baDrag=null;if(d&&!d.on&&e.pointerId===d.id&&Math.abs(e.clientY-d.y0)<8){const r=d.b.getBoundingClientRect();baSet(d.b.parentNode,(e.clientX-r.left)/r.width*100)}});
+document.addEventListener('pointercancel',()=>{baDrag=null});
+document.addEventListener('input',e=>{if(e.target.classList&&e.target.classList.contains('ba-rg'))baSet(e.target.closest('.bacard'),+e.target.value)});
 let lbI=0;
 function lbShow(i){lbI=(i+GAL.length)%GAL.length;const [f,a]=GAL[lbI];$('lbImg').src=f;$('lbImg').alt=a;$('lbCap').textContent=`${a} · ${lbI+1} de ${GAL.length}`;$('lb').hidden=false}
 const lbClose=()=>{$('lb').hidden=true};
@@ -549,7 +601,8 @@ function view0(app){
   <h1>${NEGOCIO}</h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
   <p class="inf">📍 <a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a>${horarioTxt()?`<br>🕒 ${horarioTxt()}`:''}</p>
   <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">📸 Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">🗺️ Cómo llegar</a></div>${DCQ&&!GC_ON?`<p class="dcban">🏷️ Tienes el código <b>${esc(DCQ)}</b>. Elige tu servicio: el descuento se aplica al confirmar tu reserva.</p>`:''}</div></header>
-  <div class="cat-wrap"><div class="ptabs" role="tablist"><button role="tab" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button><button role="tab" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
+  <div class="cat-wrap"><div class="ptabs${GALX().length?' t3':''}" role="tablist"><button role="tab" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button>${GALX().length?`<button role="tab" data-pt="ab" aria-selected="${ptab==='ab'}" class="${ptab==='ab'?'on':''}">Antes y después</button>`:''}<button role="tab" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
+  ${ptab==='ab'?`<div class="pane">${abHtml()}</div>`:''}
   <div class="pane" ${ptab==='svc'?'':'hidden'}>
    <div class="srch"><span>🔍</span><input id="q" type="search" placeholder="Buscar servicio" autocomplete="off" aria-label="Buscar servicio" value="${esc(qTxt)}"></div>
    ${cats.length>1?`<div class="cchips">${['Todos',...cats].map(c=>`<button data-cf="${esc(c)}" class="${c===catF?'on':''}">${ic(c)}${esc(c)}</button>`).join('')}</div>`:''}

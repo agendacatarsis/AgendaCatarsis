@@ -62,6 +62,16 @@ input,select,textarea{font:inherit;background:var(--bg);border:1px solid var(--l
 .pg-pagado{color:var(--grn);font-weight:500}.pg-pendiente{color:var(--amb);font-weight:500}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{height:clamp(38px,9vw,54px);width:auto;flex:none}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo{filter:invert(1)}}
+.bapick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:6px}
+.bapick label{position:relative;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600;cursor:pointer}
+.bapick label:focus-within .babox{outline:2px solid var(--ink);outline-offset:2px}
+.babox{position:relative;aspect-ratio:4/5;border:1.5px dashed var(--line);border-radius:12px;background:var(--card);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--mut);font-weight:500;font-size:13px;text-align:center;padding:6px}
+.babox img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bapick input[type=file]{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;overflow:hidden;min-height:0;padding:0;border:0}
+.barow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.barow .bth{display:flex;gap:3px;flex:none}.barow .bth span{width:40px;height:50px;border-radius:6px;background:var(--tint) center/cover no-repeat}
+.barow .bi{flex:1;min-width:0}.barow .bi small{display:block;color:var(--mut);font-size:12.5px}
+.baok{display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px;font-size:14px}.baok input{margin-top:3px}
 .chk{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;margin:0 6px 6px 0;background:var(--card)}.chk input{width:auto;margin:0}
 .appt.s-bloqueado{border-left-color:var(--mut)}
 .ctl{flex-wrap:wrap}.wab{text-decoration:none;font-size:13px;padding:7px 12px;color:var(--ink);white-space:nowrap}
@@ -541,6 +551,16 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-rcclose>Cerrar</button>
  </div>
 </div>
+<div id="baModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="baTitle">
+ <div class="mbox" style="max-width:520px">
+  <div class="mhead"><h3 id="baTitle">Antes y después</h3><button type="button" class="x" data-baclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:13.5px;margin:4px 0 6px">Aparecen en tu página de reservas, en la pestaña «Antes y después». Las fotos se descargan solo cuando una clienta abre esa pestaña, así la página sigue abriendo rápido.</p>
+  <div id="baList"></div>
+  <div class="lbl">Agregar antes y después</div>
+  <div id="baForm"></div>
+  <button class="pill" style="width:100%;margin-top:12px" type="button" data-baclose>Cerrar</button>
+ </div>
+</div>
 <div id="clModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="clTitle">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="clTitle">Clientas</h3><button type="button" class="x" data-clclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
@@ -699,7 +719,7 @@ function processReservas(){
 function syncPublic(){
   const db=firebase.firestore(),t0=iso(today),oc={};
   S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),pol:String(S.cfg.pol||'').trim().slice(0,600),dc:dcPub(),ocupado:oc,av:(S.cfg.av||[]).filter(a=>a&&a.i&&a.at>Date.now()-3*864e5).map(a=>({i:a.i,x:a.x})),...(gotFin?{gc:gcPub()}:{})};
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),pol:String(S.cfg.pol||'').trim().slice(0,600),gal:GALP().slice(0,12).map(x=>({id:String(x.id),t:String(x.t||'').slice(0,60),x:String(x.x||'').slice(0,60),s:String(x.s||'').slice(0,80)})),dc:dcPub(),ocupado:oc,av:(S.cfg.av||[]).filter(a=>a&&a.i&&a.at>Date.now()-3*864e5).map(a=>({i:a.i,x:a.x})),...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · ⚠ Falta tu WhatsApp (Menú → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
@@ -922,6 +942,49 @@ function clientas(){
   Object.entries(FICHAS()).forEach(([k,x])=>{if(!m[k]&&x&&(x.nt||x.cu))m[k]={k,nm:x.nm||'',f:x.f||'',n:0,tot:0,ult:'',prox:'',proxT:'',ld:'',pri:''}});
   return m;
 }
+// --- antes y después (fotos en publico/ga_<id>; la lista va en S.cfg.gal y se publica en publico/agenda.gal) ---
+const GALP=()=>{if(!Array.isArray(S.cfg.gal))S.cfg.gal=[];return S.cfg.gal};
+let baA='',baD='',baBusy=false;const baThumb={};
+async function baProc(file){
+  const url=URL.createObjectURL(file);
+  try{const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('img'));i.src=url});
+    const W=720,H=900,r=W/H;let sw=im.naturalWidth,sh=im.naturalHeight,sx=0,sy=0;
+    if(!sw||!sh)throw new Error('img');
+    if(sw/sh>r){const nw=sh*r;sx=(sw-nw)/2;sw=nw}else{const nh=sw/r;sy=(sh-nh)/2;sh=nh}
+    const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,sx,sy,sw,sh,0,0,W,H);
+    let q=.8,d=c.toDataURL('image/jpeg',q);while(d.length>190000&&q>.45){q-=.07;d=c.toDataURL('image/jpeg',q)}
+    return d}
+  finally{URL.revokeObjectURL(url)}}
+function baDraw(){
+  const L=GALP();
+  baList.innerHTML=L.length?L.map((x,i)=>{const th=baThumb[x.id];return `<div class="barow"><span class="bth"><span${th?` style="background-image:url('${th.a}')"`:''}></span><span${th?` style="background-image:url('${th.d}')"`:''}></span></span><span class="bi"><b>${esc(x.t||'Sin título')}</b><small>${esc([x.x,x.s?'Botón: '+x.s:''].filter(Boolean).join(' · ')||'—')}</small></span><button type="button" class="x" style="flex-basis:38px;height:38px" data-baup="${i}" aria-label="Subir" ${i&&!readOnly?'':'disabled'}>↑</button><button type="button" class="x" style="flex-basis:38px;height:38px" data-bax="${i}" aria-label="Eliminar ${esc(x.t||'')}" ${readOnly?'disabled':''}>✕</button></div>`}).join('')+`<div class="mut" style="font-size:12.5px;margin-top:6px">${L.length} de 12 · la primera aparece arriba en tu página.</div>`:'<p class="mut" style="font-size:14px">Aún no tienes fotos publicadas.</p>';
+  L.forEach(x=>{if(!(x.id in baThumb)){baThumb[x.id]=null;firebase.firestore().collection('publico').doc('ga_'+x.id).get().then(d=>{if(d.exists){const v=d.data();baThumb[x.id]={a:v.a,d:v.d};if(!baModal.hidden)baDraw()}}).catch(()=>{})}});
+  if(ENAPP){baForm.innerHTML=`<div class="mut" style="font-size:13.5px;margin-bottom:8px">En la app no se pueden elegir fotos del teléfono. Abre el panel en Chrome, entra con tu cuenta y vuelve a Menú → Antes y después.</div><button class="btn" style="width:100%" type="button" data-bkchrome>🌐 Abrir el panel en Chrome</button>`;return}
+  if(readOnly){baForm.innerHTML='<p class="mut" style="font-size:14px">Tu cuenta solo puede ver la agenda.</p>';return}
+  if(L.length>=12){baForm.innerHTML='<p class="mut" style="font-size:14px">Llegaste al máximo de 12. Elimina uno para agregar otro.</p>';return}
+  const sv=S.services.filter(x=>!x.p).map(x=>x.n);
+  baForm.innerHTML=`<div class="bapick"><label for="baFA">Foto de antes<span class="babox" id="baPA">${baA?`<img src="${baA}" alt="Antes">`:'📷 Toca para elegir'}</span><input type="file" id="baFA" accept="image/*"></label><label for="baFD">Foto de después<span class="babox" id="baPD">${baD?`<img src="${baD}" alt="Después">`:'📷 Toca para elegir'}</span><input type="file" id="baFD" accept="image/*"></label></div>
+  <div class="mut" style="font-size:12.5px;margin-top:4px">Se recortan al centro en formato vertical. Usa fotos con el mismo encuadre y la misma luz para que se note el cambio.</div>
+  <label class="f" for="baT">Tratamiento</label><input id="baT" maxlength="60" placeholder="Ej. Limpieza facial profunda">
+  <label class="f" for="baX">Detalle (opcional)</label><input id="baX" maxlength="60" placeholder="Ej. 3 sesiones · 1 mes">
+  <label class="f" for="baS">Botón «Reservar» (opcional)</label><select id="baS"><option value="">Sin botón</option>${sv.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select>
+  <label class="baok"><input type="checkbox" id="baOk"> <span>La clienta autorizó publicar estas fotos en mi página.</span></label>
+  <button class="btn" style="width:100%" type="button" data-basave>Publicar</button><div class="mut" id="baMsg" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>`}
+async function baFile(inp,cual){const f=inp.files&&inp.files[0];if(!f)return;const box=cual==='a'?document.getElementById('baPA'):document.getElementById('baPD');box.textContent='Preparando…';
+  try{const d=await baProc(f);if(cual==='a')baA=d;else baD=d;box.innerHTML=`<img src="${d}" alt="${cual==='a'?'Antes':'Después'}">`}
+  catch(e){box.textContent='No se pudo leer esa foto. Prueba con otra.'}}
+async function baSave(){
+  if(readOnly||baBusy)return;const msg=document.getElementById('baMsg'),t=document.getElementById('baT').value.trim(),x=document.getElementById('baX').value.trim(),sv=document.getElementById('baS').value;
+  if(!baA||!baD){msg.textContent='Elige la foto de antes y la de después.';return}
+  if(t.length<2){msg.textContent='Escribe el nombre del tratamiento.';return}
+  if(!document.getElementById('baOk').checked){msg.textContent='Confirma que la clienta autorizó publicar las fotos.';return}
+  if(GALP().length>=12){msg.textContent='Llegaste al máximo de 12.';return}
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  baBusy=true;msg.textContent='Publicando…';
+  try{await firebase.firestore().collection('publico').doc('ga_'+id).set({a:baA,d:baD,at:Date.now()});
+    baThumb[id]={a:baA,d:baD};GALP().unshift({id,t:t.slice(0,60),x:x.slice(0,60),s:sv,at:Date.now()});baA='';baD='';baBusy=false;
+    render();baDraw();showToast('Antes y después publicado ✓')}
+  catch(e){baBusy=false;msg.textContent=e&&e.code==='permission-denied'?'Firebase no permitió guardar las fotos. Envíame una captura de tus reglas de Firestore y te digo qué agregar.':'No se pudo publicar. Revisa tu conexión e intenta de nuevo.'}}
 function clDraw(){
   const q=String(clQ.value||'').trim().toLowerCase(),qd=q.replace(/\D/g,''),L=Object.values(clientas()).sort((x,y)=>y.ld.localeCompare(x.ld)||x.nm.localeCompare(y.nm));
   const F=L.filter(o=>!q||o.nm.toLowerCase().includes(q)||(qd.length>=3&&String(o.f).replace(/\D/g,'').includes(qd)));
@@ -1461,6 +1524,7 @@ function render(){
     +mt('data-promoopen','🏷️ Promociones',nPromo?`${nPromo} activa${nPromo==1?'':'s'}`:'Crear promoción o pack')
     +mt('data-madopen','🌿 Maderoterapia',`${nMad} tratamiento${nMad==1?'':'s'}${S.cfg.madera.on===false?' · oculto':''}`)
     +mt('data-duoopen','👥 Descuentos dúo',S.cfg.duo.on?((n=>n?`${n} con descuento`:'Sin descuentos')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):'Oculto en reservas')
+    +mt('data-baopen','📸 Antes y después',(n=>n?`${n} publicado${n==1?'':'s'} en tu página`:'Fotos de resultados')(GALP().length))
     +mt('data-svcopen','＋ Nuevo servicio','Agregar a tu lista')
     +`</div><div class="mgh">Configuración</div><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.servicios);
   }
@@ -1622,6 +1686,11 @@ document.addEventListener('click',e=>{
   else if(el=g('data-clopen')){clQ.value='';clDraw();clModal.hidden=false;return}
   else if(el=g('data-clk')){openFicha(el.dataset.clk);return}
   else if(el=g('data-clclose')){clModal.hidden=true;return}
+  else if(el=g('data-baopen')){baDraw();baModal.hidden=false;return}
+  else if(el=g('data-baclose')){baModal.hidden=true;return}
+  else if(el=g('data-basave')){baSave();return}
+  else if(el=g('data-baup')){const i=+el.dataset.baup,L=GALP();if(readOnly||i<1||i>=L.length)return;[L[i-1],L[i]]=[L[i],L[i-1]];render();baDraw();return}
+  else if(el=g('data-bax')){const i=+el.dataset.bax,L=GALP(),x=L[i];if(readOnly||!x)return;askConfirm('Eliminar antes y después',`¿Eliminar «${x.t||'estas fotos'}»? Dejarán de verse en tu página.`,()=>{const k=GALP().indexOf(x);if(k>=0)GALP().splice(k,1);firebase.firestore().collection('publico').doc('ga_'+x.id).delete().catch(()=>{});delete baThumb[x.id];render();baDraw()});return}
   else if(el=g('data-ficha')){const a=S.appts.find(x=>x.id==el.dataset.ficha);if(a&&ckA(a))openFicha(ckA(a));return}
   else if(el=g('data-fisave')){fiSave();return}
   else if(el=g('data-fidel')){fiDelDraw();fiDelBox.hidden=false;fiDelBox.scrollIntoView({block:'nearest'});return}
@@ -1770,6 +1839,7 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
 pickQ.addEventListener('input',pickDraw);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
+  if(e.target&&(e.target.id==='baFA'||e.target.id==='baFD')){baFile(e.target,e.target.id==='baFA'?'a':'d');return}
   const t=e.target,d=t.dataset;
   if(d.dcf!==undefined){const [a,b]=d.dcf.split('.'),D=DCF(),mx=b==='d'?365:b==='n'?100:90;D[a][b]=Math.max(1,Math.min(mx,Math.round(+t.value)||D[a][b]));t.value=D[a][b];render();dcDraw();showToast('Guardado ✓');return}
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
