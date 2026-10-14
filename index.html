@@ -468,7 +468,7 @@ const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map
 function abHtml(){const L=GALX();
   return `<div class="balist">${L.map(x=>{const t=esc(String(x.t||'Antes y después').slice(0,60)),d=esc(String(x.x||'').slice(0,60)),si=x.s?SV().findIndex(v=>v&&v.n===x.s&&!v.w):-1;
     return `<figure class="bacard" data-gid="${esc(x.id)}"><div class="baimg"><img class="ba-d" alt="Después: ${t}"><div class="ba-aw"><img class="ba-a" alt="Antes: ${t}"></div><span class="ba-st">Cargando fotos…</span><span class="ba-l">Antes</span><span class="ba-r">Después</span><span class="ba-h" aria-hidden="true"></span><input type="range" class="ba-rg" min="0" max="100" value="50" aria-label="Comparar antes y después: ${t}"></div>
-    <figcaption><span><b>${t}</b>${d?`<small>${d}</small>`:''}</span>${si>=0?`<button type="button" class="pill" data-res="${si}">Reservar</button>`:''}</figcaption></figure>`}).join('')}</div>
+    <figcaption><span><b>${t}</b>${d?`<small>${d}</small>`:''}</span>${si>=0?`<button type="button" class="rbtn" data-res="${si}">Reservar</button>`:''}</figcaption></figure>`}).join('')}</div>
   <p class="banote">Desliza sobre cada foto para comparar. Son resultados reales de clientas de Catarsis, publicados con su autorización; cada piel y cada cuerpo responden distinto.</p>`}
 const galImg={},galPend=new Set();let galIO=null,baDrag=null;
 const okImg=s=>typeof s==='string'&&s.length<900000&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(s);

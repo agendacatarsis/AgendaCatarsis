@@ -183,6 +183,8 @@ input[type=checkbox]{min-height:0;width:auto}
 .linfo{color:var(--grn);font-size:14px;font-weight:500;margin:0 0 8px}.linfo:empty{display:none}
 .llinks{display:flex;justify-content:center}
 .linkish{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;min-height:44px;padding:0 8px}
+.fiedbtn{padding:0!important;min-height:36px!important;font-size:13.5px!important;margin-top:2px}
+.fied{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:8px;background:var(--card)}
 .fidel{margin-top:14px;border-top:1px solid var(--line);padding-top:6px}.fidelbtn{color:var(--red)!important;padding:0!important}
 .fidelbox{border:1px solid var(--red);border-radius:14px;padding:12px 14px;margin-top:4px;font-size:14px}.fidelbox p{margin:6px 0}.fidelbox .mut{font-size:13px}
 .fidelchk{display:flex;gap:8px;align-items:flex-start;margin:8px 0 2px;font-size:14px;cursor:pointer}.fidelchk input{margin-top:3px}
@@ -582,6 +584,15 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="fiTitle">Ficha</h3><button type="button" class="x" data-ficlose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
   <div class="mut" id="fiSub" style="font-size:14px;margin-top:2px"></div>
+  <button type="button" class="linkish fiedbtn" id="fiEdBtn" data-fied>✏️ Editar nombre y teléfono</button>
+  <div class="fied" id="fiEd" hidden role="group" aria-labelledby="fiEdT">
+   <b id="fiEdT">Datos de la clienta</b>
+   <label class="f" for="fiNom">Nombre</label><input id="fiNom" maxlength="60" autocomplete="off">
+   <label class="f" for="fiTel" style="margin-top:10px">Teléfono</label><input id="fiTel" type="tel" inputmode="tel" maxlength="20" autocomplete="off" placeholder="9 1234 5678">
+   <div class="mut" id="fiEdMsg" role="status" style="font-size:13px;min-height:18px;margin-top:6px"></div>
+   <div class="row" style="margin-top:4px"><button class="pill" type="button" data-fiedno>Cancelar</button><button class="btn" type="button" data-fiedok>Guardar datos</button></div>
+   <p class="mut" style="font-size:12.5px;margin:8px 0 0">Se actualiza en todas sus horas, su ficha y sus códigos de descuento.</p>
+  </div>
   <div class="fstats" id="fiStats"></div>
   <label class="f" for="fiDia">Cumpleaños</label><div class="row" style="margin:6px 0 0"><select id="fiDia" aria-label="Día del cumpleaños"></select><select id="fiMes" aria-label="Mes del cumpleaños"></select></div>
   <label class="f" for="fiNota">Notas (alergias, tipo de piel, contraindicaciones, preferencias)</label>
@@ -959,7 +970,7 @@ function baDraw(){
   const L=GALP();
   baList.innerHTML=L.length?L.map((x,i)=>{const th=baThumb[x.id];return `<div class="barow"><span class="bth"><span${th?` style="background-image:url('${th.a}')"`:''}></span><span${th?` style="background-image:url('${th.d}')"`:''}></span></span><span class="bi"><b>${esc(x.t||'Sin título')}</b><small>${esc([x.x,x.s?'Botón: '+x.s:''].filter(Boolean).join(' · ')||'—')}</small></span><button type="button" class="x" style="flex-basis:38px;height:38px" data-baup="${i}" aria-label="Subir" ${i&&!readOnly?'':'disabled'}>↑</button><button type="button" class="x" style="flex-basis:38px;height:38px" data-bax="${i}" aria-label="Eliminar ${esc(x.t||'')}" ${readOnly?'disabled':''}>✕</button></div>`}).join('')+`<div class="mut" style="font-size:12.5px;margin-top:6px">${L.length} de 12 · la primera aparece arriba en tu página.</div>`:'<p class="mut" style="font-size:14px">Aún no tienes fotos publicadas.</p>';
   L.forEach(x=>{if(!(x.id in baThumb)){baThumb[x.id]=null;firebase.firestore().collection('publico').doc('ga_'+x.id).get().then(d=>{if(d.exists){const v=d.data();baThumb[x.id]={a:v.a,d:v.d};if(!baModal.hidden)baDraw()}}).catch(()=>{})}});
-  if(ENAPP){baForm.innerHTML=`<div class="mut" style="font-size:13.5px;margin-bottom:8px">En la app no se pueden elegir fotos del teléfono. Abre el panel en Chrome, entra con tu cuenta y vuelve a Menú → Antes y después.</div><button class="btn" style="width:100%" type="button" data-bkchrome>🌐 Abrir el panel en Chrome</button>`;return}
+  if(ENAPP&&!APPFOTOS){baForm.innerHTML=`<div class="mut" style="font-size:13.5px;margin-bottom:8px">Para elegir fotos desde la app, instala la versión 1.8 de la app de Android. Mientras tanto, abre el panel en Chrome, entra con tu cuenta y vuelve a Menú → Antes y después.</div><button class="btn" style="width:100%" type="button" data-bkchrome>🌐 Abrir el panel en Chrome</button>`;return}
   if(readOnly){baForm.innerHTML='<p class="mut" style="font-size:14px">Tu cuenta solo puede ver la agenda.</p>';return}
   if(L.length>=12){baForm.innerHTML='<p class="mut" style="font-size:14px">Llegaste al máximo de 12. Elimina uno para agregar otro.</p>';return}
   const sv=S.services.filter(x=>!x.p).map(x=>x.n);
@@ -1003,7 +1014,7 @@ function openFicha(k){
   fiCodsDraw();
   fiHist.innerHTML=H.map(a=>{const fut=a.d>t0||(a.d===t0&&a.t>=new Date().toTimeString().slice(0,5));
     return `<div class="gcrow"><span>${esc(a.s)}<small>${capi(fmtD(a.d))}, ${a.t} · ${fut?'próxima · ':''}${a.gc?'giftcard':a.sp?'pagado completo':a.p==='pagado'?'abono pagado':a.e==='confirmada'?'confirmada':'abono pendiente'}</small></span><b>${enPack(a)?'pack':a.ev&&!(+a.v>0)?'—':money(a.v)}</b></div>`}).join('')||'<p class="mut">Sin horas registradas.</p>';
-  fiDelBox.hidden=true;fiDel.hidden=readOnly;
+  fiDelBox.hidden=true;fiDel.hidden=readOnly;fiEd.hidden=true;fiEdBtn.hidden=readOnly;
   fiModal.hidden=false;
 }
 function fiSave(){
@@ -1013,6 +1024,24 @@ function fiSave(){
   if(t||cu)F[fiK]={nm:o.nm||'',f:o.f||'',at:Date.now(),...(t?{nt:t}:{}),...(cu?{cu}:{})};else delete F[fiK];
   fiOk.textContent='Ficha guardada ✓';render();if(!clModal.hidden)clDraw();if(!dcModal.hidden)dcDraw();
 }
+// --- editar nombre y teléfono de la clienta ---
+function fiEdAbrir(){const o=Object.assign({},FICHAS()[fiK]||{},clientas()[fiK]||{});fiNom.value=o.nm||fiTitle.textContent||'';fiTel.value=o.f||'';fiEdMsg.textContent='';fiEd.hidden=false;fiEdBtn.hidden=true;try{fiNom.focus()}catch(_){}}
+function fiEdGuardar(unir){
+  if(readOnly||!fiK){showToast('No tienes permiso para editar');return}
+  const nm=fiNom.value.trim().replace(/\s+/g,' ').slice(0,60),f=fiTel.value.trim().slice(0,20),dig=nd(f);
+  if(nm.length<2){fiEdMsg.textContent='Escribe el nombre.';return}
+  if(f&&dig.length<8){fiEdMsg.textContent='Revisa el teléfono: debe tener al menos 8 dígitos, o déjalo vacío.';return}
+  const old=fiK,nk=ckDe(f,nm),C=clientas(),F=FICHAS();
+  if(!nk)return;
+  if(nk!==old&&(C[nk]||F[nk])&&!unir){const otra=(C[nk]&&C[nk].nm)||(F[nk]&&F[nk].nm)||'otra clienta';
+    askConfirm('Unir fichas',`${otra} ya tiene ${dig.length>=8?'ese teléfono':'ese nombre'}. ¿Unir las dos fichas en una? Sus horas, notas, cumpleaños y códigos quedan juntos con el nombre y teléfono que escribiste.`,()=>fiEdGuardar(true));return}
+  S.appts.forEach(a=>{if(esCita(a)&&ckA(a)===old){a.c=nm;a.f=f}});
+  const fo=F[old],fn=nk!==old?F[nk]:null;
+  if(fo||fn){const nt=[fn&&fn.nt,fo&&fo.nt].filter(Boolean),cu=(fo&&fo.cu)||(fn&&fn.cu)||'';
+    const m={nm,f,at:Date.now()};if(nt.length)m.nt=[...new Set(nt)].join('\n').slice(0,1500);if(cu)m.cu=cu;
+    if(nk!==old)delete F[old];if(m.nt||m.cu)F[nk]=m;else delete F[nk]}
+  Object.values(CODS()).forEach(x=>{if(x&&x.k===old){x.k=nk;x.nm=nm;x.f=f}});
+  fiK=nk;render();if(!clModal.hidden)clDraw();if(!dcModal.hidden)dcDraw();openFicha(nk);showToast('Datos actualizados ✓')}
 // --- eliminar clienta ---
 function fiFut(a){const t0=hoyIso(),n=new Date(),nm=n.getHours()*60+n.getMinutes();return a.d>t0||(a.d===t0&&toMin(a.t)+(+a.m||0)>nm)}
 function fiDelInfo(k){const H=S.appts.filter(a=>esCita(a)&&ckA(a)===k),fut=H.filter(fiFut),pas=H.filter(a=>!fiFut(a)),cods=Object.keys(CODS()).filter(c=>CODS()[c]&&CODS()[c].k===k);return{H,fut,pas,cods}}
@@ -1038,6 +1067,8 @@ function fiDelete(){
 }
 // --- respaldo ---
 const ENAPP=/CatarsisApp/.test(navigator.userAgent);
+// La app de Android permite elegir fotos desde la versión 1.8
+const APPFOTOS=(m=>!!m&&(+m[1]>1||(+m[1]===1&&+m[2]>=8)))(navigator.userAgent.match(/CatarsisApp\/(\d+)\.(\d+)/));
 let bkTry=false,bkErr='';
 const jsonRep=(k,v)=>v&&typeof v==='object'&&typeof v.toDate==='function'?v.toDate().toISOString():v;
 const csvCel=v=>{v=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(v)&&isNaN(Number(v)))v="'"+v;return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
@@ -1693,6 +1724,9 @@ document.addEventListener('click',e=>{
   else if(el=g('data-bax')){const i=+el.dataset.bax,L=GALP(),x=L[i];if(readOnly||!x)return;askConfirm('Eliminar antes y después',`¿Eliminar «${x.t||'estas fotos'}»? Dejarán de verse en tu página.`,()=>{const k=GALP().indexOf(x);if(k>=0)GALP().splice(k,1);firebase.firestore().collection('publico').doc('ga_'+x.id).delete().catch(()=>{});delete baThumb[x.id];render();baDraw()});return}
   else if(el=g('data-ficha')){const a=S.appts.find(x=>x.id==el.dataset.ficha);if(a&&ckA(a))openFicha(ckA(a));return}
   else if(el=g('data-fisave')){fiSave();return}
+  else if(el=g('data-fied')){fiEdAbrir();return}
+  else if(el=g('data-fiedno')){fiEd.hidden=true;fiEdBtn.hidden=readOnly;return}
+  else if(el=g('data-fiedok')){fiEdGuardar(false);return}
   else if(el=g('data-fidel')){fiDelDraw();fiDelBox.hidden=false;fiDelBox.scrollIntoView({block:'nearest'});return}
   else if(el=g('data-fidelno')){fiDelBox.hidden=true;return}
   else if(el=g('data-fidelok')){fiDelete();return}
