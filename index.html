@@ -2,6 +2,19 @@
 <html lang="es"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reserva tu hora · Catarsis</title>
+<meta name="description" content="Catarsis Estética y Bienestar, Cochrane 450, Osorno. Reserva online tu hora de masajes y tratamientos estéticos.">
+<link rel="canonical" href="https://agendacatarsis.github.io/AgendaCatarsis/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Catarsis Estética y Bienestar">
+<meta property="og:title" content="Reserva tu hora · Catarsis Estética y Bienestar">
+<meta property="og:description" content="Masajes y tratamientos estéticos en Osorno. Elige tu servicio, día y hora en línea.">
+<meta property="og:url" content="https://agendacatarsis.github.io/AgendaCatarsis/">
+<meta property="og:image" content="https://agendacatarsis.github.io/AgendaCatarsis/og-catarsis.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Catarsis Estética y Bienestar · Reserva tu hora online">
+<meta property="og:locale" content="es_CL">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BeautySalon","name":"Catarsis Estética y Bienestar","url":"https://agendacatarsis.github.io/AgendaCatarsis/","image":"https://agendacatarsis.github.io/AgendaCatarsis/og-catarsis.jpg","address":{"@type":"PostalAddress","streetAddress":"Cochrane 450","addressLocality":"Osorno","addressRegion":"Los Lagos","addressCountry":"CL"},"sameAs":["https://www.instagram.com/catarsis_osorno"]}</script>
 <meta name="theme-color" content="#ede1cb">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -26,6 +39,7 @@ option,optgroup{background:var(--card);color:var(--ink)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px Barlow,system-ui,sans-serif;padding:16px 16px 40px;max-width:980px;margin:auto}
 .cond,h1,h2,h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;margin:0}
 .mut{color:var(--mut)}
+.pre{text-align:center;padding:36px 8px}.pre h1{font-family:"Barlow Condensed",sans-serif;margin:0 0 10px}.pre p{margin:6px 0}.pre a{color:inherit}
 button,input{font:inherit;color:var(--ink)}
 .bar{display:flex;align-items:flex-start;gap:8px;margin-bottom:22px}
 .back{flex:none;width:40px;height:40px;border:0;border-radius:10px;background:var(--card);font-size:22px;cursor:pointer}
@@ -234,7 +248,7 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 .modal,.mbox,.lb{overscroll-behavior:contain}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
-<div id="app"><p class="mut">Cargando servicios…</p></div>
+<div id="app"><div class="pre"><h1>Catarsis Estética y Bienestar</h1><p>Reserva online tu hora de masajes y tratamientos estéticos.</p><p>📍 Cochrane 450, Osorno · <a href="https://www.instagram.com/catarsis_osorno" rel="noopener">@catarsis_osorno</a></p><p class="mut">Cargando servicios…</p></div></div>
 <div id="lb" class="lb" hidden role="dialog" aria-modal="true" aria-label="Foto"><img id="lbImg" alt=""><button type="button" class="lbx" data-lbx aria-label="Cerrar">✕</button><button type="button" class="lbn lbp" data-lbn="-1" aria-label="Foto anterior">‹</button><button type="button" class="lbn lbnx" data-lbn="1" aria-label="Foto siguiente">›</button><div class="lbc" id="lbCap"></div></div>
 <script src="firebase-config.js"></script>
 <script>

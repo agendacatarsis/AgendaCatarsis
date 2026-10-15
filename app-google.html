@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Entrar con Google · Agenda Catarsis</title>
+<title>Acceso a la app · Agenda Catarsis</title>
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#ede1cb">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -26,9 +26,9 @@ p{margin:0;font-size:14.5px;line-height:1.4}
 </style></head><body>
 <main class="lbox">
 <img class="logo" src="icon-192.png" alt="Catarsis">
-<h1>Entrar con Google</h1>
-<p class="mut" id="intro">Elige tu cuenta de Google para entrar a la app Agenda Catarsis.</p>
-<div id="paso1"><button class="btn" id="go" type="button">Continuar con Google</button></div>
+<h1>Acceso a la app</h1>
+<p class="mut" id="intro" hidden></p>
+<div id="paso1" hidden><button class="btn" id="go" type="button"></button></div>
 <div id="paso2" hidden style="display:grid;gap:12px"><p class="ok">✓ Listo, entraste como <b id="em"></b>.</p><a class="btn" id="volver" href="#">Volver a la app</a><p class="mut" style="font-size:13px">Si la app no se abre sola, toca el botón.</p></div>
 <p class="err" id="err" role="alert"></p>
 </main>
@@ -56,7 +56,8 @@ function authMsg(e){const c=e&&e.code?String(e.code):'',h=location.hostname||'tu
 const S=new URLSearchParams(location.search).get('s')||'';
 function fail(m){$('err').textContent=m}
 (function(){
-  if(!/^[a-f0-9]{32}$/.test(S)){$('paso1').hidden=true;$('intro').hidden=true;fail('Abre esta página desde el botón «Continuar con Google» de la app Agenda Catarsis.');return}
+  if(!/^[a-f0-9]{32}$/.test(S)){fail('Esta página solo se usa desde la app Agenda Catarsis.');return}
+  $('intro').textContent='Elige tu cuenta de Google para entrar a la app Agenda Catarsis.';$('go').textContent='Continuar con Google';$('intro').hidden=false;$('paso1').hidden=false;
   if(!window.firebase){fail('No se pudo descargar Firebase. Revisa tu conexión y recarga la página.');$('go').disabled=true;return}
   if(!window.FIREBASE_CONFIG){fail('Falta el archivo firebase-config.js.');$('go').disabled=true;return}
   firebase.initializeApp(window.FIREBASE_CONFIG);
