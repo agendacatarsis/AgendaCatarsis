@@ -5,7 +5,13 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#ede1cb">
 <link rel="icon" type="image/png" href="icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script>/* Firebase se descarga en paralelo mientras se dibuja la página: primero la sesión, después la base de datos */(function(){var V='https://www.gstatic.com/firebasejs/10.12.2/',L=['firebase-app-compat.js','firebase-auth-compat.js','firebase-app-check-compat.js','firebase-firestore-compat.js'],n=0,ra,ja,rs,js;window.__authP=new Promise(function(a,b){ra=a;ja=b});window.__sdkP=new Promise(function(a,b){rs=a;js=b});window.__authP.catch(function(){});window.__sdkP.catch(function(){});if(window.firebase&&window.firebase.firestore){ra();rs();return}L.forEach(function(f){var s=document.createElement('script');s.src=V+f;s.async=false;s.onload=function(){n++;if(n===2)ra();if(n===L.length)rs()};s.onerror=function(){var e=new Error('sdk');ja(e);js(e)};document.head.appendChild(s)})})();</script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{--bg:#ede1cb;--card:#f8f2e6;--ink:#1f1b16;--teal:#6b5a45;--tint:#e3d4b8;--mut:#574d41;--line:#d6c7aa;--red:#b8392b;--amb:#8a5200;--grn:#256b41;--btn:#1f1b16;--btnink:#f8f2e6;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--card:#282420;--ink:#f1e7d3;--teal:#d2bb94;--tint:#3a3328;--mut:#c4b9a6;--line:#443c30;--amb:#e0a84a;--grn:#5cc08a;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16}}
@@ -45,6 +51,7 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:0 0 5px 4px}
 .modal[hidden]{display:none}
 .mbox{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;max-width:380px;width:100%;text-align:center}
 #login{display:none}#gate{display:none;max-width:380px;margin:60px auto 0;text-align:center}
+#boot{display:none;text-align:center;margin:90px auto 0}body.booting>*:not(#boot){display:none!important}body.booting #boot{display:block}
 body.locked>*:not(#login){display:none!important}body.locked #login{display:block}
 body.denied>*:not(#gate):not(#toastBox){display:none!important}body.denied #gate{display:block}
 #toastBox{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--btn);color:var(--btnink);padding:11px 18px;border-radius:14px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
@@ -90,7 +97,8 @@ a.lnk{color:var(--ink)}
 body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 .modal,.mbox,.lb{overscroll-behavior:contain}
 .grecaptcha-badge{visibility:hidden!important}.rcap{text-align:center;color:var(--mut);font-size:11.5px;margin:12px 0 0}.rcap a{color:inherit}#login .rcap{font-size:12px;line-height:1.4;margin:14px 0 0}
-</style></head><body class="locked">
+</style></head><body class="locked"><script>try{if(localStorage.getItem('catarsis-bal-ses')==='1')document.body.className='booting'}catch(e){}</script>
+<div id="boot" role="status"><img src="icon-192.png" alt="" width="72" height="72" style="border-radius:50%"><p class="mut" style="margin-top:12px">Cargando tu balance…</p></div>
 <div id="login"><div class="lbox">
 <div class="lhead"><img class="logo" id="loginLogo" alt="Catarsis" src="icon-192.png"><h2>Balance Catarsis</h2><p class="mut">Entra para ver tus finanzas. Solo la cuenta administradora puede verlas.</p></div>
 <p class="lnote" id="lFile" hidden>Estás abriendo la página como archivo. Para iniciar sesión, ábrela desde su dirección de GitHub Pages (https://tu-usuario.github.io/…).</p>
@@ -99,7 +107,7 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 <p class="lnote" id="lAppNote" hidden>Para entrar con Google desde la app, instala la versión nueva de la app. Mientras tanto, entra con tu correo y contraseña (si no tienes, escribe tu correo y toca «Olvidé mi contraseña»).</p>
 <button type="button" class="lgo" id="lGoogle">Continuar con Google</button>
 <div class="or" role="separator"><span>o con tu correo</span></div>
-<form id="loginForm" novalidate>
+<form id="loginForm" novalidate onsubmit="return false">
 <label class="f" for="lEmail">Correo</label><input id="lEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@gmail.com">
 <label class="f" for="lPass" style="margin-top:10px">Contraseña</label><input id="lPass" type="password" autocomplete="current-password">
 <div class="err" id="loginErr" role="alert"></div><div class="linfo" id="loginInfo" role="status"></div>
@@ -130,10 +138,6 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 <h3 id="confTitle" style="font-size:22px;margin:0 0 6px">¿Eliminar?</h3><p id="confMsg" class="mut" style="margin:0 0 16px"></p>
 <div class="row"><button class="pill" id="confNo">Cancelar</button><button class="btn" id="confYes" style="background:#b8392b;color:#fff">Sí, continuar</button></div></div></div>
 <div id="toastBox" role="status" aria-live="polite"></div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 // La configuración de Firebase está en el archivo firebase-config.js (misma carpeta)
@@ -152,6 +156,7 @@ const mName=m=>{const [y,n]=m.split('-').map(Number);return MES[n-1]+' '+y};
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 const shiftM=(m,k)=>{const [y,n]=m.split('-').map(Number),d=new Date(y,n-1+k,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
 const today=new Date();today.setHours(12,0,0,0);
+let dbP=null;const conDb=f=>(dbP||Promise.reject(new Error('sdk'))).then(f).catch(e=>werr(e||{}));
 let month=ymd(today).slice(0,7),D={appts:[],cfg:{},services:[],gastos:[]},F={gastos:{},saldos:{},fijos:{},gifts:{},meta:0},gotD=false,gotF=false,db=null,confFn=null,toastT=null;
 const FIN=()=>db.collection('masajes').doc('finanzas');
 function toast(m){$('toastBox').textContent=m;$('toastBox').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toastBox').classList.remove('on'),2400)}
@@ -258,7 +263,7 @@ function csvMonth(){
   toast('Archivo descargado ✓');
 }
 const werr=e=>{toast(e.code==='permission-denied'?'Sin permiso para guardar. Revisa las reglas de Firestore.':'No se pudo guardar ('+(e.code||'error')+')')};
-const del=f=>FIN().update({[f]:firebase.firestore.FieldValue.delete()}).catch(werr);
+const del=f=>conDb(()=>FIN().update({[f]:firebase.firestore.FieldValue.delete()}));
 document.addEventListener('click',e=>{
   const g=k=>e.target.closest('['+k+']');let el;
   if(el=g('data-m')){month=shiftM(month,+el.dataset.m);draw()}
@@ -266,17 +271,17 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='addG'){const m=+$('gM').value,d=$('gF').value;if(!d||!(m>0)){$('gErr').textContent='Ingresa fecha y un monto mayor a 0.';return}$('gErr').textContent='';
     const fj=$('gFijo').checked,id=(fj?'f':'g')+Date.now(),k=$('gK').value,c=$('gC').value.trim();
     const w=fj?{fijos:{[id]:{desde:d.slice(0,7),dia:+d.slice(8,10),m,c,k}}}:{gastos:{[id]:{d,m,c,k}}};
-    FIN().set(w,{merge:true}).then(()=>{$('gC').value='';$('gM').value='';$('gFijo').checked=false;toast(fj?'Gasto fijo agregado ✓':'Gasto agregado ✓')}).catch(werr)}
+    conDb(()=>FIN().set(w,{merge:true}).then(()=>{$('gC').value='';$('gM').value='';$('gFijo').checked=false;toast(fj?'Gasto fijo agregado ✓':'Gasto agregado ✓')}))}
   else if(e.target.id==='saveMeta'){const v=Math.round(+$('metaI').value);if(!(v>=0)||$('metaI').value===''){$('metaErr').textContent='Ingresa un monto válido.';return}$('metaErr').textContent='';
-    FIN().set({meta:v},{merge:true}).then(()=>toast(v?'Meta guardada ✓':'Meta quitada')).catch(werr)}
+    conDb(()=>FIN().set({meta:v},{merge:true}).then(()=>toast(v?'Meta guardada ✓':'Meta quitada')))}
   else if(el=g('data-xg')){const id=el.dataset.xg,x=gastosDe(month).find(q=>String(q.id)===id);if(!x)return;
     ask('Eliminar gasto',`¿Seguro que quieres eliminar "${x.c||'Gasto'}" por ${money(x.m)}?`,()=>{
       if(F.gastos[id])del('gastos.'+id);
-      else{D.gastos=(D.gastos||[]).filter(q=>String(q.id)!==id);db.collection('masajes').doc('datos').set({gastos:D.gastos},{merge:true}).then(draw).catch(werr)}})}
+      else{D.gastos=(D.gastos||[]).filter(q=>String(q.id)!==id);conDb(()=>db.collection('masajes').doc('datos').set({gastos:D.gastos},{merge:true}).then(draw))}})}
   else if(el=g('data-xh')){const id=el.dataset.xh,x=F.gifts[id];if(!x)return;ask('Eliminar giftcard',`¿Seguro que quieres eliminar la giftcard de ${money(x.m)} (${fmtD(x.d)})?`,()=>del('gifts.'+id))}
   else if(el=g('data-xf')){const id=el.dataset.xf.replace(/^fx/,''),f=F.fijos[id];if(!f)return;const hasta=shiftM(month,-1);
     ask('Quitar gasto fijo',`¿Dejar de contar "${f.c||'Gasto fijo'}" desde ${mName(month)}? Los meses anteriores no cambian.`,()=>{
-      if(hasta<f.desde)del('fijos.'+id);else FIN().set({fijos:{[id]:{hasta}}},{merge:true}).then(()=>toast('Gasto fijo actualizado ✓')).catch(werr)})}
+      if(hasta<f.desde)del('fijos.'+id);else conDb(()=>FIN().set({fijos:{[id]:{hasta}}},{merge:true}).then(()=>toast('Gasto fijo actualizado ✓')))})}
   else if(e.target.id==='gateCopy'){const v=$('gateUid').textContent;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('UID copiado ✓'),()=>toast('Mantén presionado el UID para copiarlo'))}
   else if(e.target.id==='gateOut')$('outBtn').click();
   else if(e.target.id==='confYes'){const f=confFn;$('confModal').hidden=true;if(f)f()}
@@ -333,24 +338,47 @@ function setupLogin(auth){
 }
 const FAIL_SDK='No se pudo descargar Firebase. Revisa tu conexión a internet y vuelve a intentarlo.';
 const FAIL_CFG='Falta el archivo firebase-config.js o sus datos no son válidos. Súbelo a la misma carpeta de GitHub que esta página.';
+const SES='catarsis-bal-ses',sesSet=v=>{try{v?localStorage.setItem(SES,'1'):localStorage.removeItem(SES)}catch(_){}};
+const unboot=()=>document.body.classList.remove('booting');
+const restV=v=>!v?null:'stringValue' in v?v.stringValue:'integerValue' in v?Number(v.integerValue):'doubleValue' in v?Number(v.doubleValue):'booleanValue' in v?v.booleanValue:'mapValue' in v?restM(v.mapValue.fields):'arrayValue' in v?(v.arrayValue.values||[]).map(restV):'timestampValue' in v?v.timestampValue:null;
+const restM=f=>{const o={};for(const k in (f||{}))o[k]=restV(f[k]);return o};
+// Lectura directa (más rápida que esperar toda la base de datos): usa tu sesión, las reglas de Firestore se aplican igual
+async function restDoc(u,ruta){const t=await u.getIdToken();
+  const r=await fetch('https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FIREBASE_CONFIG.projectId)+'/databases/(default)/documents/'+ruta,{headers:{Authorization:'Bearer '+t}});
+  if(r.status===403)throw{code:'permission-denied'};if(r.status===404)return null;if(!r.ok)throw{code:'http-'+r.status};
+  const j=await r.json();return restM(j.fields||{})}
+function setD(d){if(d)D={appts:d.appts||[],cfg:d.cfg||{},services:d.services||[],gastos:d.gastos||[]};gotD=true}
+function setF(x){const d=x||{};F={gastos:d.gastos||{},saldos:d.saldos||{},fijos:d.fijos||{},gifts:d.gifts||{},meta:+d.meta||0};if(document.activeElement!==$('metaI'))$('metaI').value=F.meta||'';gotF=true}
+function gate(u){$('gateInfo').innerHTML=`Entraste como <b>${esc(u.email||'(sin correo)')}</b>. Si es tu cuenta de administradora, agrega este UID a la lista de <b>owner()</b> en las reglas de Firestore y toca Publicar:<code id="gateUid">${esc(u.uid)}</code><div class="row"><button class="pill" id="gateCopy">Copiar UID</button></div>`;unboot();document.body.classList.remove('locked');document.body.classList.add('denied')}
 (function init(){
-  if(!window.firebase){loginFail(FAIL_SDK);return}
-  if(!FIREBASE_CONFIG){loginFail(FAIL_CFG);return}
-  firebase.initializeApp(FIREBASE_CONFIG);
-  acActivar();if(APPCHECK_KEY){const r=document.getElementById('rcapL');if(r)r.hidden=false}
-  const auth=firebase.auth();db=firebase.firestore();
-  setupLogin(auth);
-  $('outBtn').addEventListener('click',async()=>{await auth.signOut();location.reload()});
-  let u1=null,u2=null;
-  auth.onAuthStateChanged(async u=>{
-    if(u1){u1();u1=null}if(u2){u2();u2=null}gotD=gotF=false;
-    if(!u){document.body.classList.remove('denied');document.body.classList.add('locked');$('outBtn').hidden=true;return}
-    document.body.classList.remove('locked');$('outBtn').hidden=false;
-    try{await db.collection('masajes').doc('ping').set({t:Date.now()})}catch(e){if(e.code==='permission-denied'){$('gateInfo').innerHTML=`Entraste como <b>${esc(u.email||'(sin correo)')}</b>. Si es tu cuenta de administradora, agrega este UID a la lista de <b>owner()</b> en las reglas de Firestore y toca Publicar:<code id="gateUid">${esc(u.uid)}</code><div class="row"><button class="pill" id="gateCopy">Copiar UID</button></div>`;document.body.classList.add('denied');return}}
-    document.body.classList.remove('denied');
-    u1=db.collection('masajes').doc('datos').onSnapshot(s=>{if(s.exists){const d=s.data();D={appts:d.appts||[],cfg:d.cfg||{},services:d.services||[],gastos:d.gastos||[]}}gotD=true;draw();$('sync').textContent='Sincronizado en la nube ✓'},e=>{$('sync').textContent=e.code==='permission-denied'?'Esta cuenta no tiene permiso para ver los datos.':'Sin conexión ('+(e.code||'error')+')'});
-    u2=db.collection('masajes').doc('finanzas').onSnapshot(s=>{const d=s.exists?s.data():{};F={gastos:d.gastos||{},saldos:d.saldos||{},fijos:d.fijos||{},gifts:d.gifts||{},meta:+d.meta||0};if(document.activeElement!==$('metaI'))$('metaI').value=F.meta||'';gotF=true;draw()},e=>{$('sync').textContent='No se pudo leer los gastos ('+(e.code||'error')+'). Revisa las reglas de Firestore.'});
-  });
+  if(!FIREBASE_CONFIG){unboot();document.body.classList.add('locked');loginFail(FAIL_CFG);return}
+  const listo=k=>(window.firebase&&window.firebase.auth&&window.firebase.firestore)?Promise.resolve():(k==='auth'?window.__authP:window.__sdkP)||Promise.reject(new Error('sdk'));
+  const espera=setTimeout(()=>{if(document.body.classList.contains('booting')){unboot();document.body.classList.add('locked')}},10000);
+  listo('auth').then(()=>{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    if(APPCHECK_KEY){const r=document.getElementById('rcapL');if(r)r.hidden=false}
+    const auth=firebase.auth();
+    setupLogin(auth);
+    $('outBtn').addEventListener('click',async()=>{sesSet(false);await auth.signOut();location.reload()});
+    dbP=listo('all').then(()=>{acActivar();db=firebase.firestore();return db});
+    dbP.catch(()=>{$('sync').textContent=FAIL_SDK});
+    let u1=null,u2=null,gen=0;
+    auth.onAuthStateChanged(u=>{
+      const yo=++gen;clearTimeout(espera);
+      if(u1){u1();u1=null}if(u2){u2();u2=null}gotD=gotF=false;
+      if(!u){sesSet(false);unboot();document.body.classList.remove('denied');document.body.classList.add('locked');$('outBtn').hidden=true;return}
+      sesSet(true);unboot();document.body.classList.remove('locked','denied');$('outBtn').hidden=false;
+      let vivoD=false,vivoF=false;
+      if(u.getIdToken)Promise.all([restDoc(u,'masajes/datos'),restDoc(u,'masajes/finanzas')]).then(([d,f])=>{
+        if(yo!==gen)return;if(!vivoD)setD(d);if(!vivoF)setF(f);draw();if(!vivoD)$('sync').textContent='Conectando para ver cambios en vivo…'},
+        e=>{if(yo===gen&&e&&e.code==='permission-denied')gate(u)});
+      dbP.then(()=>{if(yo!==gen)return;
+        u1=db.collection('masajes').doc('datos').onSnapshot(s=>{vivoD=true;setD(s.exists?s.data():null);draw();$('sync').textContent='Sincronizado en la nube ✓'},e=>{if(e.code==='permission-denied')gate(u);else $('sync').textContent='Sin conexión ('+(e.code||'error')+')'});
+        u2=db.collection('masajes').doc('finanzas').onSnapshot(s=>{vivoF=true;setF(s.exists?s.data():null);draw()},e=>{if(e.code!=='permission-denied')$('sync').textContent='No se pudo leer los gastos ('+(e.code||'error')+'). Revisa las reglas de Firestore.'});
+      },()=>{});
+    });
+  },()=>{clearTimeout(espera);unboot();document.body.classList.add('locked');loginFail(FAIL_SDK)});
+  try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
 })();
 </script><script>
 // Mientras haya una ventana emergente abierta, la página de fondo queda fija (también en iPhone y Android)
