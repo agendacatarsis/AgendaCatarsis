@@ -3,18 +3,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reserva tu hora · Catarsis</title>
 <meta name="description" content="Catarsis Estética y Bienestar, Cochrane 450, Osorno. Reserva online tu hora de masajes y tratamientos estéticos.">
-<link rel="canonical" href="https://catarsisosorno.cl/">
+<link rel="canonical" href="https://agenda.catarsisosorno.cl/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Catarsis Estética y Bienestar">
 <meta property="og:title" content="Reserva tu hora · Catarsis Estética y Bienestar">
 <meta property="og:description" content="Masajes y tratamientos estéticos en Osorno. Elige tu servicio, día y hora en línea.">
-<meta property="og:url" content="https://catarsisosorno.cl/">
-<meta property="og:image" content="https://catarsisosorno.cl/og-catarsis.jpg">
+<meta property="og:url" content="https://agenda.catarsisosorno.cl/">
+<meta property="og:image" content="https://agenda.catarsisosorno.cl/og-catarsis.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Catarsis Estética y Bienestar · Reserva tu hora online">
 <meta property="og:locale" content="es_CL">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BeautySalon","name":"Catarsis Estética y Bienestar","url":"https://catarsisosorno.cl/","image":"https://catarsisosorno.cl/og-catarsis.jpg","address":{"@type":"PostalAddress","streetAddress":"Cochrane 450","addressLocality":"Osorno","addressRegion":"Los Lagos","addressCountry":"CL"},"sameAs":["https://www.instagram.com/catarsis_osorno"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BeautySalon","name":"Catarsis Estética y Bienestar","url":"https://agenda.catarsisosorno.cl/","image":"https://agenda.catarsisosorno.cl/og-catarsis.jpg","address":{"@type":"PostalAddress","streetAddress":"Cochrane 450","addressLocality":"Osorno","addressRegion":"Los Lagos","addressCountry":"CL"},"sameAs":["https://www.instagram.com/catarsis_osorno"]}</script>
 <meta name="theme-color" content="#ede1cb">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -477,7 +477,7 @@ function render0(){
   view3($('app'));
 }
 // ===== Collage de fotos (archivos galeria-1.jpg … galeria-6.jpg en la misma carpeta) =====
-const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje a cuatro manos','50% 40%'],['galeria-3.jpg','Masaje de espalda','72% 40%'],['galeria-4.jpg','Masaje facial con piedras de jade','50% 35%'],['galeria-5.jpg','Masaje cervical','40% 40%'],['galeria-6.jpg','Masaje descontracturante','45% 35%']];
+const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje de espalda','72% 40%'],['galeria-3.jpg','Tratamiento facial','50% 30%'],['galeria-4.jpg','Terapia con ventosas','50% 40%'],['galeria-5.jpg','Mascarilla facial','50% 40%'],['galeria-6.jpg','Masaje facial con piedras de jade','50% 35%']];
 const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-m.jpg')}" alt="${a}" style="object-position:${pos}" decoding="async" onerror="if(!this.dataset.o){this.dataset.o=1;this.src='${f}'}else this.parentNode.remove()"></button>`).join('')}</div>`;
 function abHtml(){const L=GALX();
   return `<div class="balist">${L.map(x=>{const t=esc(String(x.t||'Antes y después').slice(0,60)),d=esc(String(x.x||'').slice(0,60)),si=x.s?SV().findIndex(v=>v&&v.n===x.s&&!v.w):-1;
@@ -510,7 +510,7 @@ document.addEventListener('pointerup',e=>{const d=baDrag;baDrag=null;if(d&&!d.on
 document.addEventListener('pointercancel',()=>{baDrag=null});
 document.addEventListener('input',e=>{if(e.target.classList&&e.target.classList.contains('ba-rg'))baSet(e.target.closest('.bacard'),+e.target.value)});
 let lbI=0;
-function lbShow(i){lbI=(i+GAL.length)%GAL.length;const [f,a]=GAL[lbI];$('lbImg').src=f;$('lbImg').alt=a;$('lbCap').textContent=`${a} · ${lbI+1} de ${GAL.length}`;$('lb').hidden=false}
+function lbShow(i){lbI=(i+GAL.length)%GAL.length;const [f,a]=GAL[lbI],im=$('lbImg'),fm=f.replace(/\.jpg$/,'-m.jpg');im.onerror=()=>{im.onerror=null;im.src=fm};im.src=f;$('lbImg').alt=a;$('lbCap').textContent=`${a} · ${lbI+1} de ${GAL.length}`;$('lb').hidden=false}
 const lbClose=()=>{$('lb').hidden=true};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-gal],[data-lbn],[data-lbx]');
   if(t){if(t.dataset.gal!==undefined)lbShow(+t.dataset.gal);else if(t.dataset.lbn)lbShow(lbI+ +t.dataset.lbn);else lbClose();return}

@@ -3,4 +3,4 @@ Disallow: /panelcatarsis.html
 Disallow: /balance.html
 Disallow: /app-google.html
 
-Sitemap: https://catarsisosorno.cl/sitemap.xml
+Sitemap: https://agenda.catarsisosorno.cl/sitemap.xml
