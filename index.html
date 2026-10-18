@@ -76,17 +76,17 @@ h3{font-size:22px;margin:0 0 12px}
 .tabs button.promo{font-weight:600;color:var(--acc)}.tabs button.promo.on{color:var(--onacc)}
 .duotot{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--tint);font-size:14px;line-height:1.4}.duotot b{font-size:15px}.duotot s{color:var(--mut)}
 .pz{display:inline-block;font-size:11px;font-weight:600;background:var(--acc);color:var(--onacc);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
-.qb{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
-.qb summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;font-weight:600;font-size:14.5px;color:var(--teal)}
+.bnf{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.bnf span{display:inline-flex;align-items:flex-start;gap:6px;background:var(--tint);color:var(--ink);border-radius:999px;padding:5px 12px 5px 9px;font-size:13px;line-height:1.25}
+.bnf span::before{content:"\2713";color:var(--grn);font-weight:700;flex:none}
+.qb{margin-top:6px}
+.qb summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:34px;font-weight:600;font-size:13.5px;color:var(--teal);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
 .qb summary::-webkit-details-marker{display:none}
-.qb summary::after{content:"+";font-size:22px;line-height:1;font-weight:500}
-.qb[open] summary::after{content:"\2212"}
+.qb summary::after{content:"\25BE";font-size:12px;text-decoration:none;display:inline-block;transition:transform .2s}
+.qb[open] summary::after{transform:rotate(180deg)}
 .qb summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
-.qb .sd{margin-top:6px}
-.qb ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
-.qb li{position:relative;padding-left:26px;font-size:14px;line-height:1.35;color:var(--ink)}
-.qb li::before{content:"\2713";position:absolute;left:2px;top:0;color:var(--grn);font-weight:700}
-.qb .pnote{color:var(--mut);font-weight:400;font-size:12.5px;margin-top:10px}
+.qb .sd{margin-top:4px}
+.qb .pnote{color:var(--mut);font-weight:400;font-size:12.5px;margin-top:8px}
 .pnote{margin:10px 0 0;font-size:13.5px;color:var(--acc);font-weight:500}
 .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
 .chip{border:0;border-radius:10px;background:var(--tint);padding:9px 6px;cursor:pointer;line-height:1.2}
@@ -599,7 +599,7 @@ const INFOQ=[
 const GENQ=[[/facial|piel|rostro|limpieza/,E_('Tratamiento facial personalizado, según el tipo y las necesidades de tu piel.',['Piel más suave y luminosa','Cuidado según tu tipo de piel','Un momento de relajación'])],[/masaje|masoterapia/,E_('Masaje realizado por una profesional, con movimientos adaptados a lo que necesitas.',['Suelta la tensión del día','Relaja cuerpo y mente','Ayuda a descansar mejor'])]];
 const infoQ=(s,t,t2)=>{const k=norm(t||''),k2=norm(t2||t||'');let f=INFOQ.find(x=>x[0].test(k));if(f)return f[1];f=GENQ.find(x=>x[0].test(k2));return f?f[1]:E_('Tratamiento realizado por profesionales de Catarsis, adaptado a lo que necesitas.',['Atención personalizada','Ambiente de calma y bienestar','Cuidado en cada detalle'])};
 function qbHtml(s,t,t2){const c=infoQ(s,t,t2),b=(Array.isArray(s&&s.b)&&s.b.length?s.b:c.b),d=(s&&s.qe)||c.d;
-  return `<details class="qb"><summary>Qué es y beneficios</summary><p class="sd">${esc(d)}</p><ul>${b.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="pnote">${esc(DISCQ)}${c.n?' '+esc(c.n):''}</p></details>`}
+  return `<div class="bnf">${b.map(x=>`<span>${esc(x)}</span>`).join('')}</div><details class="qb"><summary>Más información</summary><p class="sd">${esc(d)}</p><p class="pnote">${esc(DISCQ)}${c.n?' '+esc(c.n):''}</p></details>`}
 function svcCard(it){
   if(it.duo){const L=DL(),mn=Math.min(...L.map(pD))*2;
     return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${durTxt(DM())}${duoHorTxt()?` · 📅 ${duoHorTxt()}`:''}</span>${qbHtml({},'masaje duo pareja','masaje duo pareja')}</div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
