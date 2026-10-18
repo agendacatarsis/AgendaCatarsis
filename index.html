@@ -165,6 +165,23 @@ t.addEventListener('scroll',mark,{passive:true});addEventListener('resize',dots)
 <section class="fin"><div class="wrap"><span class="orn">Catarsis</span><h2>Tu cuerpo te lo va a <i>agradecer</i></h2><p>Reserva hoy tu momento de bienestar. Sin llamadas, en menos de un minuto.</p><div class="cta"><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar mi hora</a><a class="btn o" href="https://wa.me/56942081582">Escribir por WhatsApp</a></div></div></section>
 </main>
 <footer><div class="wrap">© Catarsis Estética y Bienestar · Osorno</div></footer>
+<script src="firebase-config.js" onerror="void 0"></script>
+<script>
+/* Fotos editables desde el panel (Menú → Imágenes de la página). Si algo falla, se quedan las fotos originales. */
+(function(){var C=window.FIREBASE_CONFIG;if(!C||!C.projectId||!C.apiKey)return;
+var B='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(C.projectId)+'/databases/(default)/documents/publico/';
+function V(v){if(!v)return null;if('stringValue' in v)return v.stringValue;if('booleanValue' in v)return v.booleanValue;if('integerValue' in v)return +v.integerValue;if('mapValue' in v){var o={},f=v.mapValue.fields||{};for(var k in f)o[k]=V(f[k]);return o}if('arrayValue' in v)return (v.arrayValue.values||[]).map(V);return null}
+function G(id){return fetch(B+id+'?key='+encodeURIComponent(C.apiKey)).then(function(r){return r.ok?r.json():null}).then(function(j){return j&&j.fields?V({mapValue:{fields:j.fields}}):null})}
+function E(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+G('ga_pgweb').then(function(m){if(!m)return;
+ if(m.hero)G('ga_pgi_hero').then(function(d){if(d&&d.d){var e=document.querySelector('.hero .bg');if(e)e.style.backgroundImage='url("'+d.d+'")'}}).catch(function(){});
+ if(m.fin)G('ga_pgi_fin').then(function(d){if(d&&d.d){var e=document.querySelector('.fin');if(e)e.style.backgroundImage='url("'+d.d+'")'}}).catch(function(){});
+ if(m.gal&&m.gal.length){Promise.all(m.gal.map(function(x){return x.u?Promise.resolve({c:x.c,u:x.u}):G('ga_pgi_'+x.id).then(function(d){return d&&d.d?{c:x.c,u:d.d}:null}).catch(function(){return null})})).then(function(L){
+  L=L.filter(Boolean);if(!L.length)return;var t=document.getElementById('gt');if(!t)return;
+  t.innerHTML=L.map(function(x){return '<figure><img loading="lazy" src="'+(/^data:image\//.test(x.u)||/^inicio-img\//.test(x.u)?x.u:'')+'" alt="'+E(x.c)+'">'+(x.c?'<figcaption>'+E(x.c)+'</figcaption>':'')+'</figure>'}).join('');
+  t.scrollLeft=0;dispatchEvent(new Event('resize'))})}
+}).catch(function(){})})();
+</script>
 <div class="fab"><a class="btn o" href="https://wa.me/56942081582">WhatsApp</a><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar</a></div>
 <script>(function(){var h=document.getElementById('hd');function f(){h.classList.toggle('sc',window.scrollY>40)}f();addEventListener('scroll',f,{passive:true})})()</script>
 </body></html>

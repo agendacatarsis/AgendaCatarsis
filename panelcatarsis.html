@@ -71,7 +71,7 @@ input,select,textarea{font:inherit;background:var(--bg);border:1px solid var(--l
 .barow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
 .barow .bth{display:flex;gap:3px;flex:none}.barow .bth span{width:40px;height:50px;border-radius:6px;background:var(--tint) center/cover no-repeat}
 .barow .bi{flex:1;min-width:0}.barow .bi small{display:block;color:var(--mut);font-size:12.5px}
-.baok{display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px;font-size:14px}.baok input{margin-top:3px}
+.pgrow{flex-wrap:wrap}.pgrow .bth span{width:56px;height:56px}.pgrow input.pgcap{width:100%;margin:2px 0 0;padding:6px 8px;font-size:14px;min-height:0}.pgrow .pa{display:flex;gap:6px;flex:none}.pgrow .pa button{min-height:36px;padding:0 12px;font-size:13px}.baok{display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px;font-size:14px}.baok input{margin-top:3px}
 .chk{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;margin:0 6px 6px 0;background:var(--card)}.chk input{width:auto;margin:0}
 .appt.s-bloqueado{border-left-color:var(--mut)}
 .ctl{flex-wrap:wrap}.wab{text-decoration:none;font-size:13px;padding:7px 12px;color:var(--ink);white-space:nowrap}
@@ -578,6 +578,26 @@ setTimeout(window.__splOff,8000)})();</script>
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-rcclose>Cerrar</button>
  </div>
 </div>
+<div id="rsModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+ <div class="mbox" style="max-width:560px">
+  <div class="mhead"><h3 id="rsTitle">Imágenes de reservas</h3><button type="button" class="x" data-rsclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:13.5px;margin:4px 0 6px">Cambia las fotos de tu página de reservas: el collage de arriba y la imagen de la giftcard. Se publican al tiro; si no ves el cambio, recarga la página.</p>
+  <div id="rsList"></div>
+  <input type="file" id="rsFile" accept="image/*" hidden>
+  <div class="mut" id="rsMsgBox" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>
+  <button class="pill" style="width:100%;margin-top:12px" type="button" data-rsclose>Cerrar</button>
+ </div>
+</div>
+<div id="pgModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="pgTitle">
+ <div class="mbox" style="max-width:560px">
+  <div class="mhead"><h3 id="pgTitle">Imágenes de la página</h3><button type="button" class="x" data-pgclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:13.5px;margin:4px 0 6px">Cambia las fotos de tu página de presentación (la que se ve al entrar a tu dirección). Se publican al tiro; si no ves el cambio, recarga la página.</p>
+  <div id="pgList"></div>
+  <input type="file" id="pgFile" accept="image/*" hidden>
+  <div class="mut" id="pgMsgBox" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>
+  <button class="pill" style="width:100%;margin-top:12px" type="button" data-pgclose>Cerrar</button>
+ </div>
+</div>
 <div id="baModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="baTitle">
  <div class="mbox" style="max-width:520px">
   <div class="mhead"><h3 id="baTitle">Antes y después</h3><button type="button" class="x" data-baclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
@@ -1022,6 +1042,86 @@ async function baSave(){
     baThumb[id]={a:baA,d:baD};GALP().unshift({id,t:t.slice(0,60),x:x.slice(0,60),s:sv,at:Date.now()});baA='';baD='';baBusy=false;
     render();baDraw();showToast('Antes y después publicado ✓')}
   catch(e){baBusy=false;msg.textContent=e&&e.code==='permission-denied'?'Firebase no permitió guardar las fotos. Envíame una captura de tus reglas de Firestore y te digo qué agregar.':'No se pudo publicar. Revisa tu conexión e intenta de nuevo.'}}
+// --- imágenes de la página de presentación (lista en publico/ga_pgweb; cada foto en publico/ga_pgi_<id>) ---
+const PGDEF=[['d1','Masaje de piernas'],['d2','Masaje de piernas y pies'],['d3','Masaje de espalda'],['d4','Masaje facial con jade'],['d5','Masaje de cabeza y cuello'],['d6','Masaje relajante de espalda']];
+const PGORIG={hero:'inicio-img/galeria-3.jpg',fin:'inicio-img/galeria-1.jpg'};
+let pgM=null,pgTh={},pgTarget=null,pgBusy=false;
+const pgRef=id=>firebase.firestore().collection('publico').doc(id);
+const pgDefGal=()=>PGDEF.map(([id,c],i)=>({id,c,u:'inicio-img/galeria-'+(i+1)+'.jpg'}));
+const pgMsg=t=>{const m=document.getElementById("pgMsgBox");if(m)m.textContent=t||""};
+async function pgLoad(){if(!pgM){try{const d=await pgRef('ga_pgweb').get();pgM=d.exists?d.data():{}}catch(e){pgM={}}if(!Array.isArray(pgM.gal))pgM.gal=pgDefGal()}pgDraw()}
+async function pgSaveM(){pgM.at=Date.now();await pgRef('ga_pgweb').set(pgM)}
+async function pgProc(file,mode){
+  const url=URL.createObjectURL(file);
+  try{const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('img'));i.src=url});
+    let sw=im.naturalWidth,sh=im.naturalHeight,sx=0,sy=0,W,H;if(!sw||!sh)throw new Error('img');
+    if(mode==='gal'){W=800;H=1000;const r=W/H;if(sw/sh>r){const nw=sh*r;sx=(sw-nw)/2;sw=nw}else{const nh=sw/r;sy=(sh-nh)/2;sh=nh}}
+    else{const k=Math.min(1,1400/Math.max(sw,sh));W=Math.round(sw*k);H=Math.round(sh*k)}
+    const lim=mode==='gal'?260000:520000;let q=.82,d;
+    for(let t=0;t<6;t++){const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,sx,sy,sw,sh,0,0,W,H);q=.82;d=c.toDataURL('image/jpeg',q);while(d.length>lim&&q>.45){q-=.07;d=c.toDataURL('image/jpeg',q)}
+      if(d.length<=lim)break;W=Math.round(W*.85);H=Math.round(H*.85)}
+    return d}
+  finally{URL.revokeObjectURL(url)}}
+function pgThumb(id){if(id in pgTh)return;pgTh[id]=null;pgRef('ga_pgi_'+id).get().then(d=>{if(d.exists){pgTh[id]=d.data().d;if(!pgModal.hidden)pgDraw()}}).catch(()=>{})}
+function pgDraw(){
+  if(!pgM){pgList.innerHTML='<p class="mut">Cargando…</p>';return}
+  const ro=readOnly,L=pgM.gal;
+  if(ENAPP&&!APPFOTOS){pgList.innerHTML=`<div class="mut" style="font-size:13.5px;margin-bottom:8px">Para elegir fotos desde la app, instala la versión 1.8 de la app de Android. Mientras tanto, abre el panel en Chrome, entra con tu cuenta y vuelve a Menú → Imágenes de la página.</div><button class="btn" style="width:100%" type="button" data-bkchrome>🌐 Abrir el panel en Chrome</button>`;return}
+  const big=(k,t)=>{if(pgM[k])pgThumb(k);const th=pgM[k]?pgTh[k]:PGORIG[k];return `<div class="barow pgrow"><span class="bth"><span${th?` style="background-image:url('${th}')"`:''}></span></span><span class="bi"><b>${t}</b><small>${pgM[k]?'Foto tuya':'Foto original'}</small></span><span class="pa">${ro?'':`<button type="button" class="pill" data-pgchg="${k}">Cambiar</button>${pgM[k]?`<button type="button" class="pill" data-pgrst="${k}">Original</button>`:''}`}</span></div>`};
+  pgList.innerHTML='<div class="lbl">Portada y cierre</div>'+big('hero','Portada (foto grande de arriba)')+big('fin','Cierre (fondo de «Tu cuerpo te lo va a agradecer»)')
+   +'<div class="lbl" style="margin-top:14px">Galería ('+L.length+' de 12)</div>'
+   +L.map((x,i)=>{if(!x.u)pgThumb(x.id);const th=x.u||pgTh[x.id];return `<div class="barow pgrow"><span class="bth"><span${th?` style="background-image:url('${th}')"`:''}></span></span><span class="bi"><input class="pgcap" data-pgcap="${esc(x.id)}" maxlength="50" value="${esc(x.c||'')}" placeholder="Nombre de la foto" ${ro?'disabled':''}></span><span class="pa">${ro?'':`<button type="button" class="pill" data-pgchg="${esc(x.id)}">Cambiar</button>${i>0?`<button type="button" class="pill" data-pgup="${i}" aria-label="Subir">↑</button>`:''}${!x.u&&/^d\d$/.test(x.id)?`<button type="button" class="pill" data-pgrst="${esc(x.id)}">Original</button>`:''}<button type="button" class="x" data-pgdel="${i}" aria-label="Eliminar">✕</button>`}</span></div>`}).join('')
+   +(ro?'':(L.length<12?`<button class="btn" style="width:100%;margin-top:12px" type="button" data-pgchg="new">＋ Agregar foto a la galería</button>`:'<p class="mut" style="font-size:14px">Llegaste al máximo de 12 fotos.</p>'))}
+async function pgPicked(inp){
+  const f=inp.files&&inp.files[0];inp.value='';const t=pgTarget;if(!f||!t||pgBusy||readOnly)return;
+  pgBusy=true;pgMsg('Subiendo foto…');
+  try{const big=t==='hero'||t==='fin',d=await pgProc(f,big?'big':'gal');
+    if(t==='new'){if(pgM.gal.length>=12)throw new Error('max');const id='n'+Date.now().toString(36);await pgRef('ga_pgi_'+id).set({d,at:Date.now()});pgM.gal.push({id,c:''});pgTh[id]=d}
+    else if(big){await pgRef('ga_pgi_'+t).set({d,at:Date.now()});pgM[t]=true;pgTh[t]=d}
+    else{const x=pgM.gal.find(x=>x.id===t);if(!x)throw new Error('x');await pgRef('ga_pgi_'+t).set({d,at:Date.now()});delete x.u;pgTh[t]=d}
+    await pgSaveM();pgMsg('Foto publicada ✓');showToast('Foto publicada ✓')}
+  catch(e){pgMsg(e&&e.code==='permission-denied'?'Firebase no permitió guardar la foto. Avísame y revisamos las reglas de Firestore.':'No se pudo subir esa foto. Prueba con otra o revisa tu conexión.')}
+  pgBusy=false;pgDraw()}
+async function pgAct(fn,ok){if(readOnly||pgBusy)return;pgBusy=true;try{await fn();await pgSaveM();if(ok)showToast(ok)}catch(e){pgMsg('No se pudo guardar. Revisa tu conexión.')}pgBusy=false;pgDraw()}
+// --- imágenes de la página de reservas (lista en publico/ga_rsweb; fotos en publico/ga_rsi_<id>: m=miniatura, d=grande) ---
+const RSDEF=[['r1','Masaje de piernas'],['r2','Masaje de espalda'],['r3','Tratamiento facial'],['r4','Terapia con ventosas'],['r5','Mascarilla facial'],['r6','Masaje facial con piedras de jade']];
+let rsM=null,rsTh={},rsTarget=null,rsBusy=false;
+const rsMsg=t=>{const m=document.getElementById('rsMsgBox');if(m)m.textContent=t||''};
+async function rsLoad(){if(!rsM){try{const d=await pgRef('ga_rsweb').get();rsM=d.exists?d.data():{}}catch(e){rsM={}}
+  const G=Array.isArray(rsM.gal)?rsM.gal:[];rsM.gal=RSDEF.map(([id,c],i)=>Object.assign({id,c},G.find(x=>x&&x.id===id)||{}))}rsDraw()}
+async function rsSaveM(){rsM.at=Date.now();await pgRef('ga_rsweb').set(rsM)}
+async function rsProc(file,mode){
+  const url=URL.createObjectURL(file);
+  try{const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('img'));i.src=url});
+    const nw=im.naturalWidth,nh=im.naturalHeight;if(!nw||!nh)throw new Error('img');
+    const enc=(sx,sy,sw,sh,W,H,lim)=>{let d;for(let t=0;t<6;t++){const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,sx,sy,sw,sh,0,0,W,H);let q=.82;d=c.toDataURL('image/jpeg',q);while(d.length>lim&&q>.45){q-=.07;d=c.toDataURL('image/jpeg',q)}if(d.length<=lim)break;W=Math.round(W*.85);H=Math.round(H*.85)}return d};
+    const k=Math.min(1,1100/Math.max(nw,nh)),big=enc(0,0,nw,nh,Math.round(nw*k),Math.round(nh*k),330000);
+    if(mode==='gc')return{d:big};
+    const r=4/5;let sx=0,sy=0,sw=nw,sh=nh;if(sw/sh>r){sw=sh*r;sx=(nw-sw)/2}else{sh=sw/r;sy=(nh-sh)/2}
+    return{d:big,m:enc(sx,sy,sw,sh,400,500,60000)}}
+  finally{URL.revokeObjectURL(url)}}
+function rsThumb(id){if(id in rsTh)return;rsTh[id]=null;pgRef('ga_rsi_'+id).get().then(d=>{if(d.exists){rsTh[id]=d.data().m||d.data().d;if(!rsModal.hidden)rsDraw()}}).catch(()=>{})}
+function rsDraw(){
+  if(!rsM){rsList.innerHTML='<p class="mut">Cargando…</p>';return}
+  const ro=readOnly;
+  if(ENAPP&&!APPFOTOS){rsList.innerHTML=`<div class="mut" style="font-size:13.5px;margin-bottom:8px">Para elegir fotos desde la app, instala la versión 1.8 de la app de Android. Mientras tanto, abre el panel en Chrome, entra con tu cuenta y vuelve a Menú → Imágenes de reservas.</div><button class="btn" style="width:100%" type="button" data-bkchrome>🌐 Abrir el panel en Chrome</button>`;return}
+  const btn=(id,custom)=>ro?'':`<button type="button" class="pill" data-rschg="${id}">Cambiar</button>${custom?`<button type="button" class="pill" data-rsrst="${id}">Original</button>`:''}`;
+  if(rsM.gc)rsThumb('gc');
+  const gth=rsM.gc?rsTh.gc:'giftcard-plantilla.jpg';
+  rsList.innerHTML='<div class="lbl">Collage de la portada (6 fotos)</div>'
+   +rsM.gal.map((x,i)=>{if(x.k)rsThumb(x.id);const th=x.k?rsTh[x.id]:'galeria-'+(i+1)+'-m.jpg';return `<div class="barow pgrow"><span class="bth"><span${th?` style="background-image:url('${th}')"`:''}></span></span><span class="bi"><input class="pgcap" data-rscap="${x.id}" maxlength="50" value="${esc(x.c||'')}" placeholder="Nombre de la foto" ${ro?'disabled':''}><small>${x.k?'Foto tuya':'Foto original'}</small></span><span class="pa">${btn(x.id,x.k)}</span></div>`}).join('')
+   +'<div class="lbl" style="margin-top:14px">Giftcard</div>'
+   +`<div class="barow pgrow"><span class="bth"><span${gth?` style="background-image:url('${gth}')"`:''}></span></span><span class="bi"><b>Imagen de la giftcard</b><small>${rsM.gc?'Foto tuya':'Imagen original'}</small></span><span class="pa">${btn('gc',rsM.gc)}</span></div>`}
+async function rsPicked(inp){
+  const f=inp.files&&inp.files[0];inp.value='';const t=rsTarget;if(!f||!t||rsBusy||readOnly)return;
+  rsBusy=true;rsMsg('Subiendo foto…');
+  try{const o=await rsProc(f,t==='gc'?'gc':'gal');
+    await pgRef('ga_rsi_'+t).set(Object.assign({at:Date.now()},o));
+    if(t==='gc'){rsM.gc=true;rsTh.gc=o.d}else{const x=rsM.gal.find(x=>x.id===t);if(!x)throw new Error('x');x.k=true;rsTh[t]=o.m}
+    await rsSaveM();rsMsg('Foto publicada ✓');showToast('Foto publicada ✓')}
+  catch(e){rsMsg(e&&e.code==='permission-denied'?'Firebase no permitió guardar la foto. Avísame y revisamos las reglas de Firestore.':'No se pudo subir esa foto. Prueba con otra o revisa tu conexión.')}
+  rsBusy=false;rsDraw()}
+async function rsAct(fn,ok){if(readOnly||rsBusy)return;rsBusy=true;try{await fn();await rsSaveM();if(ok)showToast(ok)}catch(e){rsMsg('No se pudo guardar. Revisa tu conexión.')}rsBusy=false;rsDraw()}
 function clDraw(){
   const q=String(clQ.value||'').trim().toLowerCase(),qd=q.replace(/\D/g,''),L=Object.values(clientas()).sort((x,y)=>y.ld.localeCompare(x.ld)||x.nm.localeCompare(y.nm));
   const F=L.filter(o=>!q||o.nm.toLowerCase().includes(q)||(qd.length>=3&&String(o.f).replace(/\D/g,'').includes(qd)));
@@ -1582,6 +1682,8 @@ function render(){
     +mt('data-madopen','🌿 Maderoterapia',`${nMad} tratamiento${nMad==1?'':'s'}${S.cfg.madera.on===false?' · oculto':''}`)
     +mt('data-duoopen','👥 Descuentos dúo',S.cfg.duo.on?((n=>n?`${n} con descuento`:'Sin descuentos')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):'Oculto en reservas')
     +mt('data-baopen','📸 Antes y después',(n=>n?`${n} publicado${n==1?'':'s'} en tu página`:'Fotos de resultados')(GALP().length))
+    +mt('data-pgopen','🖼️ Imágenes de la página','Portada, galería y cierre')
+    +mt('data-rsopen','🖼️ Imágenes de reservas','Collage y giftcard')
     +mt('data-svcopen','＋ Nuevo servicio','Agregar a tu lista')
     +`</div><div class="mgh">Configuración</div><div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.servicios);
   }
@@ -1743,6 +1845,16 @@ document.addEventListener('click',e=>{
   else if(el=g('data-clopen')){clQ.value='';clDraw();clModal.hidden=false;return}
   else if(el=g('data-clk')){openFicha(el.dataset.clk);return}
   else if(el=g('data-clclose')){clModal.hidden=true;return}
+  else if(el=g('data-rsopen')){rsMsg('');rsModal.hidden=false;rsLoad();return}
+  else if(el=g('data-rsclose')){rsModal.hidden=true;return}
+  else if(el=g('data-rschg')){if(readOnly)return;rsTarget=el.dataset.rschg;document.getElementById('rsFile').click();return}
+  else if(el=g('data-rsrst')){const k=el.dataset.rsrst;rsAct(async()=>{if(k==='gc'){rsM.gc=false}else{const x=rsM.gal.find(x=>x.id===k);if(x)delete x.k}delete rsTh[k];await pgRef('ga_rsi_'+k).delete().catch(()=>{})},'Foto original restaurada');return}
+  else if(el=g('data-pgopen')){pgMsg('');pgModal.hidden=false;pgLoad();return}
+  else if(el=g('data-pgclose')){pgModal.hidden=true;return}
+  else if(el=g('data-pgchg')){if(readOnly)return;pgTarget=el.dataset.pgchg;document.getElementById('pgFile').click();return}
+  else if(el=g('data-pgrst')){const k=el.dataset.pgrst;pgAct(async()=>{if(k==='hero'||k==='fin'){pgM[k]=false;delete pgTh[k]}else{const i=PGDEF.findIndex(a=>a[0]===k),x=pgM.gal.find(x=>x.id===k);if(x&&i>=0)x.u='inicio-img/galeria-'+(i+1)+'.jpg'}await pgRef('ga_pgi_'+k).delete().catch(()=>{})},'Foto original restaurada');return}
+  else if(el=g('data-pgup')){const i=+el.dataset.pgup;pgAct(async()=>{const L=pgM.gal;if(i>0&&i<L.length)[L[i-1],L[i]]=[L[i],L[i-1]]});return}
+  else if(el=g('data-pgdel')){const i=+el.dataset.pgdel,x=pgM.gal[i];if(!x)return;askConfirm('Quitar foto',`¿Quitar «${x.c||'esta foto'}» de la galería?`,()=>pgAct(async()=>{pgM.gal.splice(i,1);await pgRef('ga_pgi_'+x.id).delete().catch(()=>{})},'Foto quitada'));return}
   else if(el=g('data-baopen')){baDraw();baModal.hidden=false;return}
   else if(el=g('data-baclose')){baModal.hidden=true;return}
   else if(el=g('data-basave')){baSave();return}
@@ -1899,6 +2011,10 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
 pickQ.addEventListener('input',pickDraw);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
+  if(e.target&&e.target.id==='rsFile'){rsPicked(e.target);return}
+  if(e.target&&e.target.dataset&&e.target.dataset.rscap!==undefined){const x=rsM&&rsM.gal.find(x=>x.id===e.target.dataset.rscap);if(x&&!readOnly){x.c=e.target.value.trim().slice(0,50);rsSaveM().then(()=>showToast('Nombre guardado ✓')).catch(()=>rsMsg('No se pudo guardar el nombre.'))}return}
+  if(e.target&&e.target.id==='pgFile'){pgPicked(e.target);return}
+  if(e.target&&e.target.dataset&&e.target.dataset.pgcap!==undefined){const x=pgM&&pgM.gal.find(x=>x.id===e.target.dataset.pgcap);if(x&&!readOnly){x.c=e.target.value.trim().slice(0,50);pgSaveM().then(()=>showToast('Nombre guardado ✓')).catch(()=>pgMsg('No se pudo guardar el nombre.'))}return}
   if(e.target&&(e.target.id==='baFA'||e.target.id==='baFD')){baFile(e.target,e.target.id==='baFA'?'a':'d');return}
   const t=e.target,d=t.dataset;
   if(d.dcf!==undefined){const [a,b]=d.dcf.split('.'),D=DCF(),mx=b==='d'?365:b==='n'?100:90;D[a][b]=Math.max(1,Math.min(mx,Math.round(+t.value)||D[a][b]));t.value=D[a][b];render();dcDraw();showToast('Guardado ✓');return}

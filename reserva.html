@@ -490,6 +490,16 @@ function render0(){
 // ===== Collage de fotos (archivos galeria-1.jpg … galeria-6.jpg en la misma carpeta) =====
 const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje de espalda','72% 40%'],['galeria-3.jpg','Tratamiento facial','50% 30%'],['galeria-4.jpg','Terapia con ventosas','50% 40%'],['galeria-5.jpg','Mascarilla facial','50% 40%'],['galeria-6.jpg','Masaje facial con piedras de jade','50% 35%']];
 const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-m.jpg')}" alt="${a}" style="object-position:${pos}" decoding="async" onerror="if(!this.dataset.o){this.dataset.o=1;this.src='${f}'}else this.parentNode.remove()"></button>`).join('')}</div>`;
+
+// ===== Fotos editables desde el panel (Menú → Imágenes de reservas): collage del inicio y foto de la giftcard =====
+const GCSRC={v:'giftcard-plantilla.jpg'};
+function rsDoc(id,mask){return fetch('https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FIREBASE_CONFIG.projectId)+'/databases/(default)/documents/publico/'+id+'?key='+encodeURIComponent(FIREBASE_CONFIG.apiKey)+(mask?'&mask.fieldPaths='+mask:'')).then(r=>r.ok?r.json():null).then(j=>j&&j.fields?restM(j.fields):null)}
+function rsPaint(){const c=document.querySelector('.collage');if(c)c.outerHTML=galHtml()}
+try{rsDoc('ga_rsweb').then(m=>{if(!m)return;
+  (Array.isArray(m.gal)?m.gal:[]).slice(0,GAL.length).forEach((x,i)=>{if(!x)return;if(x.c)GAL[i][1]=String(x.c).replace(/["<>&]/g,'').slice(0,60);
+    if(x.k&&/^r\d$/.test(x.id))rsDoc('ga_rsi_'+x.id,'m').then(d=>{if(d&&d.m&&/^data:image\//.test(d.m)){GAL[i]=[d.m,GAL[i][1],'50% 50%',x.id,null];rsPaint()}}).catch(()=>{});else rsPaint()});
+  if(m.gc)rsDoc('ga_rsi_gc').then(d=>{if(d&&d.d&&/^data:image\//.test(d.d)){GCSRC.v=d.d;document.querySelectorAll('.gcimg').forEach(e=>e.src=d.d)}}).catch(()=>{})
+}).catch(()=>{})}catch(e){}
 function abHtml(){const L=GALX();
   return `<div class="balist">${L.map(x=>{const t=esc(String(x.t||'Antes y después').slice(0,60)),d=esc(String(x.x||'').slice(0,60)),si=x.s?SV().findIndex(v=>v&&v.n===x.s&&!v.w):-1;
     return `<figure class="bacard" data-gid="${esc(x.id)}"><div class="baimg"><img class="ba-d" alt="Después: ${t}"><div class="ba-aw"><img class="ba-a" alt="Antes: ${t}"></div><span class="ba-st">Cargando fotos…</span><span class="ba-l">Antes</span><span class="ba-r">Después</span><span class="ba-h" aria-hidden="true"></span><input type="range" class="ba-rg" min="0" max="100" value="50" aria-label="Comparar antes y después: ${t}"></div>
@@ -521,7 +531,7 @@ document.addEventListener('pointerup',e=>{const d=baDrag;baDrag=null;if(d&&!d.on
 document.addEventListener('pointercancel',()=>{baDrag=null});
 document.addEventListener('input',e=>{if(e.target.classList&&e.target.classList.contains('ba-rg'))baSet(e.target.closest('.bacard'),+e.target.value)});
 let lbI=0;
-function lbShow(i){lbI=(i+GAL.length)%GAL.length;const [f,a]=GAL[lbI],im=$('lbImg'),fm=f.replace(/\.jpg$/,'-m.jpg');im.onerror=()=>{im.onerror=null;im.src=fm};im.src=f;$('lbImg').alt=a;$('lbCap').textContent=`${a} · ${lbI+1} de ${GAL.length}`;$('lb').hidden=false}
+function lbShow(i){lbI=(i+GAL.length)%GAL.length;const [f,a,_p,rid,full]=GAL[lbI],im=$('lbImg'),fm=f.replace(/\.jpg$/,'-m.jpg');im.onerror=()=>{im.onerror=null;im.src=fm};im.src=full||f;if(rid&&!full){const k=lbI;rsDoc('ga_rsi_'+rid,'d').then(d=>{if(d&&d.d&&/^data:image\//.test(d.d)){GAL[k][4]=d.d;if(lbI===k&&!$('lb').hidden)im.src=d.d}}).catch(()=>{})}$('lbImg').alt=a;$('lbCap').textContent=`${a} · ${lbI+1} de ${GAL.length}`;$('lb').hidden=false}
 const lbClose=()=>{$('lb').hidden=true};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-gal],[data-lbn],[data-lbx]');
   if(t){if(t.dataset.gal!==undefined)lbShow(+t.dataset.gal);else if(t.dataset.lbn)lbShow(lbI+ +t.dataset.lbn);else lbClose();return}
@@ -628,7 +638,7 @@ function gcCanje(){
 }
 // Venta de giftcards: contacto directo por WhatsApp
 const GC_VENTA='Hola, me gustaría comprar una giftcard de regalo 🎁. ¿Me pueden ayudar?';
-const gcVenta=()=>`<article class="svc gcv" data-q="${esc(norm('giftcard gift card regalo regalar tarjeta cumpleanos aniversario'))}"><img class="gcimg" src="giftcard-plantilla.jpg" alt="Giftcard de regalo Catarsis" loading="lazy" onerror="this.remove()"><div class="si"><h4>Regala una giftcard</h4><p class="sd">Sorprende a alguien especial con un masaje o tratamiento de regalo. Elige el servicio y te enviamos la giftcard digital o coordinamos la entrega física, con su número único, lista para regalar. Es válida por 30 días: una vez vencido el plazo, no se devuelve el dinero ni se agendan horas fuera de plazo.</p><span class="meta">🎁 Para cualquier servicio o monto</span></div><div class="sp"><a class="rbtn" href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">💬 Comprar por WhatsApp</a></div></article>`;
+const gcVenta=()=>`<article class="svc gcv" data-q="${esc(norm('giftcard gift card regalo regalar tarjeta cumpleanos aniversario'))}"><img class="gcimg" src="${GCSRC.v}" alt="Giftcard de regalo Catarsis" loading="lazy" onerror="this.remove()"><div class="si"><h4>Regala una giftcard</h4><p class="sd">Sorprende a alguien especial con un masaje o tratamiento de regalo. Elige el servicio y te enviamos la giftcard digital o coordinamos la entrega física, con su número único, lista para regalar. Es válida por 30 días: una vez vencido el plazo, no se devuelve el dinero ni se agendan horas fuera de plazo.</p><span class="meta">🎁 Para cualquier servicio o monto</span></div><div class="sp"><a class="rbtn" href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">💬 Comprar por WhatsApp</a></div></article>`;
 const gcSec=its=>{const canje=its.some(x=>x.gift),venta=its.some(x=>x.venta);
   return `<section class="sec" data-sec="${GIFT}"><h3>🎁 ${GIFT}<small>${canje?'Solo con tu número único':'Regala bienestar'}</small></h3>${canje?gcCanje():''}${venta?gcVenta():''}</section>`};
 async function gcVerifica(){
