@@ -76,6 +76,17 @@ h3{font-size:22px;margin:0 0 12px}
 .tabs button.promo{font-weight:600;color:var(--acc)}.tabs button.promo.on{color:var(--onacc)}
 .duotot{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--tint);font-size:14px;line-height:1.4}.duotot b{font-size:15px}.duotot s{color:var(--mut)}
 .pz{display:inline-block;font-size:11px;font-weight:600;background:var(--acc);color:var(--onacc);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.qb{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.qb summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;font-weight:600;font-size:14.5px;color:var(--teal)}
+.qb summary::-webkit-details-marker{display:none}
+.qb summary::after{content:"+";font-size:22px;line-height:1;font-weight:500}
+.qb[open] summary::after{content:"\2212"}
+.qb summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
+.qb .sd{margin-top:6px}
+.qb ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.qb li{position:relative;padding-left:26px;font-size:14px;line-height:1.35;color:var(--ink)}
+.qb li::before{content:"\2713";position:absolute;left:2px;top:0;color:var(--grn);font-weight:700}
+.qb .pnote{color:var(--mut);font-weight:400;font-size:12.5px;margin-top:10px}
 .pnote{margin:10px 0 0;font-size:13.5px;color:var(--acc);font-weight:500}
 .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
 .chip{border:0;border-radius:10px;background:var(--tint);padding:9px 6px;cursor:pointer;line-height:1.2}
@@ -542,9 +553,29 @@ function catalogo(){
   all.forEach((s,i)=>{if(!s.promo)add(s.c||'Otros',{i,s})});
   return {cats,by};
 }
+const DISCQ='Los resultados varían según cada persona. En tu primera sesión evaluamos y adaptamos el protocolo.';
+const INFOQ=[
+ [/prenatal|embaraz/,{d:'Masaje suave y seguro, en una posición cómoda con cojines, pensado para acompañar tu embarazo.',b:['Relaja espalda, cintura y piernas','Un momento de calma para ti y tu bebé','Posición cómoda y segura'],n:'Consulta con tu médico o matrona antes de agendar.'}],
+ [/limpieza|extraccion de impurezas|facial profunda/,{d:'Limpieza facial profunda con extracción de impurezas, hidratación y cuidado final de la piel.',b:['Poros más limpios y menos impurezas','Piel más suave, fresca y luminosa','Base ideal para otros tratamientos']}],
+ [/jade|piedras/,{d:'Masaje facial con piedras de jade, con movimientos suaves en rostro y cuello.',b:['Relaja el rostro y el cuello','Piel más fresca y luminosa','Un momento de calma para ti']}],
+ [/milium|verruga/,{d:'Tratamiento localizado y preciso, realizado por una profesional previa evaluación de tu piel.',b:['Procedimiento preciso y cuidadoso','Evaluación previa de tu piel','Indicaciones de cuidado posterior']}],
+ [/ventosa/,{d:'Terapia con ventosas sobre la espalda para liberar la musculatura y soltar la tensión.',b:['Ayuda a soltar contracturas','Relaja la musculatura de la espalda','Sensación de liviandad']}],
+ [/drenaje|linfatic/,{d:'Masaje suave y rítmico que estimula la circulación y el movimiento de líquidos.',b:['Sensación de piernas más livianas','Ayuda a reducir la sensación de hinchazón','Relajación profunda']}],
+ [/maderoterapia|madero/,{d:'Masaje con instrumentos de madera, con movimientos firmes sobre las zonas a trabajar.',b:['Estimula la circulación','Relaja la musculatura','Sensación de cuerpo más liviano']}],
+ [/duo|pareja|dos personas/,{d:'Masaje relajante para dos personas al mismo tiempo, en la misma sala. Cada una elige su masaje.',b:['Un momento especial para compartir','Cada persona elige su masaje','Ideal para regalar']}],
+ [/evaluaci/,{d:'Revisión personalizada para definir el tratamiento que mejor se adapta a ti.',b:['Evaluación profesional','Plan a tu medida','Lo que pagas se descuenta del tratamiento']}],
+ [/pack|combo/,{d:'Masaje y limpieza facial en la misma hora, con precio especial.',b:['Cuerpo y rostro en una sola visita','Precio especial','Relajación total']}],
+ [/descontractur|deportivo|profundo|tension/,{d:'Masaje con presión firme sobre las zonas de mayor tensión.',b:['Ayuda a aliviar contracturas','Mejora la sensación de movilidad','Relaja los músculos cargados']}],
+ [/pierna|pies|reflex/,{d:'Masaje enfocado en piernas y pies cansados.',b:['Sensación de alivio y liviandad','Relaja pantorrillas y pies','Descanso para todo el día']}],
+ [/facial|piel|rostro/,{d:'Tratamiento facial personalizado, según el tipo y las necesidades de tu piel.',b:['Piel más suave y luminosa','Cuidado según tu tipo de piel','Un momento de relajación']}],
+ [/masaje|relajante|sueco/,{d:'Masaje corporal con movimientos suaves y envolventes, en un ambiente de calma.',b:['Suelta la tensión del día','Relaja cuerpo y mente','Ayuda a descansar mejor']}]
+];
+const infoQ=(s,t)=>{const k=norm(t||'');const f=INFOQ.find(x=>x[0].test(k));return f?f[1]:{d:'Tratamiento realizado por profesionales de Catarsis, adaptado a lo que necesitas.',b:['Atención personalizada','Ambiente de calma y bienestar','Cuidado en cada detalle']}};
+function qbHtml(s,t){const c=infoQ(s,t),b=(Array.isArray(s&&s.b)&&s.b.length?s.b:c.b),d=(s&&s.qe)||c.d;
+  return `<details class="qb"><summary>Qué es y beneficios</summary><p class="sd">${esc(d)}</p><ul>${b.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p class="pnote">${esc(DISCQ)}${c.n?' '+esc(c.n):''}</p></details>`}
 function svcCard(it){
   if(it.duo){const L=DL(),mn=Math.min(...L.map(pD))*2;
-    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${durTxt(DM())}${duoHorTxt()?` · 📅 ${duoHorTxt()}`:''}</span></div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
+    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">⏱ ${durTxt(DM())}${duoHorTxt()?` · 📅 ${duoHorTxt()}`:''}</span>${qbHtml({},'masaje duo pareja')}</div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
   if(it.s&&esMad(it.s)&&!it.s.w)return madCard(it);
   const s=it.s,nm=nomS(s),ev=!s.promo&&/^evaluaci/i.test(s.n),wl=s.w?waLink(waTxtSvc(s)):'';
   const btn=s.w?(wl?`<a class="rbtn wa" href="${wl}" target="_blank" rel="noopener">💬 Agendar por WhatsApp</a>`:''):`<button class="rbtn" data-res="${it.i}">Reservar</button>`;
@@ -552,7 +583,7 @@ function svcCard(it){
   const desde=s.ev&&+s.v>0?`Desde ${money(s.v)}. `:'',desc=s.ds||desde?`<p class="sd">${desde}${esc(s.ds||'')}</p>`:'';
   const pr=s.ev?'<span class="pr ev">Valor según evaluación</span>':q.length?`<span class="pr" data-prc><small>Desde</small> ${money(Math.min(...q.map(t=>+t.v)))}</span>`:`<span class="pr">${money(s.v)}${+s.vo>+s.v?`<s>${money(s.vo)}</s>`:''}</span>`;
   const qo=q.length?`<div class="qopts" role="radiogroup" aria-label="Cantidad">${q.map((t,j)=>`<label class="qopt"><input type="radio" name="q${it.i}" value="${t.n}" ${j?'':'checked'}><span><i>${t.n} ×</i><b>${money(t.v)}</b></span></label>`).join('')}</div>`:'';
-  return `<article class="svc${q.length?' xp':''}" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')+' '+(s.ds||'')+(s.combo?' pack '+s.ca+' '+s.cb:'')))}"><div class="si"><h4>${esc(nm)}${s.promo?`<span class="pz">${s.combo?'Pack':'Promoción'}</span>`:''}</h4>${s.madp?`<p class="sd">Pack de <b>${s.ses} sesiones</b> de ${durTxt(s.m)} (${money(Math.round(s.v/s.ses))} c/u). ${pagaTodo(s)?'Pagas el valor completo al reservar y agendas tu primera sesión.':'Agendas tu primera sesión; las siguientes las coordinamos contigo.'}</p>`:''}${s.combo?(s.nom===s.ca+' + '+s.cb?'<p class="sd">Masaje y limpieza facial en la misma hora, con precio especial.</p>':`<p class="sd">Incluye <b>${esc(s.ca)}</b> + <b>${esc(s.cb)}</b>, en la misma hora.</p>`):''}${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${desc}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">⏱ ${durTxt(s.m)}${s.madp?' por sesión':''}</span></div>${qo}<div class="sp">${pr}${btn}</div></article>`;
+  return `<article class="svc${q.length?' xp':''}" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')+' '+(s.ds||'')+(s.combo?' pack '+s.ca+' '+s.cb:'')))}"><div class="si"><h4>${esc(nm)}${s.promo?`<span class="pz">${s.combo?'Pack':'Promoción'}</span>`:''}</h4>${s.madp?`<p class="sd">Pack de <b>${s.ses} sesiones</b> de ${durTxt(s.m)} (${money(Math.round(s.v/s.ses))} c/u). ${pagaTodo(s)?'Pagas el valor completo al reservar y agendas tu primera sesión.':'Agendas tu primera sesión; las siguientes las coordinamos contigo.'}</p>`:''}${s.combo?(s.nom===s.ca+' + '+s.cb?'<p class="sd">Masaje y limpieza facial en la misma hora, con precio especial.</p>':`<p class="sd">Incluye <b>${esc(s.ca)}</b> + <b>${esc(s.cb)}</b>, en la misma hora.</p>`):''}${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${desc}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">⏱ ${durTxt(s.m)}${s.madp?' por sesión':''}</span>${qbHtml(s,nm+' '+(s.g||'')+' '+(s.c||'')+(s.combo?' pack':''))}</div>${qo}<div class="sp">${pr}${btn}</div></article>`;
 }
 function gcCanje(){
   const nm=gcV&&gcV.p?gcV.p:GC_NOM;let body;
@@ -590,7 +621,7 @@ function madCard({i,s}){
   const ks=(Array.isArray(s.k)?s.k:[]).filter(q=>+q.s>1&&+q.v>0),nm=`mo${i}`;
   const op=[`<label class="opt"><input type="radio" name="${nm}" value="1" checked><span><b>1 sesión</b><small>${money(s.v)}</small></span></label>`]
     .concat(ks.map(q=>{const u=Math.round(q.v/q.s),ah=s.v*q.s-q.v;return `<label class="opt"><input type="radio" name="${nm}" value="${q.s}"><span><b>Pack ${q.s}</b><small>${money(q.v)}</small>${ah>0?`<i>${money(u)} c/u</i>`:''}</span></label>`}));
-  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h4>${esc(s.n)}</h4>${(s.b||[]).length?`<ul class="ben">${s.b.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}<span class="meta">⏱ ${durTxt(s.m)} por sesión</span></div>
+  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h4>${esc(s.n)}</h4><span class="meta">⏱ ${durTxt(s.m)} por sesión</span>${qbHtml(s,s.n+' maderoterapia')}</div>
   ${ks.length?`<div class="opts" role="radiogroup" aria-label="Sesiones">${op.join('')}</div>`:''}
   <div class="sp"><span class="pr" data-prc>${money(s.v)}</span><button class="rbtn" data-res="${i}">Reservar</button></div></article>`;
 }
