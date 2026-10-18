@@ -105,7 +105,7 @@ details.q p{padding:0 0 20px;color:var(--mut)}
 footer{padding:26px 0 96px;text-align:center;font-size:15px;color:var(--mut);border-top:1px solid var(--line)}
 .fab{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;display:flex;gap:10px;opacity:0;transform:translateY(120%);pointer-events:none;transition:opacity .3s,transform .3s}
 .fab.on{opacity:1;transform:none;pointer-events:auto}
-@media(max-width:819px){header.top.sc .btn{opacity:0;visibility:hidden;transition:opacity .25s}}
+@media(max-width:819px){.top .btn{transition:opacity .35s ease,transform .35s ease,visibility 0s linear 0s}header.top.sc .btn{opacity:0;transform:translateY(-14px) scale(.85);visibility:hidden;pointer-events:none;transition:opacity .35s ease,transform .35s ease,visibility 0s linear .35s}}
 .fab .btn{flex:1;min-height:52px;box-shadow:0 8px 24px rgba(42,33,26,.25)}
 .fab .btn.o{background:var(--bg)}
 @media(min-width:820px){.fab{display:none}footer{padding-bottom:30px}}
