@@ -337,10 +337,12 @@ const LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAACgCAYAAAB0QYCKAA
 const EMAILJS={publicKey:'',serviceId:'',templateCliente:'',templateAdmin:''};
 const MAIL_ON=!!(EMAILJS.publicKey&&EMAILJS.serviceId);
 if(!FIREBASE_CONFIG){document.getElementById('app').innerHTML='<p class="mut">No pudimos cargar la agenda. Revisa tu conexión a internet y vuelve a intentarlo en unos minutos.</p>';throw new Error('Falta firebase-config.js o sus datos no son válidos')}
-function acActivar(){if(!APPCHECK_KEY||!firebase.appCheck)return;try{const P=firebase.appCheck.ReCaptchaEnterpriseProvider;firebase.appCheck().activate(P?new P(APPCHECK_KEY):APPCHECK_KEY,true)}catch(e){console.warn('App Check',e)}}
+function acActivar(){if(!APPCHECK_KEY||!firebase.appCheck)return;try{const P=firebase.appCheck.ReCaptchaEnterpriseProvider;firebase.appCheck().activate(P?new P(APPCHECK_KEY):APPCHECK_KEY,false)}catch(e){console.warn('App Check',e)}}
 const RCAP=APPCHECK_KEY?'<p class="rcap">Protegido por reCAPTCHA de Google · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacidad</a> · <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Términos</a></p>':'';
 let db=null,fresh=false;
-const sdkP=((window.firebase&&window.firebase.firestore)?Promise.resolve():(window.__sdkP||Promise.reject(new Error('sdk')))).then(()=>{firebase.initializeApp(FIREBASE_CONFIG);acActivar();db=firebase.firestore();return db});
+const sdkP=((window.firebase&&window.firebase.firestore)?Promise.resolve():(window.__sdkP||Promise.reject(new Error('sdk')))).then(()=>{firebase.initializeApp(FIREBASE_CONFIG);db=firebase.firestore();return db});
+// App Check (reCAPTCHA) se activa solo cuando la clienta llega a «Tus datos», para no gastar el cupo mensual de reCAPTCHA con cada visita o robot.
+let acOn=false;function acLazy(){if(acOn)return;acOn=true;sdkP.then(acActivar).catch(()=>{})}
 sdkP.catch(()=>{});
 // Arranque rápido: muestra al tiro la última agenda guardada en este teléfono y la pide directo a la base de datos,
 // sin esperar a que termine de cargar Firebase. Los horarios se actualizan solos en cuanto llega la información en vivo.
@@ -807,7 +809,7 @@ function view1(app){
   ${grupo('Mañana',day.filter(x=>x<780))}${grupo('Tarde',day.filter(x=>x>=780))}${day.length?'':'<p class="mut">No hay horas este día.</p>'}
   <div class="ctabar"><button class="cta" data-go="next" ${selT!==null?'':'disabled'}>${selT!==null?`Continuar · ${fmt(selT)}`:'Elige una hora para continuar'}</button></div></section></div>`;
 }
-function view2(app){
+function view2(app){acLazy();
   app.innerHTML=`<div class="grid">${card()}<form id="form" novalidate><h3>Tus datos</h3><p class="mut" style="margin:0 0 6px">${MAIL_ON?'Te enviaremos el detalle de tu reserva por correo.':'Los usaremos solo para contactarte por tu reserva.'}</p>
   <label class="f" for="nom">Nombre</label><input id="nom" placeholder="Tu nombre y apellido" autocomplete="name" maxlength="70" required value="${esc(fd.nom||(gcMode&&gcV&&gcV.p?gcV.p:''))}">
   <label class="f" for="tel">Teléfono</label><input id="tel" type="tel" placeholder="9 1234 5678" autocomplete="tel" maxlength="20" required value="${esc(fd.tel)}">

@@ -143,7 +143,7 @@ body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 // La configuración de Firebase está en el archivo firebase-config.js (misma carpeta)
 const FIREBASE_CONFIG=(c=>c&&typeof c==='object'&&['apiKey','authDomain','projectId','appId'].every(k=>typeof c[k]==='string'&&c[k].trim()&&!/PEGA_AQUI/i.test(c[k]))?c:null)(window.FIREBASE_CONFIG);
 const APPCHECK_KEY=window.APPCHECK_KEY||'';
-function acActivar(){if(!APPCHECK_KEY||!firebase.appCheck)return;try{const P=firebase.appCheck.ReCaptchaEnterpriseProvider;firebase.appCheck().activate(P?new P(APPCHECK_KEY):APPCHECK_KEY,true)}catch(e){console.warn('App Check',e)}}
+function acActivar(){if(!APPCHECK_KEY||!firebase.appCheck)return;try{const P=firebase.appCheck.ReCaptchaEnterpriseProvider;firebase.appCheck().activate(P?new P(APPCHECK_KEY):APPCHECK_KEY,false)}catch(e){console.warn('App Check',e)}}
 const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIA=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const $=id=>document.getElementById(id);
