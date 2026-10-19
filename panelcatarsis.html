@@ -390,9 +390,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);bo
 .mgh{color:var(--teal);letter-spacing:.12em}
 .mt:hover{background:#FBF6EC}
 </style></head><body>
-<script>/* App Android: sin animación de carga. Solo avisa a la app que la página ya está lista (quita la pantalla del sistema). */
-(function(){if(!/CatarsisApp/.test(navigator.userAgent))return;var P=window.CatarsisApp;setTimeout(function(){try{if(P&&typeof P.listo==='function')P.listo()}catch(e){}},40)})();
-window.__splOff=function(){};</script>
+<script>/* App Android: una sola animación de carga (la app espera a que aparezca para quitar la pantalla del sistema) */
+(function(){if(!/CatarsisApp/.test(navigator.userAgent))return;var P=window.CatarsisApp,t0=Date.now(),d=document.createElement('div');d.id='splash';d.setAttribute('aria-hidden','true');
+/* solo la primera vez que se abre la app: al volver desde el balance u otra página no se repite */
+var ya=false;try{ya=sessionStorage.getItem('catarsis-spl')==='1';sessionStorage.setItem('catarsis-spl','1')}catch(e){}
+if(ya){setTimeout(function(){try{if(P&&typeof P.listo==='function')P.listo()}catch(e){}},40);window.__splOff=function(){};return}
+d.innerHTML='<div class="sp-in"><div class="sp-logo"><span class="sp-ring"></span><img src="logo-carga.png" alt="" width="132" height="132"></div><div class="sp-bar"><i></i></div><p class="sp-t">CARGANDO<b>.</b><b>.</b><b>.</b></p><p class="sp-s">CATARSIS · ESTÉTICA Y BIENESTAR</p></div>';
+document.body.appendChild(d);
+function br(v){try{if(P&&typeof P.barras==='function')P.barras(v)}catch(e){}}
+br(true);setTimeout(function(){try{if(P&&typeof P.listo==='function')P.listo()}catch(e){}},40);
+var hecho=false;window.__splOff=function(){if(hecho)return;hecho=true;setTimeout(function(){d.classList.add('sp-off');br(false);setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},450)},Math.max(0,2000-(Date.now()-t0)))};
+setTimeout(window.__splOff,8000)})();</script>
 <div id="login"><div class="lbox">
 <div class="lhead"><img class="logo" id="loginLogo" alt="Catarsis"><h2>Agenda Catarsis</h2><p class="mut">Entra para ver tu agenda. Tus horas y reservas se guardan en tu base de datos de Firebase y las ves en el celular y en el computador. Solo las cuentas autorizadas pueden verlas.</p></div>
 <p class="lnote" id="lFile" hidden>Estás abriendo la página como archivo. Para iniciar sesión, ábrela desde su dirección de GitHub Pages (https://tu-usuario.github.io/…).</p>
