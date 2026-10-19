@@ -410,13 +410,14 @@ async function gcAbre(num){const{k,key}=await gcKdf(num),e=((ag&&ag.gc)||{})[k];
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(e.i)},key,unb64(e.c));return Object.assign(JSON.parse(new TextDecoder().decode(pt)),{u:!!e.u,n:num})}
 // Códigos de descuento (cumpleaños, clientas fieles, recomendación): se crean en el panel y se publican cifrados en publico/agenda.dc.
 // El código viaja en el servicio de la reserva ("<servicio> · Dcto ABC123"), igual que la giftcard.
-const DC_SAL='catarsis-descuento-v1',DCQ=String(GCQ.get('codigo')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+const DC_SAL='catarsis-descuento-v1',DCQ=String(GCQ.get('codigo')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10);
 let dcTxt=DCQ,dcV=null,dcMsg='',dcBusy=false,dcAuto=!!DCQ,dcOpen=!!DCQ,ent2=false;
 const fd={nom:'',tel:'',mail:'',dia:'',mes:''};
 const dcValor=(v,p)=>Math.round((+v||0)*(100-(+p||0))/10000)*100;   // igual al de panelcatarsis.html
 const dcCode=(n,c)=>cortoL(n,60)+' · Dcto '+c;   // igual al de panelcatarsis.html
 const dcElig=b=>!!b&&!b.promo&&!b.w&&!b.duo&&!b.gcard&&!b.madp&&!b.ev&&!b.pack&&!b.qty;
-const dcTipo=t=>t==='c'?'Cumpleaños':t==='f'?'Clienta fiel':t==='r'?'Recomendación':t==='p'?'Premio':'Descuento';
+const dcTipo=t=>t==='c'?'Cumpleaños':t==='f'?'Clienta fiel':t==='r'?'Recomendación':t==='p'?'Premio':t==='x'?'Te extrañamos':t==='k'?'Campaña':t==='b'?'Bienvenida':t==='g'?'Regalo':'Descuento';
+const dcSvOk=b=>!dcV||!Array.isArray(dcV.sv)||!dcV.sv.length||(!!b&&dcV.sv.includes(b.n));
 async function dcKdf(c){const te=new TextEncoder(),base=await crypto.subtle.importKey('raw',te.encode(c),'PBKDF2',false,['deriveBits']);
   const b=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:te.encode(DC_SAL),iterations:GC_IT},base,320));
   return{k:Array.from(b.slice(0,8),x=>x.toString(16).padStart(2,'0')).join(''),key:await crypto.subtle.importKey('raw',b.slice(8,40),'AES-GCM',false,['encrypt','decrypt'])}}
@@ -424,22 +425,22 @@ async function dcAbre(c){const{k,key}=await dcKdf(c),e=((ag&&ag.dc)||{})[k];if(!
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(e.i)},key,unb64(e.c));return Object.assign(JSON.parse(new TextDecoder().decode(pt)),{u:!!e.u,c})}
 async function dcVerifica(){
   if(dcBusy)return;const inp=$('dcNum');if(inp)dcTxt=inp.value;const c=String(dcTxt).toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(c.length!==6){dcMsg='El código tiene 6 letras y números (por ejemplo ANA4K7).';render();return}
+  if(c.length<4||c.length>10){dcMsg='Revisa el código: tiene entre 4 y 10 letras y números (por ejemplo ANA4K7).';render();return}
   if(!(window.crypto&&crypto.subtle)){dcMsg='Tu navegador no permite verificar el código. Escríbenos por WhatsApp.';render();return}
   dcBusy=true;dcMsg='';render();let r=null;
   try{await agFresco();r=await dcAbre(c)}catch(e){r=null}
   dcBusy=false;
   if(!r)dcMsg='No encontramos ese código. Revisa que esté bien escrito.';
-  else if(r.u)dcMsg='Este código ya fue usado.';
+  else if(r.u)dcMsg=r.mx?'Este código ya alcanzó su límite de usos.':'Este código ya fue usado.';
   else if(r.h&&r.h<t0)dcMsg=`Este código venció el ${fLarga(r.h)}.`;
-  else{dcV={c,p:+r.p||0,t:r.t||'',nm:r.nm||'',h:r.h||''};dcTxt=c;dcMsg=''}
+  else{dcV={c,p:+r.p||0,t:r.t||'',nm:r.nm||'',h:r.h||'',sv:Array.isArray(r.sv)?r.sv:[]};dcTxt=c;dcMsg=''}
   render();
 }
 function dcHtml(){
   if(gcMode)return '';const b=svc0();
-  if(dcV){const ok=dcElig(b);return `<div class="dcbox" role="status"><div class="dcok">✓ Código ${esc(dcV.c)}: ${dcV.p}% de descuento</div><p class="hint">${dcV.t==='r'?`Recomendación${dcV.nm?' de '+esc(dcV.nm):''}: válido en tu primera visita. `:dcV.t==='c'?'¡Feliz cumpleaños! 🎂 ':''}${ok?`Valor con descuento: <b>${money(dcValor(b.v,dcV.p))}</b> <s>${money(b.v)}</s>`:'<b>Este servicio no tiene descuento</b>: los códigos no se usan en promociones, packs, masajes dúo, giftcards ni servicios con valor según evaluación.'}${dcV.h?` · válido hasta el ${fLarga(dcV.h)}`:''}</p><button type="button" class="lnk" data-dcquitar>Quitar código</button></div>`}
+  if(dcV){const el=dcElig(b),so=dcSvOk(b),ok=el&&so,L=dcV.sv||[];return `<div class="dcbox" role="status"><div class="dcok"${ok?'':' style="color:var(--ink)"'}>${ok?'✓ ':''}Código ${esc(dcV.c)}: ${dcV.p}% de descuento</div><p class="hint">${dcV.t==='r'?`Recomendación${dcV.nm?' de '+esc(dcV.nm):''}: válido en tu primera visita. `:dcV.t==='b'?'Bienvenida: válido en tu primera visita. ':dcV.t==='c'?'¡Feliz cumpleaños! 🎂 ':dcV.t==='x'?'¡Qué bueno verte de nuevo! 🌸 ':''}${ok?`Valor con descuento: <b>${money(dcValor(b.v,dcV.p))}</b> <s>${money(b.v)}</s>`:!el?'<b>Este servicio no tiene descuento</b>: los códigos no se usan en promociones, packs, masajes dúo, giftcards ni servicios con valor según evaluación.':`<b>Este código es válido solo para ${L.length==1?'':'estos servicios: '}${L.map(esc).join(', ')}.</b> Elige ${L.length==1?'ese servicio':'uno de ellos'} para usarlo.`}${dcV.h?` · válido hasta el ${fLarga(dcV.h)}`:''}</p><button type="button" class="lnk" data-dcquitar>Quitar código</button></div>`}
   if(!dcOpen)return `<button type="button" class="lnk" data-dcopen>🏷️ ¿Tienes un código de descuento?</button>`;
-  return `<div class="dcbox"><label class="f" for="dcNum" style="margin-top:0">Código de descuento</label><div class="gcin"><input id="dcNum" autocomplete="off" autocapitalize="characters" maxlength="8" placeholder="ABC123" aria-describedby="dcErr" value="${esc(dcTxt)}"><button type="button" class="rbtn" data-dcver ${dcBusy?'disabled':''}>${dcBusy?'Verificando…':'Aplicar'}</button></div><div class="err" id="dcErr" role="alert">${esc(dcMsg)}</div></div>`;
+  return `<div class="dcbox"><label class="f" for="dcNum" style="margin-top:0">Código de descuento</label><div class="gcin"><input id="dcNum" autocomplete="off" autocapitalize="characters" maxlength="10" placeholder="ABC123" aria-describedby="dcErr" value="${esc(dcTxt)}"><button type="button" class="rbtn" data-dcver ${dcBusy?'disabled':''}>${dcBusy?'Verificando…':'Aplicar'}</button></div><div class="err" id="dcErr" role="alert">${esc(dcMsg)}</div></div>`;
 }
 const gcIdx=()=>{if(!gcV)return -1;const L=SV(),j=gcV.s?L.findIndex(x=>!x.promo&&!x.w&&x.n===gcV.s):-1;return j>=0?j:gcPick};
 const gcSvc=()=>{const b=SV()[gcIdx()];if(!gcV||!b)return null;const pre='Giftcard '+fmtN(gcV.n)+' · ',fijo=!!gcV.s&&b.n===gcV.s;
@@ -448,7 +449,7 @@ const svc0=()=>{if(gcMode)return gcSvc();if(duo)return duoSvc();const b=SV()[svc
   const qt=mq>0&&Array.isArray(b.q)?b.q.find(x=>+x.n===mq):null;if(qt)return Object.assign({},b,{n:qtyCode(b.n,qt.n),nom:b.n,txt:`${b.n} × ${qt.n}`,v:+qt.v,qty:+qt.n});
   const q=mk>1&&Array.isArray(b.k)?b.k.find(x=>+x.s===mk):null;
   return q?Object.assign({},b,{n:packCode(b.n,q.s),nom:b.n,txt:`${b.n} · Pack ${q.s} sesiones`,v:+q.v,pack:+q.s,unit:Math.round(q.v/q.s),base:+b.v}):b};
-const svc=()=>{const b=svc0();if(!b||!dcV||gcMode||!dcElig(b))return b;
+const svc=()=>{const b=svc0();if(!b||!dcV||gcMode||!dcElig(b)||!dcSvOk(b))return b;
   return Object.assign({},b,{n:dcCode(b.n,dcV.c),nom:b.n,txt:b.n,v:dcValor(b.v,dcV.p),vo:Math.max(+b.vo||0,+b.v||0),dc:{c:dcV.c,p:dcV.p,t:dcV.t}})};
 function timesFor(d,sv){
   const h=H(),paso=Math.max(10,+h.paso||30),dur=Math.max(5,+sv.m||paso),wd=toD(d).getDay(),dh=sv.duo?DH():null;

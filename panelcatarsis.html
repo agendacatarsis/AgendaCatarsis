@@ -316,6 +316,10 @@ input[type=checkbox]{min-height:0;width:auto}
 .dcrow .acts{display:flex;gap:6px;flex:0 0 auto;align-items:center}
 .dccod{font:700 15px 'Playfair Display',sans-serif;letter-spacing:1px}
 .dcnote{font-size:13px;color:var(--mut);margin:8px 0 4px;line-height:1.45}
+.svp{margin:10px 0 4px;border:1px solid var(--line);border-radius:18px;padding:10px 14px;background:var(--bg)}.svp summary{cursor:pointer;font-size:14px;list-style:none;display:flex;justify-content:space-between;gap:8px}.svp summary::-webkit-details-marker{display:none}.svp summary::after{content:"▾";color:var(--teal)}.svp[open] summary::after{content:"▴"}
+.svpl{max-height:230px;overflow:auto;margin-top:8px;display:grid;gap:2px}.svpo{display:flex;gap:10px;align-items:center;font-size:14px;padding:6px 2px;cursor:pointer}.svpo input{width:18px;height:18px;min-height:0;margin:0;flex:none}
+.ncres{background:var(--bg);border-radius:20px;padding:18px;margin-top:14px;text-align:center}.ncres .dccod{font-size:28px;display:block;margin:4px 0 6px}.ncres .acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.nct{grid-template-columns:repeat(3,1fr)!important}.ncu{display:flex;flex-direction:column;gap:6px;margin:6px 0}.ncu label{display:flex;gap:8px;align-items:center;font-size:14px}.ncu input[type=radio]{width:18px;height:18px;min-height:0;margin:0}
 .dch{font:600 12.5px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:16px 0 4px}
 #dcModal .tabsb{margin:12px 0 4px}
 #fiSub a{color:var(--teal)}
@@ -665,7 +669,7 @@ setTimeout(window.__splOff,8000)})();</script>
 <div id="dcModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dcTitle">
  <div class="mbox" style="max-width:520px">
   <div class="mhead"><h3 id="dcTitle">Códigos de descuento</h3><button type="button" class="x" data-dcclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <div class="tabsb" id="dcSeg" role="tablist"><button type="button" role="tab" data-dctab="cum">🎂 Cumpleaños</button><button type="button" role="tab" data-dctab="fiel">💝 Clientas fieles</button><button type="button" role="tab" data-dctab="ref">📣 Recomendación</button><button type="button" role="tab" data-dctab="cods">🏷️ Códigos creados</button></div>
+  <div class="tabsb" id="dcSeg" role="tablist"><button type="button" role="tab" data-dctab="cum">🎂 Cumpleaños</button><button type="button" role="tab" data-dctab="fiel">💝 Clientas fieles</button><button type="button" role="tab" data-dctab="ref">📣 Recomendación</button><button type="button" role="tab" data-dctab="ext">🌸 Te extrañamos</button><button type="button" role="tab" data-dctab="nuevo">✨ Crear código</button><button type="button" role="tab" data-dctab="cods">🏷️ Códigos creados</button></div>
   <div id="dcBody"></div>
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-dcclose>Cerrar</button>
  </div>
@@ -1285,16 +1289,16 @@ async function bkAuto(){
 // --- política de cambios y cancelaciones ---
 const POL_SUG='Si necesitas cambiar o cancelar tu hora, avísanos por WhatsApp con al menos 24 horas de anticipación y tu abono queda guardado para la nueva fecha. Si cancelas con menos de 24 horas o no asistes, el abono no se devuelve.';
 let polDraft=null;
-document.addEventListener('input',e=>{if(e.target.id==='polTxt')polDraft=e.target.value;else if(e.target.id==='clQ')clDraw();else if(e.target.id==='dcRefQ')dcRefDraw()});
+document.addEventListener('input',e=>{if(e.target.id==='polTxt')polDraft=e.target.value;else if(e.target.id==='clQ')clDraw();else if(e.target.id==='dcRefQ')dcRefDraw();else if(e.target.id==='ncQ')ncgDraw()});
 
-/* ---------- códigos de descuento: cumpleaños, clientas fieles y recomendación ----------
+/* ---------- códigos de descuento: cumpleaños, clientas fieles, recomendación, te extrañamos, campañas, bienvenida y regalos ----------
    Cada código (6 letras y números) se guarda en cfg.codigos y se publica cifrado en publico/agenda.dc (como las giftcards):
    sin el código no se puede leer ni ubicar. La clienta lo escribe al reservar y viaja en el servicio: "<servicio> · Dcto ABC123". */
-const DC_SAL='catarsis-descuento-v1',DC_AB='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',DC_RX=/^(.+) · Dcto ([A-Z0-9]{6})$/;
+const DC_SAL='catarsis-descuento-v1',DC_AB='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',DC_RX=/^(.+) · Dcto ([A-Z0-9]{4,10})$/;
 const dcValor=(v,p)=>Math.round((+v||0)*(100-(+p||0))/10000)*100;   // igual al de index.html
-const DCT={c:'Cumpleaños',f:'Clienta fiel',r:'Para recomendar',p:'Premio por recomendar'};
+const DCT={c:'Cumpleaños',f:'Clienta fiel',r:'Para recomendar',p:'Premio por recomendar',x:'Te extrañamos',k:'Campaña',b:'Bienvenida',g:'Regalo personal'};
 const CODS=()=>{const c=S.cfg.codigos;if(!c||typeof c!=='object'||Array.isArray(c))S.cfg.codigos={};return S.cfg.codigos};
-const DCF=()=>{const d=S.cfg.dcfg&&typeof S.cfg.dcfg==='object'?S.cfg.dcfg:(S.cfg.dcfg={});d.cum=Object.assign({p:15,d:30},d.cum);d.fiel=Object.assign({n:5,p:10,d:60},d.fiel);d.ref=Object.assign({pa:10,pr:15,d:60},d.ref);return d};
+const DCF=()=>{const d=S.cfg.dcfg&&typeof S.cfg.dcfg==='object'?S.cfg.dcfg:(S.cfg.dcfg={});d.cum=Object.assign({p:15,d:30},d.cum);d.fiel=Object.assign({n:5,p:10,d:60},d.fiel);d.ref=Object.assign({pa:10,pr:15,d:60},d.ref);d.ext=Object.assign({n:3,p:15,d:30},d.ext);['cum','fiel','ref','ext'].forEach(a=>{if(!Array.isArray(d[a].sv))d[a].sv=[]});return d};
 const primerN=n=>String(n||'').trim().split(/\s+/)[0]||'';
 const isoL=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 let dcTab='cum',dcAseg0=false;
@@ -1309,35 +1313,49 @@ function dcCrear(t,o,p,dias,extra){const c=dcNuevo(t==='r'?primerN(o.nm):'');
   CODS()[c]=Object.assign({t,k:o.k||'',nm:String(o.nm||'').slice(0,60),f:String(o.f||''),p:Math.max(1,Math.min(90,Math.round(+p)||10)),h:+dias>0?masDias(hoyIso(),+dias):'',at:Date.now()},extra||{});
   dcCifra(c);return c}
 async function dcCifra(c){const x=CODS()[c];if(!x||(x.pub&&x.pub.k)||!(window.crypto&&crypto.subtle))return;
-  try{const{k,key}=await dcKdf(c),iv=crypto.getRandomValues(new Uint8Array(12)),dat={t:x.t,p:x.p,h:x.h||'',nm:primerN(x.nm)};
+  try{const{k,key}=await dcKdf(c),iv=crypto.getRandomValues(new Uint8Array(12)),dat={t:x.t,p:x.p,h:x.h||'',nm:x.t==='k'||x.t==='b'?'':primerN(x.nm),...(Array.isArray(x.sv)&&x.sv.length?{sv:x.sv}:{}),...(x.mx>1?{mx:x.mx}:{})};
     const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(dat)));const y=CODS()[c];if(y){y.pub={k,i:b64(iv),c:b64(ct)};render()}}catch(e){}}
 async function dcAsegurar(){if(readOnly||!ref)return;const C=CODS(),lim=masDias(hoyIso(),-365);
   Object.keys(C).forEach(c=>{const x=C[c];if(!x||(x.t!=='r'&&((x.u&&x.u.d<lim)||(!x.u&&x.h&&x.h<lim))))delete C[c]});   // limpia códigos de hace más de un año
   for(const c of Object.keys(C))if(!(C[c].pub&&C[c].pub.k)&&(!C[c].h||C[c].h>=hoyIso()))await dcCifra(c)}
-const dcPub=()=>{const o={},lim=masDias(hoyIso(),-30);Object.values(CODS()).forEach(x=>{if(x&&x.pub&&x.pub.k&&(!x.h||x.h>=lim))o[x.pub.k]={i:x.pub.i,c:x.pub.c,...(x.t!=='r'&&x.u?{u:1}:{})}});return o};
+const dcPub=()=>{const o={},lim=masDias(hoyIso(),-30);Object.values(CODS()).forEach(x=>{if(x&&x.pub&&x.pub.k&&(!x.h||x.h>=lim))o[x.pub.k]={i:x.pub.i,c:x.pub.c,...(dcAgotado(x)?{u:1}:{})}});return o};
 const dcDe=(k,t)=>{const L=Object.entries(CODS()).filter(([,x])=>x&&x.k===k&&x.t===t).sort((a,b)=>(b[1].at||0)-(a[1].at||0));return L.length?L[0][0]:''};
-const dcEstado=x=>x.t==='r'?`${x.usos||0} uso${x.usos==1?'':'s'}`:x.u?`Usado el ${fCorta(x.u.d)}${x.u.nm?' · '+esc(primerN(x.u.nm)):''}`:x.h&&x.h<hoyIso()?`Vencido el ${fCorta(x.h)}`:x.h?`Disponible hasta el ${fCorta(x.h)}`:'Disponible';
-const dcVigente=x=>!!x&&x.t!=='r'&&!x.u&&!(x.h&&x.h<hoyIso());
+const dcMulti=x=>!!x&&x.t!=='r'&&+x.mx>1;
+const dcAgotado=x=>!!x&&x.t!=='r'&&(dcMulti(x)?(x.usos||0)>=+x.mx:!!x.u);
+const dcSvTxt=x=>Array.isArray(x&&x.sv)&&x.sv.length?' · solo '+x.sv.map(n=>esc(cortoL(n,40))).join(', '):'';
+const dcEstado=x=>dcMulti(x)?`${x.usos||0} de ${x.mx} usos${dcAgotado(x)?' · agotado':x.h&&x.h<hoyIso()?` · vencido el ${fCorta(x.h)}`:x.h?` · hasta el ${fCorta(x.h)}`:''}`:x.t==='r'?`${x.usos||0} uso${x.usos==1?'':'s'}`:x.u?`Usado el ${fCorta(x.u.d)}${x.u.nm?' · '+esc(primerN(x.u.nm)):''}`:x.h&&x.h<hoyIso()?`Vencido el ${fCorta(x.h)}`:x.h?`Disponible hasta el ${fCorta(x.h)}`:'Disponible';
+const dcVigente=x=>!!x&&x.t!=='r'&&!dcAgotado(x)&&!(x.h&&x.h<hoyIso());
 function dcDeRes(s){const m=DC_RX.exec(String(s||''));if(!m)return null;const nm=m[1];return{c:m[2],nm,sv:S.services.find(x=>x.n===nm||cortoL(x.n,60)===nm)||null}}
 // aplica el código de una reserva online: valida, calcula el valor y lo marca usado
 function dcUsar(dr,r,nid){
-  const x=CODS()[dr.c],base=dr.sv?(+dr.sv.v||0):0,cr=r.creada,f0=cr&&typeof cr.toDate==='function'?cr.toDate():typeof cr==='number'?new Date(cr):new Date(),fecha=isoL(f0);
+  const x=CODS()[dr.c],base=dr.sv?(+dr.sv.v||0):0,cr=r.creada,f0=cr&&typeof cr.toDate==='function'?cr.toDate():typeof cr==='number'?new Date(cr):new Date(),fecha=isoL(f0),k=ckDe(r.telefono,r.nombre);
   if(!x)return{dc:{c:dr.c,w:'el código no existe; quedó con el valor normal'},v:base};
-  if(x.t!=='r'&&x.u)return{dc:{c:dr.c,t:x.t,w:'el código ya estaba usado; quedó con el valor normal'},v:base};
+  if(dcAgotado(x))return{dc:{c:dr.c,t:x.t,w:dcMulti(x)?'el código ya llegó a su límite de usos; quedó con el valor normal':'el código ya estaba usado; quedó con el valor normal'},v:base};
   if(x.h&&x.h<fecha)return{dc:{c:dr.c,t:x.t,w:'el código estaba vencido; quedó con el valor normal'},v:base};
-  const dc={c:dr.c,t:x.t,p:+x.p||0,vo:base},k=ckDe(r.telefono,r.nombre);
+  if(Array.isArray(x.sv)&&x.sv.length&&!(dr.sv&&x.sv.includes(dr.sv.n)))return{dc:{c:dr.c,t:x.t,w:'el código no es válido para ese servicio; quedó con el valor normal'},v:base};
+  if(dcMulti(x)&&k&&(x.us||[]).some(u=>u.k===k))return{dc:{c:dr.c,t:x.t,w:'esta clienta ya había usado este código; quedó con el valor normal'},v:base};
+  const dc={c:dr.c,t:x.t,p:+x.p||0,vo:base};
   if(x.t==='r'){dc.ref=x.k;dc.rn=x.nm;if(k&&k===x.k)dc.w='es su propio código de recomendación';else if(k&&S.appts.some(a=>esCita(a)&&ckA(a)===k))dc.w='ya había venido antes y el descuento es para la primera visita';x.usos=(x.usos||0)+1}
-  else x.u={d:fecha,id:nid,nm:String(r.nombre||'').slice(0,60)};
+  else{if(x.t==='b'&&k&&S.appts.some(a=>esCita(a)&&ckA(a)===k))dc.w='ya había venido antes y el código de bienvenida es para la primera visita';
+    if(dcMulti(x)){x.usos=(x.usos||0)+1;(x.us=x.us||[]).push({d:fecha,id:nid,nm:String(r.nombre||'').slice(0,60),k})}
+    else x.u={d:fecha,id:nid,nm:String(r.nombre||'').slice(0,60)}}
   return{dc,v:dcValor(base,dc.p)}}
-function dcLibera(a){if(!a||!a.dc)return;const x=CODS()[a.dc.c];if(!x)return;if(x.t==='r'){if(a.dc.p)x.usos=Math.max(0,(x.usos||0)-1)}else if(x.u&&x.u.id==a.id)delete x.u}
-function dcMsgUrl(c){const x=CODS()[c];if(!x||!x.f)return '';const nom=primerN(x.nm),R=DCF().ref,L=[];
+function dcLibera(a){if(!a||!a.dc)return;const x=CODS()[a.dc.c];if(!x)return;if(x.t==='r'){if(a.dc.p)x.usos=Math.max(0,(x.usos||0)-1)}else if(dcMulti(x)){const L=x.us||[],i=L.findIndex(u=>u.id==a.id);if(i>=0){L.splice(i,1);x.usos=Math.max(0,(x.usos||0)-1)}}else if(x.u&&x.u.id==a.id)delete x.u}
+function dcTexto(c){const x=CODS()[c];if(!x)return '';const nom=primerN(x.nm),R=DCF().ref,L=[];
   if(x.t==='c')L.push(`🎂 ¡Feliz cumpleaños${nom?', '+nom:''}! En Catarsis Estética y Bienestar queremos celebrarte con un ${x.p}% de descuento en tu próxima visita.`);
   else if(x.t==='f')L.push(`💝 Hola${nom?' '+nom:''}, gracias por confiar en Catarsis Estética y Bienestar. Por ser una de nuestras clientas más fieles, te regalamos un ${x.p}% de descuento en tu próxima visita.`);
   else if(x.t==='p')L.push(`🎁 Hola${nom?' '+nom:''}, ¡gracias por recomendarnos${x.rn?' a '+primerN(x.rn):''}! Como agradecimiento, tienes un ${x.p}% de descuento en tu próxima visita.`);
+  else if(x.t==='x')L.push(`🌸 Hola${nom?' '+nom:''}, ¡te extrañamos en Catarsis Estética y Bienestar! Para que vuelvas a regalarte un momento para ti, tienes un ${x.p}% de descuento en tu próxima visita.`);
+  else if(x.t==='g')L.push(`🎁 Hola${nom?' '+nom:''}, tenemos un regalo para ti: un ${x.p}% de descuento en tu próxima visita en Catarsis Estética y Bienestar.`);
+  else if(x.t==='b')L.push(`✨ ¡Bienvenida a Catarsis Estética y Bienestar! En tu primera visita tienes un ${x.p}% de descuento.`);
+  else if(x.t==='k')L.push(`✨ ${x.nm?x.nm+': ':''}${x.p}% de descuento en Catarsis Estética y Bienestar.`);
   else L.push(`📣 Hola${nom?' '+nom:''}, ¿conoces a alguien que quiera atenderse en Catarsis Estética y Bienestar? Comparte tu código personal: quien reserve con él tiene un ${x.p}% de descuento en su primera visita, y cuando venga te regalamos un ${R.pr}% de descuento a ti 🎁`);
-  L.push('',x.t==='r'?`🏷️ Tu código para compartir: *${c}*`:`🏷️ Tu código: *${c}*${x.h?` (válido hasta el ${fmtD(x.h)}, un solo uso)`:''}`);
+  if(Array.isArray(x.sv)&&x.sv.length)L.push(`💆 Válido en: ${x.sv.join(', ')}.`);
+  const uso=x.t==='r'?'':dcMulti(x)?(x.t==='k'||x.t==='b'?'un uso por persona':'un solo uso'):'un solo uso';
+  L.push('',x.t==='r'?`🏷️ Tu código para compartir: *${c}*`:`🏷️ ${x.t==='k'||x.t==='b'?'Código':'Tu código'}: *${c}*${x.h?` (válido hasta el ${fmtD(x.h)}${uso?', '+uso:''})`:uso?` (${uso})`:''}`);
   L.push('',x.t==='r'?'Quien lo use reserva aquí y el descuento se aplica solo:':'📅 Reserva aquí y el descuento se aplica solo:',LINK()+'?codigo='+c,'','No acumulable con promociones, packs, masajes dúo ni giftcards.');
-  return wa(x.f)+'?text='+encodeURIComponent(L.join('\n'))}
+  return L.join('\n')}
+function dcMsgUrl(c){const x=CODS()[c];if(!x||!x.f)return '';return wa(x.f)+'?text='+encodeURIComponent(dcTexto(c))}
 // cumpleaños de los próximos días (y de la última semana, por si se pasó)
 function cumples(dias){const hoy=new Date();hoy.setHours(12,0,0,0);const cl=clientas(),out=[];
   Object.entries(FICHAS()).forEach(([k,x])=>{if(!x||!x.cu)return;const [mm,dd]=x.cu.split('-').map(Number);let d=new Date(hoy.getFullYear(),mm-1,dd,12),n=Math.round((d-hoy)/864e5);
@@ -1346,30 +1364,66 @@ function cumples(dias){const hoy=new Date();hoy.setHours(12,0,0,0);const cl=clie
   return out.sort((a,b)=>a.dias-b.dias)}
 const dcCfg=(a,campos)=>`<div class="row">${campos.map(([b,l])=>`<div><label class="f">${l}</label><input type="number" inputmode="numeric" data-dcf="${a}.${b}" value="${DCF()[a][b]}"></div>`).join('')}</div>`;
 const dcBtn=(t,k,o,lbl)=>o.f?`<button type="button" class="pill" data-dcsend="${t}" data-k="${esc(k)}"${readOnly?' disabled':''}>${lbl}</button>`:'<span class="mut" style="font-size:12.5px">Sin teléfono</span>';
+const svSel=(id,sel)=>{sel=Array.isArray(sel)?sel:[];const L=S.services.filter(x=>!x.p&&x.n);const t=sel.length?`${sel.length} servicio${sel.length==1?'':'s'}`:'Todos los servicios';
+  return `<details class="svp"><summary><span>Válido en: <b data-svsum="${id}">${t}</b></span></summary><div class="svpl">${L.map(x=>`<label class="svpo"><input type="checkbox" data-dcsv="${id}" value="${esc(x.n)}"${sel.includes(x.n)?' checked':''}${readOnly?' disabled':''}><span>${esc(x.n)}</span></label>`).join('')}</div><p class="dcnote" style="margin:6px 0 0">Si no marcas ninguno, el código sirve para todos los servicios.</p></details>`};
+const nc={t:'k',c:'',nm:'',p:15,h:'',mode:'1',mx:20,sv:[],done:'',msg:''};
+function ncSave(){const v=id=>{const e=document.getElementById(id);return e?e.value:null};let x;
+  if((x=v('ncCod'))!==null)nc.c=x;if((x=v('ncNm'))!==null)nc.nm=x;if((x=v('ncP'))!==null)nc.p=x;if((x=v('ncH'))!==null)nc.h=x;if((x=v('ncMx'))!==null)nc.mx=x;
+  const r=document.querySelector('input[name=ncMode]:checked');if(r)nc.mode=r.value}
+function ncHtml(){if(!nc.h)nc.h=masDias(hoyIso(),30);
+  const T={k:['Campaña','Un código que tú eliges (ej. VERANO15) para publicar en Instagram o enviar a quien quieras.'],b:['Bienvenida','Para clientas nuevas: es válido solo en su primera visita. Si alguien que ya vino lo usa, te avisamos.'],g:['Para una clienta','Un código personal de un solo uso que le envías a una clienta por WhatsApp.']};
+  let h=`<div class="tabsb nct" role="tablist">${Object.entries(T).map(([k,[l]])=>`<button type="button" role="tab" data-nct="${k}" class="${nc.t===k?'on':''}" aria-selected="${nc.t===k}">${l}</button>`).join('')}</div><p class="dcnote">${T[nc.t][1]}</p>`;
+  if(nc.t!=='g')h+=`<div class="row"><div><label class="f" for="ncCod">Código</label><input id="ncCod" maxlength="10" autocapitalize="characters" autocomplete="off" placeholder="Ej. ${nc.t==='b'?'BIENVENIDA':'VERANO15'}" value="${esc(nc.c)}"></div><div><label class="f" for="ncNm">Nombre (opcional)</label><input id="ncNm" maxlength="40" placeholder="Ej. Promo de verano" value="${esc(nc.nm)}"></div></div><p class="dcnote" style="margin-top:2px">De 4 a 10 letras o números. Si lo dejas vacío, se crea uno automático.</p>`;
+  h+=`<div class="row"><div><label class="f" for="ncP">Descuento (%)</label><input id="ncP" type="number" inputmode="numeric" min="1" max="90" value="${esc(nc.p)}"></div><div><label class="f" for="ncH">Válido hasta</label><input id="ncH" type="date" value="${esc(nc.h)}"></div></div>`+svSel('new',nc.sv);
+  if(nc.t!=='g')h+=`<div class="dch">Usos</div><div class="ncu"><label><input type="radio" name="ncMode" value="1"${nc.mode!=='m'?' checked':''}> Un solo uso (la primera persona que lo use)</label><label><input type="radio" name="ncMode" value="m"${nc.mode==='m'?' checked':''}> Varias personas, una vez cada una</label></div>${nc.mode==='m'?`<div class="row"><div><label class="f" for="ncMx">Máximo de personas</label><input id="ncMx" type="number" inputmode="numeric" min="2" max="999" value="${esc(nc.mx)}"></div><div></div></div>`:''}
+    <div class="err" role="alert">${esc(nc.msg)}</div><button type="button" class="btn" style="width:100%;margin-top:6px" data-nccrear${readOnly?' disabled':''}>Crear código</button>`;
+  else h+=`<div class="err" role="alert">${esc(nc.msg)}</div><div class="dch">Elige la clienta</div><input id="ncQ" type="search" placeholder="Buscar clienta por nombre o teléfono" autocomplete="off" aria-label="Buscar clienta"><div id="ncList"></div>`;
+  const y=nc.done&&CODS()[nc.done];
+  if(y)h+=`<div class="ncres" role="status"><small class="mut">Código creado</small><span class="dccod">${nc.done}</span><div style="font-size:14px">${DCT[y.t]||'Descuento'} · ${y.p}%${y.h?' · hasta el '+fCorta(y.h):''}${dcSvTxt(y)}</div><div class="mut" style="font-size:13px;margin-top:2px">${dcMulti(y)?`Hasta ${y.mx} personas, una vez cada una`:'Un solo uso'}</div><div class="acts"><button type="button" class="pill" data-dccopy="${nc.done}">📋 Copiar mensaje</button>${y.f?`<button type="button" class="pill" data-dcre="${nc.done}">💬 Enviar a ${esc(primerN(y.nm))}</button>`:`<button type="button" class="pill" data-dcshare="${nc.done}">💬 Compartir por WhatsApp</button>`}</div></div>`;
+  return h}
+function ncgDraw(){const el=document.getElementById('ncList');if(!el)return;const q=String((document.getElementById('ncQ')||{}).value||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
+  const L=Object.values(clientas()).filter(o=>!q||o.nm.toLowerCase().includes(q)||(qd.length>=3&&String(o.f).replace(/\D/g,'').includes(qd))).sort((a,b)=>b.ld.localeCompare(a.ld)).slice(0,8);
+  el.innerHTML=L.map(o=>`<div class="dcrow"><div class="ri"><b>${esc(o.nm||'Sin nombre')}</b><small>${o.n} visita${o.n==1?'':'s'}${o.ult?' · última '+fCorta(o.ult):''}</small></div><div class="acts">${o.f?`<button type="button" class="pill" data-ncg="${esc(o.k)}"${readOnly?' disabled':''}>🎁 Crear y enviar</button>`:'<span class="mut" style="font-size:12.5px">Sin teléfono</span>'}</div></div>`).join('')||'<p class="mut" style="font-size:14px">No encontramos clientas con esa búsqueda.</p>'}
+function ncCrear(o){if(readOnly)return;ncSave();nc.msg='';const C=CODS();let c=String(nc.c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const p=Math.round(+nc.p)||0;const err=m=>{nc.msg=m;dcDraw()};
+  if(p<1||p>90)return err('Escribe un descuento entre 1 y 90%.');
+  if(nc.t!=='g'&&c){if(c.length<4||c.length>10)return err('El código debe tener entre 4 y 10 letras o números.');if(C[c])return err('Ese código ya existe. Elige otro.')}
+  const h=/^\d{4}-\d{2}-\d{2}$/.test(nc.h||'')?nc.h:'';if(h&&h<hoyIso())return err('La fecha «Válido hasta» ya pasó.');
+  if(nc.t==='g'||!c)c=dcNuevo(nc.t==='b'?'BIE':'');
+  const mx=nc.t!=='g'&&nc.mode==='m'?Math.max(2,Math.min(999,Math.round(+nc.mx)||20)):0;
+  C[c]=Object.assign({t:nc.t,k:o?o.k:'',nm:o?String(o.nm||'').slice(0,60):String(nc.nm||'').trim().slice(0,40),f:o?String(o.f||''):'',p,h,at:Date.now()},nc.sv.length?{sv:nc.sv.slice()}:{},mx?{mx,usos:0,us:[]}:{});
+  dcCifra(c);render();nc.done=c;nc.c='';nc.nm='';nc.sv=[];nc.mode='1';nc.mx=20;dcDraw();showToast('Código '+c+' creado ✓');
+  if(o&&o.f){const u=dcMsgUrl(c);if(u)window.open(u,'_blank','noopener')}}
 function dcDraw(){
   dcSeg.querySelectorAll('button').forEach(b=>{const on=b.dataset.dctab===dcTab;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
   const D=DCF(),C=CODS();let h='';
   if(dcTab==='cum'){const L=cumples(30),nCu=Object.values(FICHAS()).filter(x=>x&&x.cu).length;
-    h=dcCfg('cum',[['p','Descuento (%)'],['d','Válido por (días)']])
+    h=dcCfg('cum',[['p','Descuento (%)'],['d','Válido por (días)']])+svSel('cum',D.cum.sv)
      +`<p class="dcnote">${nCu} clienta${nCu==1?'':'s'} con cumpleaños registrado. Lo escriben al reservar (opcional) o lo agregas en su ficha.</p><div class="dch">Próximos 30 días</div>`
      +(L.map(x=>{const c=dcDe(x.k,'c'),y=c&&C[c],env=y&&Date.now()-(y.at||0)<300*864e5;
        return `<div class="dcrow"><div class="ri"><b>${esc(x.nm||'Sin nombre')}</b><small>🎂 ${capi(fmtD(x.d))} · ${x.dias===0?'<b style="color:var(--amb)">¡hoy!</b>':x.dias>0?'en '+x.dias+' día'+(x.dias==1?'':'s'):'hace '+(-x.dias)+' día'+(x.dias==-1?'':'s')}</small>${env?`<span class="rcok">✓ Código <span class="dccod">${c}</span> enviado el ${fCorta(isoL(new Date(y.at)))}</span>`:''}</div><div class="acts">${env?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:dcBtn('c',x.k,x,'🎂 Enviar código')}</div></div>`}).join('')||'<p class="mut" style="font-size:14px">No hay cumpleaños en los próximos 30 días.</p>')}
   else if(dcTab==='fiel'){const L=Object.values(clientas()).filter(o=>o.n>=D.fiel.n).sort((a,b)=>b.n-a.n||b.tot-a.tot);
-    h=dcCfg('fiel',[['n','Desde (visitas)'],['p','Descuento (%)'],['d','Válido (días)']])
+    h=dcCfg('fiel',[['n','Desde (visitas)'],['p','Descuento (%)'],['d','Válido (días)']])+svSel('fiel',D.fiel.sv)
      +`<p class="dcnote">Clientas con ${D.fiel.n} visitas o más (confirmadas o pagadas).</p>`
      +(L.map(o=>{const c=dcDe(o.k,'f'),y=c&&C[c];
        return `<div class="dcrow"><div class="ri"><b>${esc(o.nm||'Sin nombre')}</b><small>${o.n} visitas · ${money(o.tot)}${o.ult?' · última '+fCorta(o.ult):''}</small>${y?`<span class="${dcVigente(y)?'rcok':'mut'}" style="font-size:12.5px;display:block">Último código <span class="dccod">${c}</span>: ${dcEstado(y)}</span>`:''}</div><div class="acts">${dcVigente(y)?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:dcBtn('f',o.k,o,'💝 Enviar código')}</div></div>`}).join('')||`<p class="mut" style="font-size:14px">Aún no hay clientas con ${D.fiel.n} visitas o más.</p>`)}
   else if(dcTab==='ref'){const P=S.appts.filter(a=>a.dc&&a.dc.t==='r'&&a.dc.p).sort((a,b)=>(b.d+b.t).localeCompare(a.d+a.t)),t0=hoyIso();
-    h=dcCfg('ref',[['pa','Descuento para quien llega (%)'],['pr','Premio para quien recomienda (%)'],['d','Validez del premio (días)']])
+    h=dcCfg('ref',[['pa','Descuento para quien llega (%)'],['pr','Premio para quien recomienda (%)'],['d','Validez del premio (días)']])+svSel('ref',D.ref.sv)
      +`<p class="dcnote">Cada clienta tiene su código para recomendar. Quien reserva con él tiene un ${D.ref.pa}% en su primera visita; cuando viene, le envías a quien la recomendó un premio del ${D.ref.pr}%.</p>`
      +`<div class="dch">Premios por enviar</div>`
      +(P.map(a=>{const lista=(a.d<t0||(a.d===t0&&toMin(a.t)+(+a.m||0)<=new Date().getHours()*60+new Date().getMinutes()))&&(a.p==='pagado'||a.sp||a.e==='confirmada'),rx=C[a.dc.c]||{};
        return `<div class="dcrow"><div class="ri"><b>${esc(a.c||'Sin nombre')}</b><small>Recomendada por ${esc(a.dc.rn||'—')} · ${fCorta(a.d)} ${a.t}</small>${a.dc.w?`<span class="dcw" style="display:block">⚠ ${esc(a.dc.w)}</span>`:''}${a.dc.pr?`<span class="rcok">✓ Premio <span class="dccod">${a.dc.pr}</span> enviado</span>`:''}</div><div class="acts">${a.dc.pr?(C[a.dc.pr]?`<button type="button" class="pill" data-dcre="${a.dc.pr}">Reenviar</button>`:''):lista&&rx.f?`<button type="button" class="pill" data-dcprem="${a.id}"${readOnly?' disabled':''}>🎁 Premio a ${esc(primerN(a.dc.rn))}</button>`:`<span class="mut" style="font-size:12.5px">${lista?'Sin teléfono':'Aún no viene'}</span>`}</div></div>`}).join('')||'<p class="mut" style="font-size:14px">Todavía nadie ha reservado con un código de recomendación.</p>')
      +`<div class="dch">Enviar código para recomendar</div><input id="dcRefQ" type="search" placeholder="Buscar clienta por nombre o teléfono" autocomplete="off" aria-label="Buscar clienta"><div id="dcRefList"></div>`}
+  else if(dcTab==='ext'){const lim=masDias(hoyIso(),-Math.round(D.ext.n*30.4)),L=Object.values(clientas()).filter(o=>o.ult&&o.ult<=lim&&!o.prox).sort((a,b)=>b.ult.localeCompare(a.ult));
+    h=dcCfg('ext',[['n','Sin venir hace (meses)'],['p','Descuento (%)'],['d','Válido (días)']])+svSel('ext',D.ext.sv)
+     +`<p class="dcnote">Clientas que no vienen hace ${D.ext.n} mes${D.ext.n==1?'':'es'} o más y no tienen una hora agendada: ${L.length}.</p>`
+     +(L.map(o=>{const c=dcDe(o.k,'x'),y=c&&C[c];
+       return `<div class="dcrow"><div class="ri"><b>${esc(o.nm||'Sin nombre')}</b><small>Última visita ${fCorta(o.ult)} · ${o.n} visita${o.n==1?'':'s'}</small>${y?`<span class="${dcVigente(y)?'rcok':'mut'}" style="font-size:12.5px;display:block">Último código <span class="dccod">${c}</span>: ${dcEstado(y)}</span>`:''}</div><div class="acts">${dcVigente(y)?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:dcBtn('x',o.k,o,'🌸 Enviar código')}</div></div>`}).join('')||'<p class="mut" style="font-size:14px">No hay clientas sin venir en ese plazo. ¡Buena señal!</p>')}
+  else if(dcTab==='nuevo'){h=ncHtml()}
   else{const L=Object.entries(C).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
-    h=`<p class="dcnote">${L.length} código${L.length==1?'':'s'}. Los de cumpleaños, clientas fieles y premios se usan una sola vez; los de recomendación, una vez por cada clienta nueva.</p>`
-     +(L.map(([c,x])=>`<div class="dcrow"><div class="ri"><span class="dccod">${c}</span> · ${DCT[x.t]||'Descuento'} ${x.p}%<small>${esc(x.nm||'Sin nombre')} · ${dcEstado(x)}</small></div><div class="acts">${x.f&&(x.t==='r'||dcVigente(x))?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:''}<button type="button" class="x" style="flex-basis:38px;height:38px" data-dcx="${c}" aria-label="Eliminar código ${c}"${readOnly?' disabled':''}>✕</button></div></div>`).join('')||'<p class="mut" style="font-size:14px">Aún no has creado códigos.</p>')}
-  dcBody.innerHTML=h;if(dcTab==='ref')dcRefDraw();
+    h=`<p class="dcnote">${L.length} código${L.length==1?'':'s'}. Los personales se usan una sola vez; los de recomendación, una vez por cada clienta nueva; los de campaña, según el límite que elegiste.</p>`
+     +(L.map(([c,x])=>`<div class="dcrow"><div class="ri"><span class="dccod">${c}</span> · ${DCT[x.t]||'Descuento'} ${x.p}%<small>${esc(x.nm||(x.t==='k'||x.t==='b'?'Código público':'Sin nombre'))} · ${dcEstado(x)}${dcSvTxt(x)}</small></div><div class="acts">${x.f&&(x.t==='r'||dcVigente(x))?`<button type="button" class="pill" data-dcre="${c}">Reenviar</button>`:!x.f&&dcVigente(x)?`<button type="button" class="pill" data-dcshare="${c}">Compartir</button>`:''}<button type="button" class="x" style="flex-basis:38px;height:38px" data-dcx="${c}" aria-label="Eliminar código ${c}"${readOnly?' disabled':''}>✕</button></div></div>`).join('')||'<p class="mut" style="font-size:14px">Aún no has creado códigos.</p>')}
+  dcBody.innerHTML=h;if(dcTab==='ref')dcRefDraw();if(dcTab==='nuevo'&&nc.t==='g')ncgDraw();
 }
 function dcRefDraw(){const el=document.getElementById('dcRefList');if(!el)return;const q=String((document.getElementById('dcRefQ')||{}).value||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
   const L=Object.values(clientas()).filter(o=>!q||o.nm.toLowerCase().includes(q)||(qd.length>=3&&String(o.f).replace(/\D/g,'').includes(qd))).sort((a,b)=>b.n-a.n||b.ld.localeCompare(a.ld)).slice(0,8);
@@ -1721,7 +1775,7 @@ function render(){
     +mt('data-gcopen','🎁 Vender giftcard','Con número único')
     +mt('data-clopen','👩 Clientas',nCl?`${nCl} · fichas y notas`:'Fichas y notas')
     +mt('data-rcopen','🔔 Recordatorios',rcN?`${rcN} por recordar mañana`:'Avisos del día siguiente',rcN?'dot':'')
-    +((n=>mt('data-dcmodal','💝 Códigos de descuento',n?`🎂 ${n} cumpleaños esta semana`:'Cumpleaños, clientas fieles y recomendación',n?'dot':''))(cumples(7).filter(x=>x.dias>=0).length))
+    +((n=>mt('data-dcmodal','💝 Códigos de descuento',n?`🎂 ${n} cumpleaños esta semana`:'Cumpleaños, campañas, te extrañamos y más',n?'dot':''))(cumples(7).filter(x=>x.dias>=0).length))
     +`</div><div class="mgh">Servicios y promociones</div><div class="mgrid">`
     +mt('data-promoopen','🏷️ Promociones',nPromo?`${nPromo} activa${nPromo==1?'':'s'}`:'Crear promoción o pack')
     +mt('data-madopen','🌿 Maderoterapia',`${nMad} tratamiento${nMad==1?'':'s'}${S.cfg.madera.on===false?' · oculto':''}`)
@@ -1876,11 +1930,16 @@ document.addEventListener('click',e=>{
   else if(el=g('data-dctab')){dcTab=el.dataset.dctab;dcDraw();return}
   else if(el=g('data-dcclose')){dcModal.hidden=true;return}
   else if(el=g('data-dcsend')){if(readOnly)return;const t=el.dataset.dcsend,k=el.dataset.k,o=Object.assign({k},FICHAS()[k]||{},clientas()[k]||{}),D=DCF();if(!o.f)return;
-    let c=t==='r'?dcDe(k,'r'):'';if(!c)c=dcCrear(t,o,t==='c'?D.cum.p:t==='f'?D.fiel.p:D.ref.pa,t==='c'?D.cum.d:t==='f'?D.fiel.d:0);
+    let c=t==='r'?dcDe(k,'r'):'';if(!c){const P={c:[D.cum.p,D.cum.d,D.cum.sv],f:[D.fiel.p,D.fiel.d,D.fiel.sv],x:[D.ext.p,D.ext.d,D.ext.sv],r:[D.ref.pa,0,D.ref.sv]}[t]||[10,30,[]];c=dcCrear(t,o,P[0],P[1],P[2]&&P[2].length?{sv:P[2].slice()}:null)}
     window.open(dcMsgUrl(c),'_blank','noopener');render();dcDraw();if(!fiModal.hidden)fiCodsDraw();showToast('Código '+c+' creado ✓');return}
+  else if(el=g('data-nct')){ncSave();nc.t=el.dataset.nct;nc.msg='';nc.done='';dcDraw();return}
+  else if(el=g('data-nccrear')){ncCrear(null);return}
+  else if(el=g('data-ncg')){const k=el.dataset.ncg,o=Object.assign({k},FICHAS()[k]||{},clientas()[k]||{});if(!o.f)return;ncCrear(o);return}
+  else if(el=g('data-dcshare')){const t=dcTexto(el.dataset.dcshare);if(t)window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener');return}
+  else if(el=g('data-dccopy')){const t=dcTexto(el.dataset.dccopy);(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>showToast('Mensaje copiado ✓')).catch(()=>{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy');showToast('Mensaje copiado ✓')}catch(_){}a.remove()});return}
   else if(el=g('data-dcre')){const u=dcMsgUrl(el.dataset.dcre);if(u)window.open(u,'_blank','noopener');return}
   else if(el=g('data-dcprem')){if(readOnly)return;const a=S.appts.find(x=>x.id==el.dataset.dcprem);if(!a||!a.dc||a.dc.pr)return;const rx=CODS()[a.dc.c]||{},o={k:a.dc.ref,nm:a.dc.rn||rx.nm||'',f:rx.f||''};if(!o.f)return;
-    const c=dcCrear('p',o,DCF().ref.pr,DCF().ref.d,{rn:a.c||''});a.dc.pr=c;window.open(dcMsgUrl(c),'_blank','noopener');render();dcDraw();showToast('Premio '+c+' creado ✓');return}
+    const c=dcCrear('p',o,DCF().ref.pr,DCF().ref.d,Object.assign({rn:a.c||''},DCF().ref.sv.length?{sv:DCF().ref.sv.slice()}:{}));a.dc.pr=c;window.open(dcMsgUrl(c),'_blank','noopener');render();dcDraw();showToast('Premio '+c+' creado ✓');return}
   else if(el=g('data-dcx')){const c=el.dataset.dcx,x=CODS()[c];if(!x)return;askConfirm('Eliminar código',`¿Eliminar el código ${c}${x.nm?' de '+x.nm:''}? Ya no se podrá usar en la página de reservas.`,()=>{delete CODS()[c];render();dcDraw()});return}
   else if(el=g('data-dcquitar')){const a=S.appts.find(x=>x.id==el.dataset.dcquitar);if(a&&a.dc){askConfirm('Quitar descuento',`¿Quitar el descuento del código ${a.dc.c}? La hora vuelve a su valor normal (${money(+a.dc.vo||a.v)}).`,()=>{if(a.dc.p&&+a.dc.vo>0)a.v=+a.dc.vo;dcLibera(a);delete a.dc;render();showToast('Descuento quitado')})}return}
   else if(el=g('data-rcopen')){rcDia=1;rcDraw();rcModal.hidden=false;return}
@@ -2062,6 +2121,9 @@ document.addEventListener('change',e=>{
   if(e.target&&e.target.dataset&&e.target.dataset.pgcap!==undefined){const x=pgM&&pgM.gal.find(x=>x.id===e.target.dataset.pgcap);if(x&&!readOnly){x.c=e.target.value.trim().slice(0,50);pgSaveM().then(()=>showToast('Nombre guardado ✓')).catch(()=>pgMsg('No se pudo guardar el nombre.'))}return}
   if(e.target&&(e.target.id==='baFA'||e.target.id==='baFD')){baFile(e.target,e.target.id==='baFA'?'a':'d');return}
   const t=e.target,d=t.dataset;
+  if(d.dcsv!==undefined){const id=d.dcsv,L=[...document.querySelectorAll(`input[data-dcsv="${id}"]:checked`)].map(i=>i.value);if(id==='new'){nc.sv=L}else{const D=DCF();D[id].sv=L;render();showToast('Guardado ✓')}
+    const sm=document.querySelector(`[data-svsum="${id}"]`);if(sm)sm.textContent=L.length?`${L.length} servicio${L.length==1?'':'s'}`:'Todos los servicios';return}
+  if(t.name==='ncMode'){ncSave();dcDraw();return}
   if(d.dcf!==undefined){const [a,b]=d.dcf.split('.'),D=DCF(),mx=b==='d'?365:b==='n'?100:90;D[a][b]=Math.max(1,Math.min(mx,Math.round(+t.value)||D[a][b]));t.value=D[a][b];render();dcDraw();showToast('Guardado ✓');return}
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
   else if(t.id==='cat'){render();fill();return}
