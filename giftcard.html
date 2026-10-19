@@ -26,7 +26,7 @@ img{width:100%;display:block;border-radius:14px;margin:14px 0;box-shadow:0 8px 2
 <a class="btn alt" id="dl" download="giftcard-catarsis.jpg" hidden>⬇ Descargar imagen</a>
 <div class="err" id="err" role="alert"></div>
 <script>
-// Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros
+// Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros (el número va en la casilla «Código de canje», abajo a la derecha)
 const GC_PLANTILLA='giftcard-plantilla.jpg';
 function gcImagen(dat){
   const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA});
@@ -39,7 +39,7 @@ function gcImagen(dat){
       if(x.measureText(t).width>w){while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);t=t.trimEnd()+'…'}
       x.fillStyle='#3b2f26';x.textBaseline='middle';x.fillText(t,x0*k,(cy+1)*k)};
     put(dat.para,127,306,233.5);put(dat.de,377,569,233.5);put(dat.vale,163,569,283.5);put(dat.hasta,203,569,333.5);
-    if(dat.n){x.font=`600 ${12.5*k}px ${fam}`;try{x.letterSpacing=(1.6*k)+'px'}catch(_){}x.fillStyle='#86672b';x.textAlign='center';x.textBaseline='middle';x.fillText('N° '+dat.n,332*k,195*k);x.textAlign='left';try{x.letterSpacing='0px'}catch(_){}}
+    if(dat.n){x.font=`700 ${15*k}px ${fam}`;try{x.letterSpacing=(1.5*k)+'px'}catch(_){}x.fillStyle='#3b2f26';x.textAlign='center';x.textBaseline='middle';x.fillText(String(dat.n),577.5*k,431*k);x.textAlign='left';try{x.letterSpacing='0px'}catch(_){}}
     return c});
 }
 const gcTexto=d=>[`🎁 ${d.para?'¡'+d.para+', tienes':'¡Tienes'} una giftcard de regalo en Catarsis Estética y Bienestar${d.de?' de parte de '+d.de:''}!`,`Vale por: ${d.vale}`,`Válida hasta el ${d.hasta}`,`Una vez vencido el plazo, no se devuelve el dinero ni se agendan horas fuera de plazo.`,...(d.n?[`🔢 Número de tu giftcard: ${d.n}`,'',`📅 Reserva tu hora aquí: elige la categoría «Giftcard» e ingresa tu número.`,d.link]:[]),'',`📍 Lord Cochrane 450, Osorno`].join('\n');
