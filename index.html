@@ -111,15 +111,47 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justif
 .fab{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;display:flex;gap:10px;opacity:0;transform:translateY(120%);pointer-events:none;transition:opacity .3s,transform .3s}
 .fab.on{opacity:1;transform:none;pointer-events:auto}.fab .btn{flex:1;box-shadow:var(--shadow)}.fab .btn.o{background:var(--canvas)}
 @media(min-width:900px){.fab{display:none}}
+
+/* ===== Animaciones (inspiradas en el estilo de referencia: tramado de puntos, titulares que suben, superficies planas que se elevan) ===== */
+@keyframes kb{from{transform:scale(1.12)}to{transform:scale(1)}}
+@keyframes up{to{transform:none}}
+@keyframes fi{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes drift{from{background-position:0 0}to{background-position:28px 28px}}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:.9}}
+.hero .bg{animation:kb 2.6s cubic-bezier(.2,.7,.2,1) both}
+.ht{position:absolute;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(circle,rgba(230,196,140,.55) 1.1px,transparent 1.7px);background-size:14px 14px;-webkit-mask-image:linear-gradient(200deg,#000 0%,rgba(0,0,0,.6) 30%,transparent 62%);mask-image:linear-gradient(200deg,#000 0%,rgba(0,0,0,.6) 30%,transparent 62%);animation:drift 9s linear infinite,glow 6s ease-in-out infinite}
+.fin .ht{z-index:0;-webkit-mask-image:radial-gradient(circle at 50% 0%,#000 0%,transparent 70%);mask-image:radial-gradient(circle at 50% 0%,#000 0%,transparent 70%)}
+.hx .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.08em;margin-bottom:-.08em}
+.hx .w>span{display:inline-block;transform:translateY(110%);animation:up .95s cubic-bezier(.2,.75,.15,1) forwards;animation-delay:calc(.25s + var(--i)*.09s)}
+.hero .eb{animation:fi .8s .1s both}.hero p.sub{animation:fi .9s .85s both}.hero .cta{animation:fi .9s 1s both}.hero .stats{animation:fi .9s 1.15s both}
+.js-anim .rv{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.js-anim .rv.in{opacity:1;transform:none}
+.btn{transition:transform .25s cubic-bezier(.2,.7,.2,1),filter .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.card,.step{transition:transform .45s cubic-bezier(.2,.7,.2,1),background .3s}
+@media(hover:hover){.card:hover,.step:hover{transform:translateY(-6px)}#servicios .card:hover{background:#E6D8BC}}
+.card .ft a{display:inline-block;transition:transform .25s}.card:hover .ft a{transform:translateX(4px)}
+.trk img{transition:transform .8s cubic-bezier(.2,.7,.2,1)}@media(hover:hover){.trk figure:hover img{transform:scale(1.06)}}
+.faq summary::after{content:"+";transition:transform .35s cubic-bezier(.2,.7,.2,1)}.faq details[open] summary::after{content:"+";transform:rotate(45deg)}
+.faq details[open] p{animation:fi .45s both}
+.tags span{transition:color .2s}.tags span:hover{color:var(--seal)}
+.js-anim .tags span{opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s;transition-delay:calc(var(--k,0)*.06s)}.js-anim .tags.in span{opacity:1;transform:none}
+@media(min-width:900px){
+ header.top{transition:background .35s,border-color .35s}
+ header.top .wrap{transition:max-width .5s cubic-bezier(.2,.7,.2,1),height .4s,background .4s,border-radius .5s,margin .4s,padding .4s}
+ header.top.sc{background:transparent;border-bottom-color:transparent;backdrop-filter:none}
+ header.top.sc .wrap{max-width:1120px;height:60px;margin-top:10px;background:rgba(237,226,204,.94);backdrop-filter:blur(10px);border-radius:800px;padding:0 10px 0 26px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.hx .w>span{transform:none}.js-anim .rv,.js-anim .tags span{opacity:1;transform:none}}
 </style></head><body>
 <div class="ann">Reserva online en minutos · Lunes a viernes de 10:00 a 19:00 · <a href="https://agenda.catarsisosorno.cl/reserva.html">Ver horas disponibles</a></div>
 <header class="top" id="hd"><div class="wrap"><a href="#" aria-label="Catarsis, inicio"><img src="inicio-img/logo-h-t.png" alt="Catarsis Estética y Bienestar" height="44"></a>
 <nav aria-label="Secciones"><a href="#servicios">Servicios</a><a href="#como">Cómo reservar</a><a href="#galeria">Galería</a><a href="#preguntas">Preguntas</a><a href="#ubicacion">Ubicación</a></nav>
 <div class="act"><a class="ghost" href="https://wa.me/56942081582?text=Hola%2C%20quiero%20consultar%20por%20una%20hora">WhatsApp</a><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar</a></div></div></header>
 <main>
-<section class="hero"><div class="bg" role="img" aria-label="Masaje de espalda en Catarsis"></div><div class="wrap">
+<section class="hero"><div class="bg" role="img" aria-label="Masaje de espalda en Catarsis"></div><div class="ht" aria-hidden="true"></div><div class="wrap">
 <span class="eb">Estética y bienestar · Osorno</span>
-<h1>Un momento para ti, <i>en Osorno.</i></h1>
+<h1 class="hx" aria-label="Un momento para ti, en Osorno."><span class="w"><span style="--i:0">Un</span></span> <span class="w"><span style="--i:1">momento</span></span> <span class="w"><span style="--i:2">para</span></span> <span class="w"><span style="--i:3">ti,</span></span> <i><span class="w"><span style="--i:4">en</span></span> <span class="w"><span style="--i:5">Osorno.</span></span></i></h1>
 <p class="sub">Masajes, drenaje linfático, limpiezas faciales y tratamientos estéticos con atención personalizada.</p>
 <div class="cta"><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar mi hora</a><a class="btn lt" href="https://wa.me/56942081582?text=Hola%2C%20quiero%20consultar%20por%20una%20hora">Escribir por WhatsApp</a></div>
 <div class="stats"><div><b>Cochrane 450</b><span>Osorno</span></div><div><b>Lun a Vie</b><span>10:00 a 19:00</span></div><div><b>Online</b><span>Reserva sin llamadas</span></div></div>
@@ -180,7 +212,7 @@ t.addEventListener('scroll',mark,{passive:true});addEventListener('resize',dots)
 <div class="map"><iframe loading="lazy" title="Mapa de Catarsis en Cochrane 450, Osorno" src="https://www.google.com/maps?q=Cochrane+450,+Osorno&output=embed"></iframe></div></div>
 </div></section>
 
-<section class="fin"><div class="wrap"><span class="eb">Catarsis · Estética y bienestar</span><h2>Tu cuerpo te lo va a <i>agradecer</i></h2><p>Reserva hoy tu momento de bienestar, sin llamadas y en menos de un minuto.</p><div class="cta"><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar mi hora</a><a class="btn lt" href="https://wa.me/56942081582">Escribir por WhatsApp</a></div></div></section>
+<section class="fin"><div class="ht" aria-hidden="true"></div><div class="wrap"><span class="eb">Catarsis · Estética y bienestar</span><h2>Tu cuerpo te lo va a <i>agradecer</i></h2><p>Reserva hoy tu momento de bienestar, sin llamadas y en menos de un minuto.</p><div class="cta"><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar mi hora</a><a class="btn lt" href="https://wa.me/56942081582">Escribir por WhatsApp</a></div></div></section>
 </main>
 <footer><div class="wrap"><img src="inicio-img/logo-h-t.png" alt="Catarsis"><nav aria-label="Pie"><a href="#servicios">Servicios</a><a href="#como">Cómo reservar</a><a href="#preguntas">Preguntas</a><a href="https://agenda.catarsisosorno.cl/reserva.html">Reservar</a></nav><span>© Catarsis Estética y Bienestar · Osorno</span></div></footer>
 <script src="firebase-config.js" onerror="void 0"></script>
@@ -202,4 +234,11 @@ G('ga_pgweb').then(function(m){if(!m)return;
 </script>
 <div class="fab"><a class="btn o" href="https://wa.me/56942081582">WhatsApp</a><a class="btn" href="https://agenda.catarsisosorno.cl/reserva.html">Reservar</a></div>
 <script>(function(){var h=document.getElementById('hd');var fb=document.querySelector('.fab');function f(){var y=window.scrollY>140;h.classList.toggle('sc',y);if(fb)fb.classList.toggle('on',y)}f();addEventListener('scroll',f,{passive:true})})()</script>
+<script>(function(){if(matchMedia('(prefers-reduced-motion: reduce)').matches||!('IntersectionObserver' in window))return;
+document.documentElement.classList.add('js-anim');
+var sel=['.sh','#servicios .card','.step','#como .btn','.gc','.quote','.faq details','.loc>*','.fin .wrap>*','.note'];
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px',threshold:.08});
+sel.forEach(function(q){var L=document.querySelectorAll(q);[].forEach.call(L,function(el,i){el.classList.add('rv');el.style.setProperty('--d',Math.min(i%3,3)*0.12+'s');io.observe(el)})});
+var tg=document.querySelector('.tags');if(tg){[].forEach.call(tg.children,function(c,i){c.style.setProperty('--k',i)});io.observe(tg)}
+setTimeout(function(){[].forEach.call(document.querySelectorAll('.rv:not(.in)'),function(el){var r=el.getBoundingClientRect();if(r.top<innerHeight&&r.bottom>0)el.classList.add('in')})},1200)})()</script>
 </body></html>
