@@ -29,7 +29,7 @@ img{width:100%;display:block;border-radius:14px;margin:14px 0;box-shadow:0 8px 2
 // Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros (el número va en la casilla «Código de canje», abajo a la derecha)
 const GC_PLANTILLA='giftcard-plantilla.jpg';
 function gcImagen(dat){
-  const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA});
+  const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA+'?nc='+Date.now()});   // siempre la plantilla más nueva (sin copia guardada)
   const fuente=document.fonts&&document.fonts.load?document.fonts.load('500 38px Barlow').catch(()=>{}):Promise.resolve();
   return Promise.all([carga,fuente]).then(([im])=>{
     const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);

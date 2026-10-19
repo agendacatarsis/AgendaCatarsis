@@ -17,6 +17,7 @@ self.addEventListener('fetch',e=>{
     return;
   }
   if(u.origin!==location.origin)return;
+  if(u.searchParams.has('nc'))return;   // pedido «sin copia» (ej. plantilla de la giftcard): directo a internet
   if(/\.(jpe?g|png|webp|gif|svg|ico)$/i.test(u.pathname)){
     e.respondWith(caches.open(C).then(c=>c.match(r).then(m=>{
       const red=fetch(r).then(res=>{if(res.ok)c.put(r,res.clone()).catch(()=>{});return res});
