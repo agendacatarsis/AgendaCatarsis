@@ -625,7 +625,7 @@ window.__splOff=function(){};</script>
 <div id="rsModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="rsTitle">
  <div class="mbox" style="max-width:560px">
   <div class="mhead"><h3 id="rsTitle">Imágenes de reservas</h3><button type="button" class="x" data-rsclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
-  <p class="mut" style="font-size:13.5px;margin:4px 0 6px">Cambia las fotos de tu página de reservas: el collage de arriba y la imagen de la giftcard. Se publican al tiro; si no ves el cambio, recarga la página.</p>
+  <p class="mut" style="font-size:13.5px;margin:4px 0 6px">Cambia las fotos de tu página de reservas: el collage de arriba y la imagen de la giftcard (también se usa como diseño de las giftcards que vendes y envías). Se publican al tiro; si no ves el cambio, recarga la página.</p>
   <div id="rsList"></div>
   <input type="file" id="rsFile" accept="image/*" hidden>
   <div class="mut" id="rsMsgBox" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>
@@ -1140,7 +1140,7 @@ async function rsProc(file,mode){
     const nw=im.naturalWidth,nh=im.naturalHeight;if(!nw||!nh)throw new Error('img');
     const enc=(sx,sy,sw,sh,W,H,lim)=>{let d;for(let t=0;t<6;t++){const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,sx,sy,sw,sh,0,0,W,H);let q=.82;d=c.toDataURL('image/jpeg',q);while(d.length>lim&&q>.45){q-=.07;d=c.toDataURL('image/jpeg',q)}if(d.length<=lim)break;W=Math.round(W*.85);H=Math.round(H*.85)}return d};
     const k=Math.min(1,1100/Math.max(nw,nh)),big=enc(0,0,nw,nh,Math.round(nw*k),Math.round(nh*k),330000);
-    if(mode==='gc')return{d:big};
+    if(mode==='gc'){const r=1322/940;let sx=0,sy=0,sw=nw,sh=nh;if(sw/sh>r){sw=sh*r;sx=(nw-sw)/2}else{sh=sw/r;sy=(nh-sh)/2}return{d:enc(sx,sy,sw,sh,1322,940,600000)}}
     const r=4/5;let sx=0,sy=0,sw=nw,sh=nh;if(sw/sh>r){sw=sh*r;sx=(nw-sw)/2}else{sh=sw/r;sy=(nh-sh)/2}
     return{d:big,m:enc(sx,sy,sw,sh,400,500,60000)}}
   finally{URL.revokeObjectURL(url)}}
@@ -2027,8 +2027,10 @@ function gcUpd(full){
 }
 // Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros (el número va en la casilla «Código de canje», abajo a la derecha)
 const GC_PLANTILLA='giftcard-plantilla.jpg';
+// si cambiaste la imagen en Menú → Imágenes de reservas → Giftcard, se usa esa; si no, el archivo de GitHub (siempre la versión más nueva)
+function gcPlantillaSrc(){return pgRef('ga_rsweb').get().then(d=>d.exists&&d.data().gc?pgRef('ga_rsi_gc').get().then(x=>x.exists&&x.data().d||null):null).catch(()=>null).then(u=>u||GC_PLANTILLA+'?nc='+Date.now())}
 function gcImagen(dat){
-  const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA+'?nc='+Date.now()});   // siempre la plantilla más nueva (sin copia guardada)
+  const carga=gcPlantillaSrc().then(src=>new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=src}));
   const fuente=document.fonts&&document.fonts.load?document.fonts.load('500 38px Inter').catch(()=>{}):Promise.resolve();
   return Promise.all([carga,fuente]).then(([im])=>{
     const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);

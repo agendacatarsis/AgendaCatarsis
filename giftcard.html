@@ -25,11 +25,16 @@ img{width:100%;display:block;border-radius:14px;margin:14px 0;box-shadow:0 8px 2
 <button class="btn" id="share" hidden>📲 Compartir por WhatsApp</button>
 <a class="btn alt" id="dl" download="giftcard-catarsis.jpg" hidden>⬇ Descargar imagen</a>
 <div class="err" id="err" role="alert"></div>
+<script src="firebase-config.js" onerror="void 0"></script>
 <script>
 // Imagen de la giftcard: plantilla giftcard-plantilla.jpg + datos escritos en los recuadros (el número va en la casilla «Código de canje», abajo a la derecha)
 const GC_PLANTILLA='giftcard-plantilla.jpg';
+function gcPlantillaSrc(){const C=window.FIREBASE_CONFIG;if(!C||!C.projectId||!C.apiKey)return Promise.resolve(GC_PLANTILLA+'?nc='+Date.now());
+  const B='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(C.projectId)+'/databases/(default)/documents/publico/',K='?key='+encodeURIComponent(C.apiKey);
+  const G=id=>fetch(B+id+K).then(r=>r.ok?r.json():null).then(j=>j&&j.fields||null);
+  return G('ga_rsweb').then(f=>f&&f.gc&&f.gc.booleanValue?G('ga_rsi_gc').then(x=>x&&x.d&&x.d.stringValue||null):null).catch(()=>null).then(u=>u&&/^data:image\//.test(u)?u:GC_PLANTILLA+'?nc='+Date.now())}
 function gcImagen(dat){
-  const carga=new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=GC_PLANTILLA+'?nc='+Date.now()});   // siempre la plantilla más nueva (sin copia guardada)
+  const carga=gcPlantillaSrc().then(src=>new Promise((ok,ko)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ko(new Error('plantilla'));im.src=src}));
   const fuente=document.fonts&&document.fonts.load?document.fonts.load('500 38px Barlow').catch(()=>{}):Promise.resolve();
   return Promise.all([carga,fuente]).then(([im])=>{
     const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);
