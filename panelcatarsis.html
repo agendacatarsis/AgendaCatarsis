@@ -426,7 +426,8 @@ window.__splOff=function(){};</script>
   <label class="f" for="cat">Categoría</label><select id="cat"></select>
   <div id="madBox" class="madbox" hidden><div class="madbh"><b>Cliente de maderoterapia</b><small id="madCnt"></small></div><div id="madCliList" class="mclis" role="radiogroup" aria-label="Cliente de maderoterapia"></div></div>
   <div id="gcBox" class="madbox" hidden><div class="madbh"><b>Giftcard a cobrar</b><small id="gcCnt"></small></div><div id="gcList" class="mclis" role="radiogroup" aria-label="Giftcard a cobrar"></div></div>
-  <label class="f" for="svc" style="margin-top:8px">Servicio</label><select id="svc"></select>
+  <label class="f" for="svc" style="margin-top:8px" id="svcLbl">Servicio</label><select id="svc"></select>
+  <div id="duoBox" hidden><label class="f" for="svc2" style="margin-top:8px">Masaje persona 2</label><select id="svc2"></select><div class="mut" id="duoHint" style="font-size:12.5px;margin-top:6px"></div></div>
   <div class="row r3"><div><label class="f" for="time">Hora</label><select id="time" aria-describedby="timeHint"></select><input type="time" id="timeX" class="hide" aria-label="Otra hora" style="margin-top:6px"></div>
     <div><label class="f" for="dur">Duración (min)</label><input type="number" id="dur" min="5" step="5"></div>
     <div><label class="f" for="price">Valor ($)</label><input type="number" id="price" min="0" step="500"></div></div>
@@ -744,7 +745,10 @@ const LP_DEF=[
  {n:'Verrugas',m:90,v:55000,ev:1,c:LP,g:'',ds:'El valor depende del tamaño y zona a tratar. Reserva tu hora de evaluación.'},
  {n:'Cicatriz',m:90,v:0,ev:1,c:LP,g:'',ds:'Tratamiento estético localizado para mejorar la apariencia y textura de cicatrices. El valor depende del tamaño y zona a tratar. Reserva tu hora de evaluación.'}];
 let S={branches:['Catarsis Osorno'],thers:['Daniela Velásquez'],services:DEF,appts:[],branch:0,ther:0};
-try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+let BASE=null; // última versión de la nube que vio este equipo (ver «Sincronización segura»)
+try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o._b2&&typeof o._b2==='object')BASE=o._b2;
+  else if(o&&o._b&&o._b.a){const b=o._b,P=x=>x?JSON.parse(x):undefined;BASE={branches:P(b.b),thers:P(b.t),services:P(b.s),cfg:b.c?Object.fromEntries(Object.entries(b.c).map(([k,v])=>[k,P(v)])):undefined,appts:Object.values(b.a).map(P)}}
+  if(o){delete o._b;delete o._b2}S=Object.assign(S,o)}}catch(e){BASE=null}
 function migrate(){
   S.branches=S.branches.map(b=>b==='Mi sucursal'?'Catarsis Osorno':b);
   S.thers=S.thers.map(t=>t==='Terapeuta 1'?'Daniela Velásquez':t);
@@ -776,11 +780,75 @@ let wkS=new Date(mon),sel=iso(today),editing=false,custom=false,ref=null,skip=fa
 let deniedRead=false;
 function showDeny(u){deniedRead=true;denyBox.innerHTML=`<b>Esta cuenta no tiene acceso a la agenda.</b><div class="mut" style="margin-top:4px">Entraste como <b>${esc(u.email||'(sin correo)')}</b>. Si es tu cuenta, agrega este UID a la lista de <b>owner()</b> en las reglas de Firestore y toca Publicar:</div><code id="denyUid">${esc(u.uid)}</code><div class="row"><button class="pill" data-copyuid>Copiar UID</button><button class="pill" data-logout>Salir y entrar con otra cuenta</button></div>`;denyBox.hidden=false;sync.textContent='Sin acceso a la agenda'}
 const uidTag=u=>` Tu UID es: <code style="user-select:all;background:var(--tint);padding:2px 6px;border-radius:6px;word-break:break-all">${u.uid}</code> Pégalo en las reglas de Firestore.`;
-// mergeFields: reemplaza cada campo completo (así se borran días, horas o descuentos que quitaste) y conserva los demás campos del documento
-const push0=()=>ref.set({branches:S.branches,thers:S.thers,services:S.services,cfg:S.cfg,appts:S.appts},{mergeFields:['branches','thers','services','cfg','appts']}).catch(e=>{const u=firebase.auth().currentUser;sync.innerHTML=e.code==='permission-denied'&&u?'Sin permiso para guardar.'+uidTag(u):'No se pudo guardar en la nube ('+(e.code||'error')+')';return false});
-let pushP=Promise.resolve(),pubP=Promise.resolve();
-const push=()=>(pushP=push0());
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} if(ref&&!skip&&!readOnly)push();if(ref&&gotMain&&gotRes&&!readOnly)syncPublic()};
+// ── Sincronización entre equipos (panel abierto en varios teléfonos / computadores a la vez) ──
+// · BASE = la última versión de la nube que vio este equipo (se guarda junto al caché).
+// · Al guardar NO se reemplaza todo: se leen los datos actuales de la nube (transacción) y solo se aplican encima
+//   los cambios hechos AQUÍ (lo que difiere de BASE). Si dos equipos cambian cosas distintas se conservan ambas
+//   (horas, fichas, códigos, avisos, configuración…); si cambian exactamente lo mismo, gana el último en guardar.
+// · Lo que llega de otro equipo se mezcla con lo que este equipo aún no envía (sin internet se envía después).
+// · Si estás escribiendo en un campo del menú, la pantalla espera a que salgas de él para actualizarse.
+const cj=o=>o===undefined?'':JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);
+const cp=o=>o===undefined?undefined:JSON.parse(JSON.stringify(o));
+const FLD=['branches','thers','services','cfg','appts'];
+const esObj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
+// listas cuyos elementos tienen id (horas, avisos, fotos…) se mezclan elemento por elemento
+const kid=x=>!esObj(x)?null:x.id!==undefined&&x.id!==null?'id'+x.id:x.i!==undefined&&x.i!==null?'i'+x.i:null;
+function claves(arr){const n={},out=[];for(const x of arr){const k=kid(x);if(k===null)return null;n[k]=(n[k]||0)+1;out.push([n[k]>1?k+'#'+n[k]:k,x])}return out}
+// mezcla de 3 vías: b = base, l = este equipo, s = nube
+function m3(b,l,s){
+  const jb=cj(b),jl=cj(l),js=cj(s);
+  if(js===jb||js===jl)return l;    // la nube no cambió (o ya tiene lo mismo)
+  if(jl===jb)return s;             // solo cambió la nube
+  if(esObj(l)&&esObj(s)){const bo=esObj(b)?b:{},o={};
+    new Set([...Object.keys(s),...Object.keys(l),...Object.keys(bo)]).forEach(k=>{const v=m3(bo[k],l[k],s[k]);if(v!==undefined)o[k]=v});return o}
+  if(Array.isArray(l)&&Array.isArray(s)){const bk=claves(Array.isArray(b)?b:[]),lk=claves(l),sk=claves(s);
+    if(bk&&lk&&sk){const B=new Map(bk),L=new Map(lk),S2=new Map(sk),out=[];
+      sk.forEach(([k,x])=>{if(L.has(k)){const v=m3(B.get(k),L.get(k),x);if(v!==undefined)out.push(v)}else if(!B.has(k))out.push(x)}); // borrado aquí → no se agrega
+      lk.forEach(([k,y])=>{if(S2.has(k))return;if(!B.has(k)||cj(y)!==cj(B.get(k)))out.push(y)}); // nuevo aquí, o editado aquí y borrado en otro equipo → se conserva
+      return out}}
+  return l}                        // ambos cambiaron el mismo dato: gana este equipo
+function mezcla(d){const o={};FLD.forEach(f=>{o[f]=d[f]===undefined?S[f]:m3(BASE[f],S[f],d[f])});
+  if(Array.isArray(o.appts)){const vis=new Set();o.appts=o.appts.filter(a=>!a||!a.rid||(!vis.has(a.rid)&&vis.add(a.rid)))} // una reserva web = una sola hora
+  return o}
+// aplica v sobre t sin cambiar los objetos que ya existen (las ventanas abiertas siguen apuntando a la misma hora)
+function rec(t,v){if(t===v)return t;
+  if(esObj(t)&&esObj(v)){Object.keys(t).forEach(k=>{if(!(k in v))delete t[k]});Object.keys(v).forEach(k=>{t[k]=rec(t[k],v[k])});return t}
+  if(Array.isArray(t)&&Array.isArray(v)){const tk=claves(t),vk=claves(v);if(tk&&vk){const T=new Map(tk);return vk.map(([k,x])=>T.has(k)?rec(T.get(k),x):x)}}
+  return v}
+const pick=d=>{const o={};FLD.forEach(f=>{if(d&&d[f]!==undefined)o[f]=d[f]});return o};
+if(!BASE)BASE=cp(pick(S)); // sin copia base guardada: se toma el caché como punto de partida
+const guardaLocal=()=>{try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},S,{_b2:BASE})))}catch(e){}};
+function setBase(d){BASE=cp(pick(d));guardaLocal()}
+const cambiosLocales=()=>FLD.some(f=>cj(S[f])!==cj(BASE[f]));
+// toma los datos de la nube conservando los cambios locales que aún no se envían; true si cambió lo que se ve
+function adopta(d){const antes=cj(FLD.map(f=>S[f])),m=mezcla(d);setBase(d);FLD.forEach(f=>{if(m[f]!==undefined)S[f]=rec(S[f],m[f])});return cj(FLD.map(f=>S[f]))!==antes}
+// redibuja con datos de otro equipo sin interrumpir lo que estás escribiendo
+let rPend=false;
+const escribiendo=()=>{const a=document.activeElement;if(!a||a===document.body)return false;
+  const campo=a.isContentEditable||a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(button|submit|reset|checkbox|radio|file|range|color|image)$/i.test(a.type));
+  return campo&&(edit.contains(a)||['svc','cat','time'].includes(a.id)||(!rcModal.hidden&&rcModal.contains(a)))};
+function pintaRemoto(){if(escribiendo()){rPend=true;return}rPend=false;const t0=getTime();skip=true;render();skip=false;
+  const t1=getTime();if(t0&&t0!=='__otra'&&t1!==t0&&client.value.trim())showToast(`La hora ${t0} se acaba de ocupar desde otro equipo. Elige otra.`)}
+function refrescar(){if(escribiendo()){rPend=true;save()}else render()}
+document.addEventListener('focusout',()=>{if(rPend)setTimeout(()=>{if(rPend&&!escribiendo())pintaRemoto()},300)});
+let pushQ=Promise.resolve(true),pushErr=false;
+function push0(force){
+  if(!ref||readOnly)return Promise.resolve(true);
+  if(!force&&!cambiosLocales())return Promise.resolve(true);   // nada nuevo en este equipo: no se escribe
+  return firebase.firestore().runTransaction(async t=>{
+    const s=await t.get(ref),d=s.exists?s.data():{},m=mezcla(d),ch=FLD.filter(f=>m[f]!==undefined&&cj(m[f])!==cj(d[f]));
+    if(ch.length)t.set(ref,Object.fromEntries(ch.map(f=>[f,m[f]])),{mergeFields:ch});
+    return cp(Object.assign({},d,m));   // copia de lo que quedó en la nube en este instante
+  }).then(n=>{if(adopta(n))pintaRemoto();
+    if(pushErr){pushErr=false;sync.textContent='Sincronizado en la nube ✓'}return true})
+  .catch(e=>{pushErr=true;const u=firebase.auth().currentUser;
+    sync.innerHTML=e&&e.code==='permission-denied'&&u?'Sin permiso para guardar.'+uidTag(u):e&&e.code==='unavailable'?'Sin conexión: tus cambios quedan en este equipo y se envían solos al volver internet':'No se pudo guardar en la nube ('+((e&&e.code)||'error')+')';return false});
+}
+let pubP=Promise.resolve(),pushP=pushQ;
+const push=f=>(pushP=pushQ=pushQ.then(()=>push0(f)));
+const save=()=>{guardaLocal();if(ref&&!skip&&!readOnly)push();if(ref&&gotMain&&gotRes&&!readOnly)syncPublic()};
+addEventListener('online',()=>{if(ref&&gotMain&&!readOnly)push()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ref&&gotMain&&!readOnly)push()});
 const pubErr=e=>{pubInfo.textContent='No se pudo publicar el horario ('+(e.code||'error')+'). Revisa las reglas de Firestore.'};
 const toMin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 // Aviso de reserva nueva: notificación en la app de Android (si está abierta) y lista pública «av»
@@ -788,6 +856,8 @@ const toMin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 function avisoNuevo(r,sn){const x=`${String(sn||'Reserva')} · ${fmtD(r.d)}, ${r.t}`.slice(0,140),ahora=Date.now();
   S.cfg.av=[...(S.cfg.av||[]).filter(a=>a&&a.at>ahora-3*864e5&&a.i!==String(r.id)),{i:String(r.id),x,at:ahora}].slice(-20);
   try{if(window.CatarsisApp&&window.CatarsisApp.notificar)window.CatarsisApp.notificar(String(r.id),'Nueva reserva: '+String(r.nombre||'clienta').slice(0,60),x)}catch(_){}}
+// id fijo para la hora de una reserva web (fecha de creación + reserva): dos equipos que la procesan a la vez crean la MISMA hora
+const ridNum=(r,i)=>{const c=r.creada,ms=typeof c==='number'?c:c&&typeof c.toMillis==='function'?c.toMillis():c&&+c.seconds?c.seconds*1000:0;let h=0;for(const x of String(r.id))h=(h*31+x.charCodeAt(0))%997;return ms?ms*1000+h:Date.now()+i};
 function processReservas(){
   const db=firebase.firestore();let ch=false,aviso='';const items=reservas,later=[];reservas=[];
   items.forEach((r,i)=>{
@@ -796,7 +866,7 @@ function processReservas(){
     if(gr&&!gotFin){later.push(r);return} // espera a cargar las giftcards
     // el cumpleaños llega al final del nombre ("Ana Pérez #N0315"): se guarda en su ficha
     {const nn=nomNac(r.nombre);r=Object.assign({},r,{nombre:nn.n});if(nn.cu){const k=ckDe(r.telefono,nn.n);if(k){const F=FICHAS(),x=F[k]||{};F[k]=Object.assign(x,{cu:nn.cu,nm:x.nm||nn.n,f:x.f||String(r.telefono||'')})}}}
-    const nid=Date.now()+i,k0=S.branches[0]+'|'+S.thers[0];
+    const nid=ridNum(r,i),k0=S.branches[0]+'|'+S.thers[0];
     if(gr){const sv=gr.sv,ok=!!(gr.g&&!gr.g.usada);
       // reserva hecha con giftcard desde la página de reservas: queda pagada con la giftcard
       S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?+sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:ok?(sv?sv.n:gr.nm):String(r.s||'').slice(0,80),v:ok?(+gr.g.m||0):(sv?+sv.v:0),o:1,...(ok?{e:'confirmada',p:'pagado',sp:1,gc:1,gid:gr.g.id}:{e:'reservada',p:'pendiente'})});
@@ -806,7 +876,7 @@ function processReservas(){
     S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(dr?dr.nm:r.s||'').slice(0,80),v:dx?dx.v:sv?(sv.ev&&!(+sv.v>0)?(+S.cfg.abono||0):sv.v):0,e:'reservada',p:'pendiente',o:1,...(dx?{dc:dx.dc}:{}),...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{}),...(sv&&sv.ev?{ev:1}:{})});avisoNuevo(r,sv?sv.n:String(r.s||''));ch=true;
   });
   reservas=later;
-  if(ch)render();
+  if(ch)refrescar();
   if(aviso)showToast(aviso);
   const hechas=items.filter(r=>!later.includes(r));
   if(!hechas.length)return;
@@ -960,9 +1030,9 @@ function initDB(){
     unsubF=db.collection('masajes').doc('finanzas').onSnapshot(s=>{GIFTS=(s.exists&&s.data().gifts)||{};gotFin=true;gcUpd();afterSync();gcAsegurarTodas()},()=>{gotFin=true;afterSync()});
     unsub=ref.onSnapshot(s=>{
       if(s.metadata.hasPendingWrites)return;
-      if(s.exists){const d=s.data();S.branches=d.branches||S.branches;S.thers=d.thers||S.thers;S.services=d.services||S.services;S.cfg=d.cfg||S.cfg;S.appts=d.appts||[];
-        migrate();S.branch=Math.min(S.branch,S.branches.length-1);S.ther=Math.min(S.ther,S.thers.length-1);skip=true;render();skip=false;}
-      else if(!readOnly)push();
+      if(s.exists){adopta(s.data());needPush=true;
+        migrate();S.branch=Math.min(S.branch,S.branches.length-1);S.ther=Math.min(S.ther,S.thers.length-1);pintaRemoto();}
+      else if(!readOnly)push(true);
       gotMain=true;sync.textContent=readOnly?'Modo solo lectura ✓':'Sincronizado en la nube ✓';afterSync();
     },err=>{if(err.code==='permission-denied')showDeny(u);else sync.textContent='Sin conexión con la base de datos ('+(err.code||'error')+')'});
   });
@@ -1464,13 +1534,14 @@ function timelineHtml(all){
   <div class="tlhint nobox">Toca un espacio libre para ponerle hora a una cita nueva, o toca una cita para ver sus detalles.</div>`;
 }
 const freeTimes=()=>{const d=+dur.value||+(S.services[svc.value]||S.services[0]||{}).m||30,busy=mine().filter(a=>a.d===sel&&a.e!=='disponible');
-  return slotTimes().filter(t=>{const x=toMin(t);return !busy.some(a=>toMin(a.t)<x+d&&x<toMin(a.t)+(+a.m||0))})};
+  const base=cat.value===DUOC&&dhOn()?((S.cfg.duo.h.t[String(new Date(sel+'T12:00').getDay())])||[]).slice().sort():slotTimes();
+  return base.filter(t=>{const x=toMin(t);return !busy.some(a=>toMin(a.t)<x+d&&x<toMin(a.t)+(+a.m||0))})};
 const getTime=()=>time.value==='__otra'?timeX.value:time.value;
 function setTime(t){if(![...time.options].some(o=>o.value===t)){const o=new Option(t+' (fuera de la lista)',t);const i=[...time.options].findIndex(x=>x.value>t&&x.value!=='__otra');time.add(o,i<0?time.options.length-1:i)}time.value=t;timeX.classList.add('hide')}
 function fillTimes(){
   const prev=getTime(),L=freeTimes();
   time.innerHTML=L.map(t=>`<option value="${t}">${t}</option>`).join('')+`<option value="__otra">Otra hora…</option>`;
-  timeHint.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} libre${L.length==1?'':'s'} el ${fmtD(sel)} para ${+dur.value||+(S.services[svc.value]||{}).m||30} min.`:'No quedan horas libres este día con esa duración. Usa "Otra hora…".';
+  timeHint.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} libre${L.length==1?'':'s'} el ${fmtD(sel)} para ${+dur.value||+(S.services[svc.value]||{}).m||30} min.`:cat.value===DUOC&&dhOn()?'Este día no tiene horas libres para masajes dúo. Usa "Otra hora…".':'No quedan horas libres este día con esa duración. Usa "Otra hora…".';
   if(prev&&[...time.options].some(o=>o.value===prev))time.value=prev;else{time.selectedIndex=0;timeX.classList.toggle('hide',time.value!=='__otra')}
 }
 // --- promociones ---
@@ -1722,7 +1793,12 @@ const aDef=s=>!!(s&&s.p&&!(+s.v>0));
 const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
 function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
   return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
-const fill=()=>{const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.ev&&!(+s.v>0)?(+S.cfg.abono||0):s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
+// Masajes dúo desde el panel: dos personas al mismo tiempo, cada una con su masaje (precio dúo y duración dúo)
+const DUOC='Masajes dúo';
+function duoFill(){const a=S.services[svc.value],b=S.services[svc2.value]||a;dur.value=duoMin();price.value=a&&b?(+a.v-duoDesc(a))+(+b.v-duoDesc(b)):'';
+  pkBox.hidden=true;pk.innerHTML='';madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder='';defHint.hidden=true;
+  duoHint.innerHTML=`Las dos personas se atienden al mismo tiempo · ${duoMin()} min · abono ${money(duoAbono())}`+(dhOn()?' · se muestran tus horas para masajes dúo':'');fillTimes()}
+const fill=()=>{if(cat.value===DUOC){duoFill();return}const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.ev&&!(+s.v>0)?(+S.cfg.abono||0):s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 function render(){
   edBtn.textContent=editing?'Cerrar':'Menú';edBtn.setAttribute('aria-expanded',editing);
@@ -1786,11 +1862,15 @@ function render(){
   selbox.classList.toggle('hide',single);
   branches.innerHTML=S.branches.map((b,i)=>`<button class="branch ${i==S.branch?'on':''}" data-sb="${i}">${esc(b)}</button>`).join('');
   thers.innerHTML=S.thers.map((t,i)=>`<div class="ther ${i==S.ther?'on':''}" data-st="${i}"><b>${esc(t)}</b><span class="mut">${ROL}</span></div>`).join('');
-  const cats=[...new Set(S.services.map(x=>x.c||'Otros')),GCC],cc=cats.includes(cat.value)?cat.value:cats[0];
+  const cats=(c=>{if(duoLista().length){const i=c.findIndex(x=>/maso|masaj/i.test(x));c.splice(i>=0?i+1:c.length,0,DUOC)}return[...c,GCC]})([...new Set(S.services.map(x=>x.c||'Otros'))]),cc=cats.includes(cat.value)?cat.value:cats[0];
   cat.innerHTML=cats.map(c=>`<option ${c===cc?'selected':''}>${esc(c)}</option>`).join('');
   const prev=svc.value,first=!svc.options.length,gr={};
-  S.services.forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+(x.ev?(+x.v>0?'desde '+money(x.v):'valor según evaluación'):(x.q||[]).length?'desde '+money(x.v):money(x.v))}</option>`)});
+  const dl=cc===DUOC?new Set(duoLista()):null;
+  if(dl)S.services.forEach((x,i)=>{if(!dl.has(x))return;const dd=duoDesc(x);(gr[x.g||'']=gr[x.g||'']||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${money(+x.v-dd)}${dd?' (precio dúo)':''}</option>`)});
+  else S.services.forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+(x.ev?(+x.v>0?'desde '+money(x.v):'valor según evaluación'):(x.q||[]).length?'desde '+money(x.v):money(x.v))}</option>`)});
   svc.innerHTML=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
+  duoBox.hidden=!dl;svcLbl.textContent=dl?'Masaje persona 1':'Servicio';
+  if(dl){const p2=svc2.value;svc2.innerHTML=svc.innerHTML;svc2.value=[...svc2.options].some(o=>o.value===p2)?p2:(svc.options[0]||{}).value||''}else svc2.innerHTML='';
   if([...svc.options].some(o=>o.value===prev))svc.value=prev;else{svc.selectedIndex=0;fill()}
   if(first)fill();
   madCliUpd();gcUpd();
@@ -1912,7 +1992,11 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='at'){const v=nt.value.trim();if(v)S.thers.push(v)}
   else if(e.target.id==='ab'){const v=nb.value.trim();if(v)S.branches.push(v)}
   else if(e.target.id==='addAppt'){
-    const tv=getTime();if(!tv)return;const s=S.services[svc.value]||S.services[0];
+    const tv=getTime();if(!tv)return;
+    if(cat.value===DUOC){const a=S.services[svc.value],b=S.services[svc2.value];if(!a||!b){showToast('Elige el masaje de cada persona');return}
+      S.appts.push({id:Date.now(),k:key(),d:sel,t:tv,m:+dur.value||duoMin(),c:client.value.trim(),f:phone.value.trim(),s:'Dúo: '+a.n+' + '+b.n,v:+price.value||0,e:estado.value,p:'pendiente'});
+      client.value='';phone.value='';showToast('Masaje dúo agregado ✓')}
+    else{const s=S.services[svc.value]||S.services[0];
     if(aDef(s)&&!(+dur.value>=5&&+price.value>0)){defHint.innerHTML=defHintTxt(s,1);defHint.hidden=false;(+dur.value>=5?price:dur).focus();return}
     let gcx={};if(cat.value===GCC){const gg=gcSel&&gcLista().find(x=>x.id===gcSel&&!x.usada);if(!gg){showToast('Elige la giftcard que se va a cobrar');gcBox.scrollIntoView({behavior:'smooth',block:'center'});return}
       gcx={gc:1,gid:gg.id,p:'pagado',sp:1,...(estado.value==='reservada'?{e:'confirmada'}:{})}}
@@ -1920,7 +2004,7 @@ document.addEventListener('click',e=>{
     S.appts.push({id:nid,k:key(),d:sel,t:tv,m:+dur.value||s.m,c:client.value.trim(),f:phone.value.trim(),s:pi.s,v:pi.v===0?0:(+price.value||0),e:estado.value,p:'pendiente',...pi.x,...gcx,...(s.ev&&!gcx.gid?{ev:1}:{})});
     if(pi.x.pk&&pi.x.ps>1){madCli=null;showToast(`Sesión ${pi.x.ps} de ${pi.x.pn} agregada ✓ · quedan ${pi.x.pn-pi.x.ps}`)}
     if(gcx.gid){gcSel=null;showToast('Giftcard cobrada ✓')}
-    client.value='';phone.value=''}
+    client.value='';phone.value=''}}
   else if(el=g('data-dcmodal')){dcDraw();dcModal.hidden=false;return}
   else if(el=g('data-dctab')){dcTab=el.dataset.dctab;dcDraw();return}
   else if(el=g('data-dcclose')){dcModal.hidden=true;return}
@@ -2124,7 +2208,7 @@ document.addEventListener('change',e=>{
   if(d.dcf!==undefined){const [a,b]=d.dcf.split('.'),D=DCF(),mx=b==='d'?365:b==='n'?100:90;D[a][b]=Math.max(1,Math.min(mx,Math.round(+t.value)||D[a][b]));t.value=D[a][b];render();dcDraw();showToast('Guardado ✓');return}
   if(t.id==='pick'&&t.value){sel=t.value;custom=true;wkS=monOf(sel)}
   else if(t.id==='cat'){render();fill();return}
-  else if(t.id==='svc'){fill();return}
+  else if(t.id==='svc'||t.id==='svc2'){fill();return}
   else if(t.id==='gcSvc'){const x=S.services.find(s=>s.n===t.value);if(x)gcM.value=x.v;return}
   else if(t.id==='gcF'){gcMesDraw();return}
   else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v),qt=(s.q||[]).find(x=>'q'+x.n===v);price.value=v==='pp'||v==='use'?0:k?k.v:qt?qt.v:s.v;return}
