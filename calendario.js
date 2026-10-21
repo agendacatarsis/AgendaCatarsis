@@ -65,5 +65,5 @@
     return new URL('calendario.html',base||location.href).href+'#'+p.toString()}
   function desdeEnlace(h){var p=new URLSearchParams(String(h||location.hash).replace(/^#/,''));if(!p.get('fecha'))return null;
     return {titulo:p.get('titulo')||'Hora en Catarsis',fecha:p.get('fecha'),hora:+p.get('hora')||0,dur:+p.get('dur')||60,lugar:p.get('lugar')||'',detalle:p.get('detalle')||'',uid:p.get('uid')||'',resumen:p.get('resumen')||'',avisos:p.get('avisos')!=='0'}}
-  window.CalCat={google:google,outlook:outlook,ics:ics,telefono:telefono,menu:menu,opciones:opciones,ejecutar:ejecutar,enlace:enlace,desdeEnlace:desdeEnlace,esIOS:esIOS,esAndroid:esAndroid};
+  window.CalCat={instante:function(e){return {ini:utc(e.fecha,e.hora),fin:utc(e.fecha,fin(e))}},google:google,outlook:outlook,ics:ics,telefono:telefono,menu:menu,opciones:opciones,ejecutar:ejecutar,enlace:enlace,desdeEnlace:desdeEnlace,esIOS:esIOS,esAndroid:esAndroid};
 })();
