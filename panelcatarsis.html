@@ -24,6 +24,9 @@ h2{font-size:clamp(24px,5vw,32px)}
 .lbl{color:var(--mut);margin:20px 0 6px;font-size:14px}
 button,input,select{font:inherit;color:var(--ink)}
 .pill{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:7px 14px;font-size:14px;cursor:pointer}
+.bkgrp{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:14px 0 2px}
+.bkrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.bkrow:last-child{border-bottom:0}
+.bkrow b{font-size:14.5px}.bkrow small{display:block;color:var(--mut);font-size:12.5px}.bkrow .pill{flex:0 0 auto;padding:6px 12px}
 .box{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:10px}
 .who{background:var(--btn);color:var(--btnink);border-radius:20px;padding:12px 16px;margin-top:20px}
 .who b{font:700 25px/1.1 'Playfair Display';display:block}
@@ -270,6 +273,7 @@ input[type=checkbox]{min-height:0;width:auto}
 #pkBox[hidden]{display:none}
 /* --- editar horario de una cita --- */
 .hrbtn{white-space:nowrap;font-size:13px}
+.calb{white-space:nowrap;font-size:13px;text-decoration:none;color:inherit}
 .ro .hrbtn{display:none!important}
 .hrq{display:flex;gap:8px;margin:10px 0 0}.hrq .pill{flex:1}
 .hrinfo{font-size:14px;margin:10px 0 0;padding:9px 12px;border-radius:12px;background:var(--tint)}
@@ -956,7 +960,7 @@ function blockAll(on){
   else S.appts=S.appts.filter(a=>!(a.bq&&a.d===sel&&a.k===key()));
 }
 var needPush=false; // migraciones (ej. categoría Acrocordones) que deben guardarse en la nube
-function afterSync(){if(!gotMain||!gotRes)return;if(needPush&&ref&&!readOnly){needPush=false;push()}processReservas();syncPublic();if(!bkTry&&gotFin)setTimeout(bkAuto,4000);if(!dcAseg0){dcAseg0=true;setTimeout(dcAsegurar,2500)}}
+function afterSync(){if(!gotMain||!gotRes)return;if(needPush&&ref&&!readOnly){needPush=false;push()}processReservas();syncPublic();if(!bkIni&&gotFin){bkIni=true;setTimeout(bkAuto,4000)}if(!dcAseg0){dcAseg0=true;setTimeout(dcAsegurar,2500)}}
 let unsub=null;
 const lock=on=>document.body.classList.toggle('locked',on);
 /* ---------- inicio de sesión ---------- */
@@ -1309,7 +1313,7 @@ function fiDelete(){
 const ENAPP=/CatarsisApp/.test(navigator.userAgent);
 // La app de Android permite elegir fotos desde la versión 1.8
 const APPFOTOS=(m=>!!m&&(+m[1]>1||(+m[1]===1&&+m[2]>=8)))(navigator.userAgent.match(/CatarsisApp\/(\d+)\.(\d+)/));
-let bkTry=false,bkErr='';
+let bkErr='',bkBusy=false,bkIni=false,bkFalloAt=0;
 const jsonRep=(k,v)=>v&&typeof v==='object'&&typeof v.toDate==='function'?v.toDate().toISOString():v;
 const csvCel=v=>{v=v==null?'':String(v);if(/^[=+\-@\t\r]/.test(v)&&isNaN(Number(v)))v="'"+v;return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
 function bajar(nombre,txt,tipo){const u=URL.createObjectURL(new Blob([txt],{type:tipo})),x=document.createElement('a');x.href=u;x.download=nombre;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)}
@@ -1323,34 +1327,51 @@ function bkBtnsHtml(){
   if(ENAPP)return `<div class="mut" style="font-size:13.5px;margin-bottom:8px">En la app no se pueden descargar archivos. Abre el panel en Chrome (en el celular o el computador), entra con tu cuenta y vuelve a Menú → Respaldo.</div><button class="btn" style="width:100%" type="button" data-bkchrome>🌐 Abrir el panel en Chrome</button>`;
   return `<button class="btn" style="width:100%" type="button" data-bkjson>⬇ Descargar respaldo completo</button><div class="mut" style="font-size:12.5px;margin:4px 0 12px">Archivo .json con toda la información, para restaurarla si algún día se pierde.</div><div class="row"><button class="pill" type="button" data-bkcsv>⬇ Agenda en Excel</button><button class="pill" type="button" data-bkcli>⬇ Clientas en Excel</button></div>${S.cfg.bkDl?`<div class="mut" style="font-size:12.5px;margin-top:8px">Última descarga: ${fmtFH(S.cfg.bkDl)}</div>`:''}`;
 }
-const bkAutoTxt=()=>S.cfg.bkAt?`<span style="color:var(--grn);font-weight:600">✓ Última copia: ${fmtFH(S.cfg.bkAt)}.</span> Se hace sola una vez por semana al abrir la agenda y se guardan las 4 últimas, para recuperar la información si se borra algo por error.`
-  :bkErr?`<span style="color:var(--red)">No se pudo hacer la copia automática (${esc(bkErr)}).</span> Descarga el respaldo completo desde Chrome mientras tanto.`
-  :'Se hace sola una vez por semana al abrir la agenda y se guardan las 4 últimas. La primera se hace unos segundos después de entrar.';
-async function bkJson(){
-  if(!ref){showToast('Inicia sesión para descargar el respaldo');return}
-  let x;try{x=await bkDatos()}catch(_){x={datos:localDatos(),finanzas:{gifts:GIFTS}}}
-  bajar('respaldo-catarsis-'+hoyIso()+'.json',JSON.stringify({app:'Agenda Catarsis',tipo:'respaldo completo',creado:new Date().toISOString(),...x},jsonRep,1),'application/json');
-  S.cfg.bkDl=Date.now();render();showToast('Respaldo descargado ✓');
-}
-function bkCsv(){
-  const H=['Fecha','Hora','Hasta','Clienta','Teléfono','Servicio','Valor','Estado','Pago','Sucursal y terapeuta'];
-  const R=S.appts.filter(esCita).sort((x,y)=>(x.d+x.t).localeCompare(y.d+y.t)).map(a=>[a.d,a.t,end(a.t,+a.m||0),a.c||'',a.f||'',a.s||'',enPack(a)?0:+a.v||0,a.e,a.gc?'giftcard':a.sp?'pagado completo':a.p==='pagado'?'abono pagado':'abono pendiente',String(a.k||'').replace('|',' · ')]);
-  bajar('agenda-catarsis-'+hoyIso()+'.csv','﻿'+[H,...R].map(r=>r.map(csvCel).join(';')).join('\r\n'),'text/csv;charset=utf-8');showToast('Agenda descargada ✓');
-}
-function bkCli(){
-  const H=['Clienta','Teléfono','Visitas realizadas','Total en servicios','Primera hora','Última visita','Próxima hora','Notas'];
-  const R=Object.values(clientas()).sort((x,y)=>x.nm.localeCompare(y.nm)).map(o=>[o.nm,o.f,o.n,o.tot,o.pri,o.ult,o.prox?o.prox+' '+o.proxT:'',notaDe(o.k)]);
-  bajar('clientas-catarsis-'+hoyIso()+'.csv','﻿'+[H,...R].map(r=>r.map(csvCel).join(';')).join('\r\n'),'text/csv;charset=utf-8');showToast('Clientas descargadas ✓');
-}
+// --- Copias automáticas en la nube ---
+// · Diarias: una por día de la semana (masajes/respaldo-lun … respaldo-dom) → siempre está la semana completa.
+// · Mensuales: una por mes (masajes/respaldo-mes-01 … respaldo-mes-12) → se guardan los últimos 12 meses.
+// Se crean solas la primera vez que se abre el panel cada día (en cualquier equipo); cfg.bk guarda las fechas.
+// Las copias semanales del sistema anterior (respaldo-1 … respaldo-4) se conservan y se pueden descargar.
+const BK_DIA=['dom','lun','mar','mie','jue','vie','sab'],BK_NOM={dom:'Domingo',lun:'Lunes',mar:'Martes',mie:'Miércoles',jue:'Jueves',vie:'Viernes',sab:'Sábado'};
+const bkIdx=()=>{const b=esObj(S.cfg.bk)?S.cfg.bk:{};return{dia:b.dia||'',mes:b.mes||'',d:Object.assign({},b.d),m:Object.assign({},b.m),...(esObj(b.ant)?{ant:Object.assign({},b.ant)}:{})}};
+const bkMs=c=>c&&typeof c.toMillis==='function'?c.toMillis():c&&+c.seconds?c.seconds*1000:+c||0;
+const isoDe=ms=>{const d=new Date(ms);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function bkAutoHtml(){const I=bkIdx(),dl=!ENAPP;
+  const fila=(id,t,ts)=>`<div class="bkrow"><div><b>${esc(t)}</b><small>${ts>1?'Copia del '+fmtFH(ts):'Fecha no registrada'}</small></div>${dl?`<button class="pill" type="button" data-bkget="${id}" aria-label="Descargar copia ${esc(t)}">⬇ Descargar</button>`:''}</div>`;
+  const D=Object.entries(I.d).sort((x,y)=>y[1]-x[1]).map(([k,ts])=>fila('respaldo-'+k,BK_NOM[k]||k,ts)).join('');
+  const M=Object.entries(I.m).sort((x,y)=>y[1]-x[1]).map(([k,ts])=>fila('respaldo-mes-'+k,(MES[+k-1]||k).replace(/^./,c=>c.toUpperCase())+' '+new Date(ts).getFullYear(),ts)).join('');
+  const A=I.ant?Object.entries(I.ant).sort((x,y)=>y[1]-x[1]).map(([k,ts])=>fila('respaldo-'+k,'Copia semanal anterior',ts)).join(''):'';
+  const est=bkErr?`<span style="color:var(--red)">No se pudo hacer la copia automática (${esc(bkErr)}). Se vuelve a intentar sola en una hora; mientras tanto descarga el respaldo completo desde Chrome.</span>`
+    :S.cfg.bkAt?`<span style="color:var(--grn);font-weight:600">✓ Última copia: ${fmtFH(S.cfg.bkAt)}.</span>`:'La primera copia se hace unos segundos después de entrar.';
+  return `<div class="mut" style="font-size:13.5px">${est} Se hacen solas la primera vez que se abre el panel cada día, en cualquier equipo: <b>una diaria</b> (se guardan los 7 días de la semana) y <b>una mensual</b> (se guardan los últimos 12 meses).${ENAPP?' Para descargar una copia, abre el panel en Chrome.':''}</div>`
+    +(D?`<div class="bkgrp">Diarias · última semana</div>${D}`:'')+(M?`<div class="bkgrp">Mensuales</div>${M}`:'')+(A?`<div class="bkgrp">Copias semanales anteriores</div>${A}`:'')}
 async function bkAuto(){
-  if(bkTry||readOnly||!ref||!gotMain||!gotFin)return;
-  if(Date.now()-(+S.cfg.bkAt||0)<7*864e5)return;
-  bkTry=true;
-  try{const x=await bkDatos(),n=(+S.cfg.bkN||0)%4+1;
-    await firebase.firestore().collection('masajes').doc('respaldo-'+n).set({creado:firebase.firestore.FieldValue.serverTimestamp(),...x});
-    S.cfg.bkAt=Date.now();S.cfg.bkN=n;bkErr='';render();
-  }catch(e){bkErr=(e&&e.code)||'error';if(editing)render()}
+  if(bkBusy||readOnly||!ref||!gotMain||!gotFin)return;
+  if(bkFalloAt&&Date.now()-bkFalloAt<3600e3)return;   // si falló, reintenta en una hora
+  const hoy=hoyIso(),mes=hoy.slice(0,7),I=bkIdx(),hacerD=I.dia!==hoy,hacerM=I.mes!==mes,ant=!I.ant&&+S.cfg.bkN>0;
+  if(!hacerD&&!hacerM&&!ant)return;
+  bkBusy=true;
+  try{const db=firebase.firestore(),M=db.collection('masajes'),ts=firebase.firestore.FieldValue.serverTimestamp(),now=Date.now();
+    if(ant){I.ant={};for(let n=1;n<=4;n++){try{const s=await M.doc('respaldo-'+n).get();if(s.exists)I.ant[n]=bkMs(s.data().creado)||1}catch(_){}}}
+    if(hacerD||hacerM){const x=await bkDatos(),wd=BK_DIA[new Date().getDay()];
+      if(hacerD){await M.doc('respaldo-'+wd).set({creado:ts,tipo:'diaria',fecha:hoy,...x});I.d[wd]=now;I.dia=hoy}
+      if(hacerM){const mm=mes.slice(5);await M.doc('respaldo-mes-'+mm).set({creado:ts,tipo:'mensual',fecha:hoy,...x});I.m[mm]=now;I.mes=mes}
+      S.cfg.bkAt=now}
+    S.cfg.bk=I;bkErr='';bkFalloAt=0;render();
+  }catch(e){bkErr=(e&&e.code)||'error';bkFalloAt=Date.now();if(editing)render()}
+  finally{bkBusy=false}
 }
+async function bkGet(id){
+  if(!ref){showToast('Inicia sesión para descargar la copia');return}
+  showToast('Preparando la copia…');
+  try{const s=await firebase.firestore().collection('masajes').doc(id).get();if(!s.exists){showToast('Esa copia ya no existe');return}
+    const x=s.data(),f=x.fecha||isoDe(bkMs(x.creado)||Date.now());
+    bajar('respaldo-catarsis-'+id.replace('respaldo-','')+'-'+f+'.json',JSON.stringify({app:'Agenda Catarsis',tipo:'copia automática '+(x.tipo||'semanal'),...x},jsonRep,1),'application/json');showToast('Copia descargada ✓')}
+  catch(e){showToast('No se pudo descargar ('+((e&&e.code)||'error')+')')}
+}
+// el panel puede quedar abierto varios días: revisa cada 30 min y al volver a la app
+setInterval(()=>bkAuto(),30*60e3);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(bkAuto,3000)});
 // --- política de cambios y cancelaciones ---
 const POL_SUG='Si necesitas cambiar o cancelar tu hora, avísanos por WhatsApp con al menos 24 horas de anticipación y tu abono queda guardado para la nueva fecha. Si cancelas con menos de 24 horas o no asistes, el abono no se devuelve.';
 let polDraft=null;
@@ -1800,6 +1821,12 @@ function duoFill(){const a=S.services[svc.value],b=S.services[svc2.value]||a;dur
   duoHint.innerHTML=`Las dos personas se atienden al mismo tiempo · ${duoMin()} min · abono ${money(duoAbono())}`+(dhOn()?' · se muestran tus horas para masajes dúo':'');fillTimes()}
 const fill=()=>{if(cat.value===DUOC){duoFill();return}const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.ev&&!(+s.v>0)?(+S.cfg.abono||0):s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
+// Google Calendar: abre el evento ya lleno (clienta, servicio, fecha y hora); se guarda con un toque
+const gcalT=(d,min)=>{const [y,m,dd]=String(d).split('-').map(Number),x=new Date(Date.UTC(y,m-1,dd,0,min)),q=n=>String(n).padStart(2,'0');return `${x.getUTCFullYear()}${q(x.getUTCMonth()+1)}${q(x.getUTCDate())}T${q(x.getUTCHours())}${q(x.getUTCMinutes())}00`};
+function gcalUrl(a){const ini=toMin(a.t),fin=ini+(+a.m||60);
+  const det=[`Servicio: ${a.s}`,a.f?`Teléfono: ${a.f}`:'',`Valor: ${enPack(a)?'incluida en el pack':a.ev?'según evaluación':money(a.v)}`,`Pago: ${a.gc?'giftcard':a.sp?'pagado completo':a.p==='pagado'?'abono pagado':'pendiente'}`,a.f?`WhatsApp: ${wa(a.f)}`:''].filter(Boolean).join('\n');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent((a.c||'Clienta')+' · '+a.s)+'&dates='+gcalT(a.d,ini)+'/'+gcalT(a.d,fin)+'&ctz=America/Santiago&details='+encodeURIComponent(det)+'&location='+encodeURIComponent('Catarsis · Cochrane 450, Osorno')}
+function abrirFuera(u){try{if(window.CatarsisApp&&window.CatarsisApp.abrir){window.CatarsisApp.abrir(u);return}}catch(_){}const w=window.open(u,'_blank','noopener');if(!w)location.href=u}
 function render(){
   edBtn.textContent=editing?'Cerrar':'Menú';edBtn.setAttribute('aria-expanded',editing);
   edit.classList.toggle('hide',!editing);
@@ -1839,7 +1866,7 @@ function render(){
     <div class="row"><div><label class="f">Desde</label><input type="time" data-h="desde" value="${S.cfg.horario.desde}"></div><div><label class="f">Hasta</label><input type="time" data-h="hasta" value="${S.cfg.horario.hasta}"></div></div>
     <div class="row"><div><label class="f">Intervalo entre horas (min)</label><input type="number" data-h="paso" min="10" step="5" value="${S.cfg.horario.paso}"></div><div><label class="f">Anticipación mínima (horas)</label><input type="number" data-h="adv" min="0" value="${S.cfg.horario.adv}"></div></div>
     <div class="mut" style="font-size:13px">Tus clientas ven libre todo este horario, excepto lo que tengas agendado o bloqueado aquí.</div>`;
-    pane.respaldo=`<div class="lbl" style="margin-top:0">Respaldo de datos</div><p class="mut" style="font-size:13.5px;margin:0 0 10px">Descarga una copia de toda tu información: agenda, clientas y sus notas, servicios, promociones, configuración, giftcards y finanzas. Guárdala en tu Google Drive o en tu computador.</p>${bkBtnsHtml()}<div class="lbl">Copia automática en la nube</div><div class="mut" style="font-size:13.5px">${bkAutoTxt()}</div>`;
+    pane.respaldo=`<div class="lbl" style="margin-top:0">Respaldo de datos</div><p class="mut" style="font-size:13.5px;margin:0 0 10px">Descarga una copia de toda tu información: agenda, clientas y sus notas, servicios, promociones, configuración, giftcards y finanzas. Guárdala en tu Google Drive o en tu computador.</p>${bkBtnsHtml()}<div class="lbl">Copias automáticas en la nube</div>${bkAutoHtml()}`;
     const nPromo=S.cfg.promos.length,nMad=S.services.filter(esMadSvc).length,rcN=rcPend(),nCl=Object.keys(clientas()).length;
     const mt=(at,t,sub,cl)=>`<button type="button" class="mt finbtn${cl?' '+cl:''}" ${at}>${t}<small>${sub}</small></button>`;
     edit.innerHTML=`<div class="mgh">Ventas y clientas</div><div class="mgrid"><a class="mt finbtn" href="balance.html">📊 Balance y gastos<small>Ingresos, gastos y Excel</small></a>`
@@ -1886,7 +1913,7 @@ function render(){
   const pend=L.filter(a=>!['disponible','bloqueado'].includes(a.e)&&a.p==='pendiente').length;
   dayInfo.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} agendada${L.length==1?'':'s'}`+(pend?` · ${pend} abono${pend==1?'':'s'} pendiente${pend==1?'':'s'}`:''):'Sin horas agendadas.';
   viewbar.innerHTML=`<button data-view="lista" class="${dayView==='lista'?'on':''}">Lista</button><button data-view="linea" class="${dayView==='linea'?'on':''}">Línea de tiempo</button>`;
-  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':`<button type="button" class="cname" data-ficha="${a.id}" aria-label="Ver ficha de ${esc(a.c||'la clienta')}">${esc(a.c||'Sin nombre')}</button>${notaDe(ckA(a))?'<span class="fnote" title="Tiene notas en su ficha">📝 Notas</span>':''}`}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?`<b class="gct">🎁 Giftcard${a.gid&&GIFTS[a.gid]&&GIFTS[a.gid].para?' para '+esc(GIFTS[a.gid].para):''}</b> · `:''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}${a.dc&&a.dc.p?` · <span class="dct">🏷️ ${esc(a.dc.c)} −${a.dc.p}%</span>${a.dc.t==='r'&&a.dc.rn?` (recomendada por ${esc(primerN(a.dc.rn))})`:''}`:''}</div>${a.dc&&a.dc.w?`<div class="dcw">⚠ Código ${esc(a.dc.c)}: ${esc(a.dc.w)}.${a.dc.p?` <button type="button" class="und" data-dcquitar="${a.id}">Quitar descuento</button>`:''}</div>`:''}</div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':pagoTotal(a)?'Pago pendiente':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'&&!pagoTotal(a)?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
+  list.innerHTML=dayView==='linea'?timelineHtml(L0.filter(a=>a.d===sel)):L.map(a=>{const free=a.e==='disponible'||a.e==='bloqueado';return `<div class="appt s-${a.e}" id="ap-${a.id}"><div class="t">${a.t}</div><div class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':a.e==='disponible'?'Horario disponible':`<button type="button" class="cname" data-ficha="${a.id}" aria-label="Ver ficha de ${esc(a.c||'la clienta')}">${esc(a.c||'Sin nombre')}</button>${notaDe(ckA(a))?'<span class="fnote" title="Tiene notas en su ficha">📝 Notas</span>':''}`}</b>${a.f&&!free?` · <a href="${wa(a.f)}" target="_blank" rel="noopener">${esc(a.f)}</a>`:''}<div class="mut">${a.gc?`<b class="gct">🎁 Giftcard${a.gid&&GIFTS[a.gid]&&GIFTS[a.gid].para?' para '+esc(GIFTS[a.gid].para):''}</b> · `:''}${esc(a.s)} · hasta ${end(a.t,a.m)} (${+a.m||0} min) · ${enPack(a)?'incluida en el pack':a.ev?'valor según evaluación':money(a.v)}${a.dc&&a.dc.p?` · <span class="dct">🏷️ ${esc(a.dc.c)} −${a.dc.p}%</span>${a.dc.t==='r'&&a.dc.rn?` (recomendada por ${esc(primerN(a.dc.rn))})`:''}`:''}</div>${a.dc&&a.dc.w?`<div class="dcw">⚠ Código ${esc(a.dc.c)}: ${esc(a.dc.w)}.${a.dc.p?` <button type="button" class="und" data-dcquitar="${a.id}">Quitar descuento</button>`:''}</div>`:''}</div><button class="x" style="flex-basis:38px;height:38px" data-xa="${a.id}" aria-label="Quitar hora">✕</button><div class="ctl">${!free?`<div class="pst pg-${a.sp?'pagado':a.p}" id="st-${a.id}">${a.sp?'✓ Pagado completo':a.p==='pagado'?'✓ Abono pagado':pagoTotal(a)?'Pago pendiente':'Abono pendiente'}${a.p==='pagado'||a.sp?`<button class="und" data-undo="${a.id}" aria-label="Deshacer pago">Deshacer</button>`:''}</div>${a.p==='pendiente'&&!pagoTotal(a)?`<button class="okbtn" data-ok="${a.id}">✓ Marcar abono pagado</button>`:''}${!a.sp?`<button class="okbtn full" data-full="${a.id}">✓ Pagado</button>`:''}`:''}<select data-e="${a.id}" aria-label="Estado">${opt([...(a.e==='disponible'?[['disponible','Disponible']]:[]),['bloqueado','Bloqueado'],['reservada','Reservada'],['confirmada','Confirmada']],a.e)}</select>${a.e!=='disponible'&&!a.bq?`<button type="button" class="pill hrbtn" data-hora="${a.id}">🕒 Editar horario</button>`:''}${!free?`<button type="button" class="pill calb" data-gcal="${a.id}" title="Agregar esta hora a tu Google Calendar">📅 Google Calendar</button>`:''}${!free&&a.f?`<a class="pill wab" href="${waMsg(a)}" target="_blank" rel="noopener">Enviar comprobante</a>`:''}</div></div>`}).join('');
   slots.innerHTML=slotsHtml();blkDay.textContent=fmtD(sel);fillTimes();
   {const n=rcPend();rcQuick.hidden=!n;rcQuick.textContent=`🔔 Recordar mañana · ${n}`}
   if(!rcModal.hidden)rcDraw();
@@ -2043,6 +2070,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-basave')){baSave();return}
   else if(el=g('data-baup')){const i=+el.dataset.baup,L=GALP();if(readOnly||i<1||i>=L.length)return;[L[i-1],L[i]]=[L[i],L[i-1]];render();baDraw();return}
   else if(el=g('data-bax')){const i=+el.dataset.bax,L=GALP(),x=L[i];if(readOnly||!x)return;askConfirm('Eliminar antes y después',`¿Eliminar «${x.t||'estas fotos'}»? Dejarán de verse en tu página.`,()=>{const k=GALP().indexOf(x);if(k>=0)GALP().splice(k,1);firebase.firestore().collection('publico').doc('ga_'+x.id).delete().catch(()=>{});delete baThumb[x.id];render();baDraw()});return}
+  else if(el=g('data-gcal')){const a=S.appts.find(x=>x.id==el.dataset.gcal);if(a)abrirFuera(gcalUrl(a));return}
   else if(el=g('data-ficha')){const a=S.appts.find(x=>x.id==el.dataset.ficha);if(a&&ckA(a))openFicha(ckA(a));return}
   else if(el=g('data-fisave')){fiSave();return}
   else if(el=g('data-fied')){fiEdAbrir();return}
@@ -2054,6 +2082,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-ficlose')){fiModal.hidden=true;return}
   else if(el=g('data-fiagendar')){const o=clientas()[fiK]||FICHAS()[fiK]||{};fiModal.hidden=true;clModal.hidden=true;editing=false;render();client.value=o.nm||'';phone.value=o.f||'';setTimeout(()=>{const ad=document.querySelector('.add');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'})},80);showToast('Elige el servicio y la hora para '+(o.nm||'la clienta'));return}
   else if(el=g('data-bkjson')){bkJson();return}
+  else if(el=g('data-bkget')){bkGet(el.dataset.bkget);return}
   else if(el=g('data-bkcsv')){bkCsv();return}
   else if(el=g('data-bkcli')){bkCli();return}
   else if(el=g('data-bkchrome')){try{window.CatarsisApp.abrir(location.href.split('#')[0].split('?')[0])}catch(_){showToast('No se pudo abrir Chrome')}return}
