@@ -52,8 +52,14 @@
             {k:'o',i:'🗓️',b:'Outlook / Hotmail',s:'Tu cuenta de Microsoft'}]}
   function ejecutar(k,e){if(k==='tel')telefono(e);else if(k==='g')abrir(google(e));else if(k==='o')abrir(outlook(e))}
   // Menú con todas las opciones
+  function css(){if(!document.getElementById('calcat-css')){var st=document.createElement('style');st.id='calcat-css';st.textContent=CSS;document.head.appendChild(st)}}
+  // Aviso simple dentro de la misma página
+  function aviso(t,txt){css();var f=document.createElement('div');f.className='calcat-f';f.setAttribute('role','alertdialog');
+    f.innerHTML='<div class="calcat-s"><h4></h4><p class="calcat-sub" style="font-size:14.5px;margin-bottom:6px"></p><button type="button" class="calcat-x">Entendido</button></div>';
+    f.querySelector('h4').textContent=t;f.querySelector('.calcat-sub').textContent=txt;
+    f.addEventListener('click',function(ev){if(ev.target===f||ev.target.closest('.calcat-x'))f.remove()});document.body.appendChild(f)}
   function menu(e){
-    if(!document.getElementById('calcat-css')){var st=document.createElement('style');st.id='calcat-css';st.textContent=CSS;document.head.appendChild(st)}
+    css();
     var f=document.createElement('div');f.className='calcat-f';f.setAttribute('role','dialog');f.setAttribute('aria-label','Agregar a mi calendario');
     f.innerHTML='<div class="calcat-s"><h4>Agregar a mi calendario</h4><p class="calcat-sub"></p>'+opciones().map(function(o){return '<button type="button" class="calcat-o" data-k="'+o.k+'"><i>'+o.i+'</i><span><b>'+o.b+'</b><small>'+o.s+'</small></span></button>'}).join('')+'<button type="button" class="calcat-x">Cancelar</button></div>';
     f.querySelector(".calcat-sub").textContent=e.resumen||e.titulo;
@@ -65,5 +71,5 @@
     return new URL('calendario.html',base||location.href).href+'#'+p.toString()}
   function desdeEnlace(h){var p=new URLSearchParams(String(h||location.hash).replace(/^#/,''));if(!p.get('fecha'))return null;
     return {titulo:p.get('titulo')||'Hora en Catarsis',fecha:p.get('fecha'),hora:+p.get('hora')||0,dur:+p.get('dur')||60,lugar:p.get('lugar')||'',detalle:p.get('detalle')||'',uid:p.get('uid')||'',resumen:p.get('resumen')||'',avisos:p.get('avisos')!=='0'}}
-  window.CalCat={instante:function(e){return {ini:utc(e.fecha,e.hora),fin:utc(e.fecha,fin(e))}},google:google,outlook:outlook,ics:ics,telefono:telefono,menu:menu,opciones:opciones,ejecutar:ejecutar,enlace:enlace,desdeEnlace:desdeEnlace,esIOS:esIOS,esAndroid:esAndroid};
+  window.CalCat={aviso:aviso,instante:function(e){return {ini:utc(e.fecha,e.hora),fin:utc(e.fecha,fin(e))}},google:google,outlook:outlook,ics:ics,telefono:telefono,menu:menu,opciones:opciones,ejecutar:ejecutar,enlace:enlace,desdeEnlace:desdeEnlace,esIOS:esIOS,esAndroid:esAndroid};
 })();

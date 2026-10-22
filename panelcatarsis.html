@@ -1826,9 +1826,11 @@ const fill=()=>{if(cat.value===DUOC){duoFill();return}const s=S.services[svc.val
 function calEvento(a){return{titulo:(a.c||'Clienta')+' · '+a.s,fecha:a.d,hora:toMin(a.t),dur:+a.m||60,lugar:'Catarsis · Cochrane 450, Osorno',uid:'cat-'+a.id,resumen:`${a.c||'Clienta'} · ${fmtD(a.d)}, ${a.t}`,
   detalle:[`Servicio: ${a.s}`,a.f?`Teléfono: ${a.f}`:'',`Valor: ${enPack(a)?'incluida en el pack':a.ev?'según evaluación':money(a.v)}`,`Pago: ${a.gc?'giftcard':a.sp?'pagado completo':a.p==='pagado'?'abono pagado':'pendiente'}`,a.f?`WhatsApp: ${wa(a.f)}`:''].filter(Boolean).join('\n')}}
 function calAbrir(a){if(!window.CalCat){showToast('Falta subir calendario.js a GitHub');return}const e=calEvento(a),P=window.CatarsisApp;
-  // App 2.2 o superior: abre directo la pantalla «Nuevo evento» del calendario del teléfono (Samsung, Google, Huawei, Xiaomi…), sin páginas nuevas
-  if(P&&typeof P.calendario==='function'){try{const t=CalCat.instante(e);if(P.calendario(e.titulo,String(t.ini),String(t.fin),e.lugar,e.detalle))return}catch(_){}}
-  if(P&&P.abrir){showToast('Instala la versión 2.2 de la app para agregarla directo al calendario');try{P.abrir(CalCat.enlace(e));return}catch(_){}}
+  if(P){ // dentro de la app: directo a «Nuevo evento» del calendario del teléfono (Samsung, Google, Huawei, Xiaomi…), sin abrir páginas
+    if(typeof P.calendario==='function'){let ok=false;try{const t=CalCat.instante(e);ok=!!P.calendario(e.titulo,String(t.ini),String(t.fin),e.lugar,e.detalle)}catch(_){}
+      if(!ok)CalCat.aviso('No se pudo abrir el calendario','Este teléfono no tiene una app de calendario que acepte eventos nuevos. Instala Google Calendar desde Play Store y vuelve a intentarlo.');return}
+    const v=(navigator.userAgent.match(/CatarsisApp\/([\d.]+)/)||[])[1]||'antigua';
+    CalCat.aviso('Actualiza la app del panel',`Para agregar la hora directo al calendario necesitas la versión 2.3 de la app (ahora tienes la ${v}). Instala el archivo AgendaCatarsis.apk nuevo y vuelve a intentarlo.`);return}
   CalCat.menu(e)} // en el navegador: menú dentro de la misma página
 function render(){
   edBtn.textContent=editing?'Cerrar':'Menú';edBtn.setAttribute('aria-expanded',editing);
