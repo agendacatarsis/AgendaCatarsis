@@ -338,6 +338,8 @@ input[aria-invalid="true"],select[aria-invalid="true"]{border-color:var(--red)!i
 .day small,.chip small{font-size:12px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .st li:not(.done):not(.cur) .dot{color:var(--ink)}
+
+.grp{scroll-margin-top:64px}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
 <div id="app"><div class="pre"><h1>Catarsis Estética y Bienestar</h1><p>Reserva online tu hora de masajes y tratamientos estéticos.</p><p>Cochrane 450, Osorno · <a href="https://www.instagram.com/catarsis_osorno" rel="noopener">@catarsis_osorno</a></p><p class="mut">Cargando servicios…</p></div></div>
@@ -419,7 +421,7 @@ const pD=x=>Math.max(0,(+x.v||0)-Math.max(0,+x.d||0));
 // Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de panelcatarsis.html
 const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
-let duo=false,dA=0,dB=0,ptab='svc',catF=new URLSearchParams(location.search).has('giftcard')?'Giftcard':'Todos',qTxt='',lastStep=-1;
+let duo=false,dA=0,dB=0,ptab='svc',catF=(P=>P.has('giftcard')?'Giftcard':(String(P.get('cat')||'').trim().slice(0,60)||'Todos'))(new URLSearchParams(location.search)),qTxt='',lastStep=-1;
 const duoSvc=()=>{const L=DL(),a=L[dA],b=L[dB];if(!a||!b)return null;return{n:duoCode(a.n,b.n),nom:'Masaje dúo',txt:'Masaje dúo: '+a.n+' + '+b.n,m:DM(),v:pD(a)+pD(b),vo:(+a.v||0)+(+b.v||0),c:DUO,duo:1,a,b}};
 // Maderoterapia: sesión individual o pack (panel → Menú → Maderoterapia)
 let mk=1,mq=0;
@@ -820,11 +822,18 @@ function view0(app){
    <h2>Cómo reservar</h2><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
   <p class="foot">${NEGOCIO} · ${ADDR}</p>${RCAP}</div>`;
-  applyF();
+  applyF();deepLink();
   if(foc){const q=$(foc);if(q){q.focus();try{q.setSelectionRange(q.value.length,q.value.length)}catch(_){}}}
   // al abrir el link de la giftcard, baja directo a su sección
   if(GC_ON&&!gcIr&&catF===GIFT){gcIr=true;requestAnimationFrame(()=>{const c=document.querySelector('.cchips');if(c)c.scrollIntoView({block:'start'})})}
 }
+// Enlaces directos desde la página de inicio: ?cat=Categoría (&grp=Grupo) muestra esa parte de la carta; ?s=Servicio abre directo «Fecha y hora»
+let dlHecho=false;
+function deepLink(){if(dlHecho||step!==0||!SV().length)return;dlHecho=true;
+  const P=new URLSearchParams(location.search),sv=String(P.get('s')||'').trim(),gr=String(P.get('grp')||'').trim();
+  if(sv){const i=SV().findIndex(x=>norm(x.n)===norm(sv));if(i>=0&&!SV()[i].w){gcMode=false;duo=false;mk=1;mq=0;svcIdx=i;step=1;selT=null;notice='';recompute();setTimeout(()=>{render();try{scrollTo(0,0)}catch(_){}} ,0);return}}
+  if(!P.get('cat')&&!gr)return;
+  requestAnimationFrame(()=>{let t=gr?[...document.querySelectorAll('#app .grp')].find(x=>!x.hidden&&norm(x.textContent)===norm(gr)):null;if(!t)t=document.querySelector('.cchips');if(t)t.scrollIntoView({block:'start'})})}
 function applyF(){
   const q=norm(qTxt.trim());let any=false;
   document.querySelectorAll('#app .sec').forEach(sec=>{const okC=catF==='Todos'||sec.dataset.sec===catF;let n=0;
