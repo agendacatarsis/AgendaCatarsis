@@ -615,12 +615,19 @@ function render0(){
 }
 // ===== Collage de fotos (archivos galeria-1.jpg … galeria-6.jpg en la misma carpeta) =====
 const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje de espalda','72% 40%'],['galeria-3.jpg','Tratamiento facial','50% 30%'],['galeria-4.jpg','Terapia con ventosas','50% 40%'],['galeria-5.jpg','Mascarilla facial','50% 40%'],['galeria-6.jpg','Masaje facial con piedras de jade','50% 35%']];
-const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-t.webp')}" alt="${a}" style="object-position:${pos}" decoding="async" fetchpriority="${i<3?'high':'auto'}" onerror="const n=+(this.dataset.o||0);this.dataset.o=n+1;if(n===0)this.src='${f.replace(/\.jpg$/,'-m.jpg')}';else if(n===1)this.src='${f}';else this.parentNode.remove()"></button>`).join('')}</div>`;
+const galHtml=()=>`<div class="collage" data-keep="col" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-t.webp')}" data-f="${i}" alt="${a}" style="object-position:${pos}" decoding="${i<3?'sync':'async'}" fetchpriority="${i<3?'high':'auto'}" onerror="galErr(this)"></button>`).join('')}</div>`;
+// Fallback de cada foto: miniatura .webp → -m.jpg → original → se quita
+window.galErr=function(im){const g=GAL[+im.dataset.f];if(!g)return;const f=g[0],n=+(im.dataset.o||0);im.dataset.o=n+1;if(!/\.jpg$/.test(f)||n>1){im.parentNode&&im.parentNode.remove();return}im.src=n===0?f.replace(/\.jpg$/,'-m.jpg'):f};
+// Conserva nodos ya cargados (collage y logo) entre renders: así las fotos no se vuelven a decodificar ni parpadean
+const KEEP={};
+function keepSwap(root){root.querySelectorAll('[data-keep]').forEach(n=>{const k=n.dataset.keep,o=KEEP[k];if(o&&o!==n&&(o.dataset.sig||'')===(n.dataset.sig||''))n.replaceWith(o);else KEEP[k]=n})}
 
 // ===== Fotos editables desde el panel (Menú → Imágenes de reservas): collage del inicio y foto de la giftcard =====
 const GCSRC={v:'giftcard-plantilla.jpg'};
 function rsDoc(id,mask){return fetch('https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FIREBASE_CONFIG.projectId)+'/databases/(default)/documents/publico/'+id+'?key='+encodeURIComponent(FIREBASE_CONFIG.apiKey)+(mask?'&mask.fieldPaths='+mask:'')).then(r=>r.ok?r.json():null).then(j=>j&&j.fields?restM(j.fields):null)}
-function rsPaint(){const c=document.querySelector('.collage');if(c)c.outerHTML=galHtml()}
+function rsPaint(){const c=KEEP.col||document.querySelector('.collage');if(!c)return;
+  c.querySelectorAll('button[data-gal]').forEach(bt=>{const i=+bt.dataset.gal,g=GAL[i];if(!g)return;bt.setAttribute('aria-label','Ver foto: '+g[1]);const im=bt.querySelector('img');if(!im)return;im.alt=g[1];
+    const src=g[0].replace(/\.jpg$/,'-t.webp');if(/^data:image\//.test(g[0])&&im.getAttribute('src')!==src){im.dataset.o=0;im.style.objectPosition=g[2];im.src=src}})}
 try{rsDoc('ga_rsweb').then(m=>{if(!m)return;
   (Array.isArray(m.gal)?m.gal:[]).slice(0,GAL.length).forEach((x,i)=>{if(!x)return;if(x.c)GAL[i][1]=String(x.c).replace(/["<>&]/g,'').slice(0,60);
     if(x.k&&/^r\d$/.test(x.id))rsDoc('ga_rsi_'+x.id,'m').then(d=>{if(d&&d.m&&/^data:image\//.test(d.m)){GAL[i]=[d.m,GAL[i][1],'50% 50%',x.id,null];rsPaint()}}).catch(()=>{});else rsPaint()});
@@ -805,7 +812,7 @@ function view0(app){
   const secs=cats.map(c=>{let last=null;const its=by[c];if(c===GIFT&&its.some(x=>x.gift||x.venta))return gcSec(its);if(MADX()&&c===MADC())return madSec(c,its);
     return `<section class="sec" data-sec="${esc(c)}"><h2>${ic(c)}${esc(c)}<small>${its.length} servicio${its.length==1?'':'s'}</small></h2>`+its.map(it=>{const g=it.s&&it.s.g&&it.s.g!==c?it.s.g:'';let h='';if(g!==last){if(g)h=`<p class="grp">${esc(g)}</p>`;last=g}return h+svcCard(it)}).join('')+'</section>'}).join('');
   const A=+(ag&&ag.abono)||0,ab=A>0&&A<=100?A+'% del valor':money(A);
-  app.innerHTML=`<header class="hero">${galHtml()}<div class="hb"><div class="lgc"><img class="logo" alt="Catarsis" src="${LOGO}"></div>
+  app.innerHTML=`<header class="hero">${galHtml()}<div class="hb"><div class="lgc"><img class="logo" data-keep="logo" alt="Catarsis" src="${LOGO}"></div>
   <h1>Catarsis <i>Estética y Bienestar</i></h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
   <p class="inf"><a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a>${horarioTxt()?`<br>${horarioTxt()}`:''}</p>
   <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">Cómo llegar</a></div>${DCQ&&!GC_ON?`<p class="dcban">Tienes el código <b>${esc(DCQ)}</b>. Elige tu servicio: el descuento se aplica al confirmar tu reserva.</p>`:''}</div></header>
@@ -827,7 +834,7 @@ function view0(app){
    <h2>Cómo reservar</h2><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
   <p class="foot">${NEGOCIO} · ${ADDR}</p>${RCAP}</div>`;
-  applyF();deepLink();
+  keepSwap(app);applyF();deepLink();
   if(foc){const q=$(foc);if(q){q.focus();try{q.setSelectionRange(q.value.length,q.value.length)}catch(_){}}}
   // al abrir el link de la giftcard, baja directo a su sección
   if(GC_ON&&!gcIr&&catF===GIFT){gcIr=true;requestAnimationFrame(()=>{const c=document.querySelector('.cchips');if(c)c.scrollIntoView({block:'start'})})}
