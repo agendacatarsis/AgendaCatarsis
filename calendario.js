@@ -34,10 +34,22 @@
   function esAndroid(){return /Android/i.test(navigator.userAgent)}
   function abrir(u){var w=null;try{w=window.open(u,'_blank','noopener')}catch(_){}if(!w)location.href=u}
   // Calendario del teléfono: archivo .ics que abre la app de calendario (iPhone: Calendario; Android: Samsung, Huawei, Xiaomi y otras)
-  function telefono(e){var t=ics(e);
+  // Android: pide al sistema «agregar evento» → aparece el menú «Completar la acción utilizando» (Samsung, Google, Outlook…)
+  function intento(e){function s(v){return encodeURIComponent(String(v==null?'':v))}
+    return 'intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/event;S.title='+s(e.titulo)+';l.beginTime='+utc(e.fecha,e.hora)+';l.endTime='+utc(e.fecha,fin(e))+';S.eventLocation='+s(e.lugar)+';S.description='+s(e.detalle)+';end'}
+  function telefono(e,listo){var t=ics(e);
     if(esIOS()){location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(t);return}
+    if(esAndroid()&&/Chrome\//.test(navigator.userAgent)&&!/Firefox|FxiOS/.test(navigator.userAgent)&&!e._ics){
+      // si el teléfono abre el menú de calendarios, la página pierde el foco; si no, se usa el archivo como respaldo
+      var salio=false,m=function(){salio=true};window.addEventListener('blur',m);document.addEventListener('visibilitychange',m);window.addEventListener('pagehide',m);
+      try{location.href=intento(e)}catch(_){}
+      setTimeout(function(){window.removeEventListener('blur',m);document.removeEventListener('visibilitychange',m);window.removeEventListener('pagehide',m);
+        if(salio){listo&&listo('menu');return}
+        descargar(e,t);listo&&listo('archivo')},1400);return}
+    descargar(e,t);listo&&listo('archivo')}
+  function descargar(e,t){
     var u=URL.createObjectURL(new Blob([t],{type:'text/calendar;charset=utf-8'})),a=document.createElement('a');
-    a.href=u;a.download=(e.archivo||'hora-catarsis')+'.ics';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},10000)}
+    a.href=u;var d=new Date();a.download=(e.archivo||'hora-catarsis')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0')+'.ics';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},10000)}
   var CSS='.calcat-f{position:fixed;inset:0;z-index:99999;background:rgba(31,27,22,.45);display:flex;align-items:flex-end;justify-content:center;animation:calcatf .2s ease}'+
     '.calcat-s{width:100%;max-width:460px;background:#F7F1E6;color:#2a211a;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25);font:15px/1.4 Inter,system-ui,sans-serif;animation:calcats .25s ease}'+
     '.calcat-s h4{margin:0 0 2px;font:600 18px Inter,system-ui,sans-serif}.calcat-s .calcat-sub{margin:0 0 14px;color:#6b5a45;font-size:13.5px}'+
@@ -71,5 +83,5 @@
     return new URL('calendario.html',base||location.href).href+'#'+p.toString()}
   function desdeEnlace(h){var p=new URLSearchParams(String(h||location.hash).replace(/^#/,''));if(!p.get('fecha'))return null;
     return {titulo:p.get('titulo')||'Hora en Catarsis',fecha:p.get('fecha'),hora:+p.get('hora')||0,dur:+p.get('dur')||60,lugar:p.get('lugar')||'',detalle:p.get('detalle')||'',uid:p.get('uid')||'',resumen:p.get('resumen')||'',avisos:p.get('avisos')!=='0'}}
-  window.CalCat={aviso:aviso,instante:function(e){return {ini:utc(e.fecha,e.hora),fin:utc(e.fecha,fin(e))}},google:google,outlook:outlook,ics:ics,telefono:telefono,menu:menu,opciones:opciones,ejecutar:ejecutar,enlace:enlace,desdeEnlace:desdeEnlace,esIOS:esIOS,esAndroid:esAndroid};
+  window.CalCat={aviso:aviso,intento:intento,instante:function(e){return {ini:utc(e.fecha,e.hora),fin:utc(e.fecha,fin(e))}},google:google,outlook:outlook,ics:ics,telefono:telefono,menu:menu,opciones:opciones,ejecutar:ejecutar,enlace:enlace,desdeEnlace:desdeEnlace,esIOS:esIOS,esAndroid:esAndroid};
 })();

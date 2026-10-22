@@ -843,10 +843,10 @@ const calEv=a=>({titulo:'Catarsis · '+a.s,fecha:a.d,hora:a.t,dur:+a.m||60,lugar
   detalle:`Tu hora en Catarsis Estética y Bienestar${a.th?' con '+a.th:''}.\nDirección: Cochrane 450, Osorno.${WA()?`\nCambios o consultas por WhatsApp: https://wa.me/${WA()}`:''}`});
 const calBtns=a=>window.CalCat?`<button type="button" class="cta alt" data-cal>Agregar a mi calendario</button><p class="hint" id="calNota" hidden style="text-align:center;margin:8px 0 0"></p>`:'';
 // Un toque y directo al calendario del teléfono, sin menús ni páginas nuevas:
-// iPhone/iPad → se abre el Calendario para agregarla; Android y computador → se descarga el evento y se abre con su app de calendario
-function calDirecto(){if(!booked||!window.CalCat)return;const e=calEv(booked);CalCat.telefono(e);
-  const n=$('calNota');if(!n||CalCat.esIOS())return;
-  n.innerHTML=(CalCat.esAndroid()?'✓ Listo. Toca <b>Abrir</b> en el aviso de descarga y elige tu calendario.':'✓ Listo. Abre el archivo <b>hora-catarsis.ics</b> que se descargó para agregarla a tu calendario.')+` <a href="${esc(CalCat.google(e))}" target="_blank" rel="noopener" style="white-space:nowrap">¿Usas Google Calendar?</a>`;n.hidden=false}
+// iPhone/iPad → se abre el Calendario; Android → menú de calendarios del teléfono (si el navegador no lo permite, se descarga el evento); computador → archivo del evento
+function calDirecto(){if(!booked||!window.CalCat)return;const e=calEv(booked);const n=$('calNota');if(n)n.hidden=true;
+  CalCat.telefono(e,r=>{if(r!=='archivo'||!n)return;
+  n.innerHTML=(CalCat.esAndroid()?'✓ Listo. Toca <b>Abrir</b> en el aviso de abajo y elige tu calendario (Samsung, Google u Outlook).':'✓ Listo. Abre el archivo de la hora que se descargó para agregarla a tu calendario.')+` <a href="${esc(CalCat.google(e))}" target="_blank" rel="noopener" style="white-space:nowrap">¿Usas Google Calendar?</a>`;n.hidden=false})}
 function view3(app){
   const a=booked;if(!a)return;
   if(a.gc){const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)} con mi giftcard N° ${fmtN(a.gc.n)}.`);clearInterval(cdT);
