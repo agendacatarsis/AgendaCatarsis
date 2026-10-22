@@ -340,6 +340,11 @@ input[aria-invalid="true"],select[aria-invalid="true"]{border-color:var(--red)!i
 .st li:not(.done):not(.cur) .dot{color:var(--ink)}
 
 .grp{scroll-margin-top:64px}
+
+/* El círculo del logo es claro también en modo oscuro: el logo va en su color normal (antes quedaba blanco sobre crema y no se veía) */
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .lgc img{filter:none!important;mix-blend-mode:multiply}}
+/* Sin «deslizar para recargar» del navegador: un tirón accidental hacia abajo recargaba la página y se perdía la reserva en curso */
+html,body{overscroll-behavior-y:none}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
 <div id="app"><div class="pre"><h1>Catarsis Estética y Bienestar</h1><p>Reserva online tu hora de masajes y tratamientos estéticos.</p><p>Cochrane 450, Osorno · <a href="https://www.instagram.com/catarsis_osorno" rel="noopener">@catarsis_osorno</a></p><p class="mut">Cargando servicios…</p></div></div>
