@@ -328,7 +328,6 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(1
 <div id="app"><div class="pre"><h1>Catarsis Estética y Bienestar</h1><p>Reserva online tu hora de masajes y tratamientos estéticos.</p><p>Cochrane 450, Osorno · <a href="https://www.instagram.com/catarsis_osorno" rel="noopener">@catarsis_osorno</a></p><p class="mut">Cargando servicios…</p></div></div>
 <div id="lb" class="lb" hidden role="dialog" aria-modal="true" aria-label="Foto"><img id="lbImg" alt=""><button type="button" class="lbx" data-lbx aria-label="Cerrar">✕</button><button type="button" class="lbn lbp" data-lbn="-1" aria-label="Foto anterior">‹</button><button type="button" class="lbn lbnx" data-lbn="1" aria-label="Foto siguiente">›</button><div class="lbc" id="lbCap"></div></div>
 <script src="firebase-config.js"></script>
-<script src="calendario.js"></script>
 <script>
 // La configuración de Firebase está en el archivo firebase-config.js (misma carpeta)
 const FIREBASE_CONFIG=(c=>c&&typeof c==='object'&&['apiKey','authDomain','projectId','appId'].every(k=>typeof c[k]==='string'&&c[k].trim()&&!/PEGA_AQUI/i.test(c[k]))?c:null)(window.FIREBASE_CONFIG);
@@ -857,15 +856,6 @@ function startCd(a){
   };
   tick();cdT=setInterval(tick,1000);
 }
-// Agregar la hora a cualquier calendario de la clienta (iPhone, Samsung, Google, Outlook…) con calendario.js
-const calEv=a=>({titulo:'Catarsis · '+a.s,fecha:a.d,hora:a.t,dur:+a.m||60,lugar:'Catarsis Estética y Bienestar, Cochrane 450, Osorno',uid:'res-'+a.d+'-'+a.t+'-'+(a.at||0),resumen:`${cap(fmtD(a.d))} · ${fmt(a.t)}`,
-  detalle:`Tu hora en Catarsis Estética y Bienestar${a.th?' con '+a.th:''}.\nDirección: Cochrane 450, Osorno.${WA()?`\nCambios o consultas por WhatsApp: https://wa.me/${WA()}`:''}`});
-const calBtns=a=>window.CalCat?`<button type="button" class="cta alt" data-cal>Agregar a mi calendario</button><p class="hint" id="calNota" hidden style="text-align:center;margin:8px 0 0"></p>`:'';
-// Un toque y directo al calendario del teléfono, sin menús ni páginas nuevas:
-// iPhone/iPad → se abre el Calendario; Android → menú de calendarios del teléfono (si el navegador no lo permite, se descarga el evento); computador → archivo del evento
-function calDirecto(){if(!booked||!window.CalCat)return;const e=calEv(booked);const n=$('calNota');if(n)n.hidden=true;
-  CalCat.telefono(e,r=>{if(r!=='archivo'||!n)return;
-  n.innerHTML=(CalCat.esAndroid()?'✓ Listo. Toca <b>Abrir</b> en el aviso de abajo y elige tu calendario (Samsung, Google u Outlook).':'✓ Listo. Abre el archivo de la hora que se descargó para agregarla a tu calendario.')+` <a href="${esc(CalCat.google(e))}" target="_blank" rel="noopener" style="white-space:nowrap">¿Usas Google Calendar?</a>`;n.hidden=false})}
 function view3(app){
   const a=booked;if(!a)return;
   if(a.gc){const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)} con mi giftcard N° ${fmtN(a.gc.n)}.`);clearInterval(cdT);
@@ -873,7 +863,7 @@ function view3(app){
     <p style="margin:0 0 10px"><b>Dirección:</b> <a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a></p>
     <p>No necesitas pagar abono: tu hora queda pagada con la giftcard <b>N° ${fmtN(a.gc.n)}</b>${a.gc.dif>0?`. La diferencia de <b>${money(a.gc.dif)}</b> se paga en el local`:''}. Te confirmaremos la hora por WhatsApp.</p>
     ${WA()?`<a class="cta" href="https://wa.me/${WA()}?text=${msg}" target="_blank" rel="noopener">Avisar por WhatsApp</a>`:''}
-    ${calBtns(a)}<button class="cta alt" data-go="again">Volver al inicio</button></div>`;
+    <button class="cta alt" data-go="again">Volver al inicio</button></div>`;
     window.scrollTo({top:0,behavior:'smooth'});return}
   const ab=a.ab!=null?a.ab:abonoDe(a.v);
   const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)}. Te envío el comprobante ${a.full?'del pago':'del abono'}.`);
@@ -884,14 +874,13 @@ function view3(app){
   <p>Tu hora queda <b>pendiente hasta que se pague ${a.full?'el valor completo':'el abono'}</b>${ab?` de <b>${money(ab)}</b>${a.full?'':' (se descuenta del valor del servicio)'}`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para ${mpPara(ab)?'pagarlo':'transferirlo'}; pasado ese plazo la hora puede liberarse.</p>
   <div class="timer" id="timer" role="timer"><span>${mpPara(ab)?(a.full?'Tiempo para pagar':'Tiempo para pagar el abono'):(a.full?'Tiempo para transferir el pago':'Tiempo para transferir el abono')}</span><b id="cd">--:--</b></div>
   ${DATOS()?`<pre>${esc(DATOS())}</pre>`:''}${mpPara(ab)?`<a class="cta mp" href="${esc(MP())}" target="_blank" rel="noopener">Pagar ${money(ab)} con tarjeta</a><p class="hint" style="text-align:center;margin:6px 0 0">Mercado Pago · crédito o débito. Ingresa <b>${money(ab)}</b> y después envíanos el comprobante.</p>`:''}${WA()?`<a class="cta" href="https://wa.me/${WA()}?text=${msg}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>`:''}
-  ${calBtns(a)}<button class="cta alt" data-go="again">Reservar otra hora</button></div>`;
+  <button class="cta alt" data-go="again">Reservar otra hora</button></div>`;
   startCd(a);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.addEventListener('click',e=>{
   const g=k=>e.target.closest('['+k+']');let el;
-  if(el=g('data-cal')){calDirecto();return}
-  else if(el=g('data-gcver')){gcVerifica();return}
+  if(el=g('data-gcver')){gcVerifica();return}
   else if(el=g('data-dcver')){dcVerifica();return}
   else if(el=g('data-dcopen')){dcOpen=true;render();const i=$('dcNum');if(i)i.focus();return}
   else if(el=g('data-dcquitar')){dcV=null;dcTxt='';dcMsg='';dcOpen=true}
