@@ -30,7 +30,7 @@ window.__sdkP=new Promise(function(ok,no){if(window.firebase&&window.firebase.fi
 </script>
 <style>
 :root{--bg:#ede1cb;--card:#f8f2e6;--ink:#1f1b16;--acc:#6b5a45;--tint:#e3d4b8;--line:#d6c7aa;--mut:#574d41;--btn:#1f1b16;--btnink:#f8f2e6;--onacc:#fff;--red:#b8392b;--grn:#256b41;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--red:#ff8f80;--card:#282420;--ink:#f1e7d3;--acc:#d2bb94;--tint:#3a3328;--line:#443c30;--mut:#c4b9a6;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16;--grn:#5cc08a}.logo{filter:invert(1)}}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a16;--red:#ff8f80;--card:#282420;--ink:#f1e7d3;--acc:#d2bb94;--acc-t:#d2bb94;--tint:#3a3328;--line:#443c30;--mut:#c4b9a6;--btn:#ede1cb;--btnink:#1f1b16;--onacc:#1d1a16;--grn:#5cc08a}.logo{filter:invert(1)}}
 :root{color-scheme:light dark}
 textarea{color:var(--ink)}
 ::placeholder{color:var(--mut);opacity:1}
@@ -42,7 +42,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px Barlow,system-ui,s
 .pre{text-align:center;padding:36px 8px}.pre h1{font-family:"Barlow Condensed",sans-serif;margin:0 0 10px}.pre p{margin:6px 0}.pre a{color:inherit}
 button,input{font:inherit;color:var(--ink)}
 .bar{display:flex;align-items:flex-start;gap:8px;margin-bottom:22px}
-.back{flex:none;width:40px;height:40px;border:0;border-radius:10px;background:var(--card);font-size:22px;cursor:pointer}
+.back{flex:none;width:44px;height:44px;border:0;border-radius:10px;background:var(--card);font-size:22px;cursor:pointer}
 .back[hidden]{visibility:hidden;display:block}
 .st{flex:1;display:flex;list-style:none;margin:0;padding:0}
 .st li{flex:1;position:relative;text-align:center;font-size:13px;color:var(--mut)}
@@ -55,7 +55,7 @@ button,input{font:inherit;color:var(--ink)}
 @media(min-width:760px){.grid{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:32px;align-items:start}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:20px}
 .who{display:flex;gap:12px;align-items:center}.logo{height:56px;width:auto}
-.who b{display:block;font-size:24px;line-height:1.1}.who span{display:block;font-size:14px}.who .acc{color:var(--acc)}
+.who b{display:block;font-size:24px;line-height:1.1}.who span{display:block;font-size:14px}.who .acc{color:var(--acc-t)}
 dl{margin:14px 0 0;border-top:1px solid var(--line);padding-top:12px;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
 dt{color:var(--mut)}dd{margin:0;font-weight:600}
 h3{font-size:22px;margin:0 0 12px}
@@ -73,21 +73,21 @@ h3{font-size:22px;margin:0 0 12px}
 .tabs button.on{background:var(--acc);color:var(--onacc)}
 .tabs.cats{display:flex;flex-wrap:wrap;gap:6px;overflow:visible;border-radius:0}
 .tabs.cats button{border-radius:8px;white-space:nowrap;padding:7px 12px}
-.tabs button.promo{font-weight:600;color:var(--acc)}.tabs button.promo.on{color:var(--onacc)}
+.tabs button.promo{font-weight:600;color:var(--acc-t)}.tabs button.promo.on{color:var(--onacc)}
 .duotot{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--tint);font-size:14px;line-height:1.4}.duotot b{font-size:15px}.duotot s{color:var(--mut)}
-.pz{display:inline-block;font-size:11px;font-weight:600;background:var(--acc);color:var(--onacc);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.pz{display:inline-block;font-size:12px;font-weight:600;background:var(--acc);color:var(--onacc);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
 .bnf{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .bnf span{display:inline-flex;align-items:flex-start;gap:6px;background:var(--tint);color:var(--ink);border-radius:999px;padding:5px 12px 5px 9px;font-size:13px;line-height:1.25}
 .bnf span::before{content:"\2713";color:var(--grn);font-weight:700;flex:none}
 .qb{margin-top:6px}
-.qb summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:34px;font-weight:600;font-size:13.5px;color:var(--teal);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+.qb summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:600;font-size:13.5px;color:var(--teal);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
 .qb summary::-webkit-details-marker{display:none}
 .qb summary::after{content:"\25BE";font-size:12px;text-decoration:none;display:inline-block;transition:transform .2s}
 .qb[open] summary::after{transform:rotate(180deg)}
 .qb summary:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
 .qb .sd{margin-top:4px}
 .qb .pnote{color:var(--mut);font-weight:400;font-size:12.5px;margin-top:8px}
-.pnote{margin:10px 0 0;font-size:13.5px;color:var(--acc);font-weight:500}
+.pnote{margin:10px 0 0;font-size:13.5px;color:var(--acc-t);font-weight:500}
 .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
 .chip{border:0;border-radius:10px;background:var(--tint);padding:9px 6px;cursor:pointer;line-height:1.2}
 .chip b{display:block;font-size:16px}.chip small{display:block;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -129,11 +129,11 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .lgc img{mix-blend-mode:screen}}
 @media(min-width:760px){.cover{height:170px;border-radius:0 0 22px 22px}.hb{margin-top:-60px}}
 .hero h1{font-size:31px;line-height:1.05}
-.hero .sub{margin:6px 0 0;color:var(--acc);font-size:15px;font-weight:500}
+.hero .sub{margin:6px 0 0;color:var(--acc-t);font-size:15px;font-weight:500}
 .hero .inf{margin:8px 0 0;font-size:14px;color:var(--mut);line-height:1.5}
 .hero .inf a{color:inherit}
 .hacts{display:flex;gap:6px;justify-content:center;margin:14px 0 0;flex-wrap:wrap}
-.hbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px;font-size:14px;text-decoration:none;color:var(--ink);min-height:42px;white-space:nowrap}
+.hbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px;font-size:14px;text-decoration:none;color:var(--ink);min-height:44px;white-space:nowrap}
 .cat-wrap{max-width:760px;margin:0 auto}
 /* collage de fotos (portada) */
 .collage{position:relative;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:168px;gap:3px;min-height:128px;background:linear-gradient(135deg,#dcc8a6 0%,#b09270 58%,#836a52 100%);overflow:hidden}
@@ -176,14 +176,14 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .srch span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
 .cchips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 4px;padding:2px 16px 8px;scrollbar-width:none}
 .cchips::-webkit-scrollbar{display:none}
-.cchips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;font-size:14px;cursor:pointer;white-space:nowrap;min-height:42px}
+.cchips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;font-size:14px;cursor:pointer;white-space:nowrap;min-height:44px}
 .cchips button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .sec{margin:16px 0 4px}
-.sec>h3{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:25px;margin:0 0 4px}
-.sec>h3 small{font:500 13px Barlow,sans-serif;color:var(--mut)}
+.sec>h3,.sec>h2{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:25px;margin:0 0 4px}
+.sec>h3 small,.sec>h2 small{font:500 13px Barlow,sans-serif;color:var(--mut)}
 .grp{font:600 12.5px Barlow,sans-serif;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:14px 2px 6px}
 .svc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:8px 0;display:flex;flex-direction:column;gap:12px}
-.svc h4{margin:0;font-size:16.5px;font-weight:600;line-height:1.3}
+.svc h4,.svc h3{margin:0;font-size:16.5px;font-weight:600;line-height:1.3}
 .sd{margin:4px 0 0;font-size:13.5px;color:var(--mut);line-height:1.4}
 .meta{display:inline-block;margin-top:6px;font-size:13.5px;color:var(--mut)}
 .sp{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -193,7 +193,7 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .svc[hidden],.sec[hidden],.grp[hidden],#noRes[hidden],.pane[hidden]{display:none}
 /* giftcard (solo con el link del mensaje) */
 .svc.gcx{border:2px solid var(--acc);background:linear-gradient(135deg,var(--card) 0%,var(--card) 55%,var(--tint) 100%)}
-.gcx h4{font-size:18px}
+.gcx h4,.gcx h3{font-size:18px}
 .gcin{display:flex;gap:8px;align-items:center}
 .gcin input{flex:1;min-width:0;margin:6px 0;font:600 19px Barlow,sans-serif;letter-spacing:2px;text-align:center}
 .gcin .rbtn{flex:none}
@@ -219,11 +219,11 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 @media(min-width:760px){.gcv .gcimg{width:170px;flex:none}}
 @media(max-width:759px){.gcv .rbtn{flex:1}}
 @media(min-width:760px){.svc{flex-direction:row;align-items:center;gap:16px}.svc .si{flex:1}.sp{flex:none;gap:16px}}
-.info{line-height:1.5}.info h3{font-size:19px;margin:16px 0 4px}.info h3:first-child{margin-top:0}.info p{margin:0}
-.grecaptcha-badge{visibility:hidden!important}.rcap{text-align:center;color:var(--mut);font-size:11.5px;margin:12px 0 0}.rcap a{color:inherit}
+.info{line-height:1.5}.info h3,.info h2{font-size:19px;margin:16px 0 4px}.info h3:first-child,.info h2:first-child{margin-top:0}.info p{margin:0}
+.grecaptcha-badge{visibility:hidden!important}.rcap{text-align:center;color:var(--mut);font-size:12.5px;margin:12px 0 0}.rcap a{color:inherit;position:relative}.rcap a::after{content:'';position:absolute;left:-3px;right:-3px;top:-15px;bottom:-15px}.hero .inf a,a.amp{position:relative}.hero .inf a::after,a.amp::after{content:'';position:absolute;left:-4px;right:-4px;top:-14px;bottom:-14px}
 .foot{text-align:center;color:var(--mut);font-size:13px;margin:30px 0 0}
 .sumh{font-size:21px;margin:0}
-.lnk{border:0;background:none;color:var(--acc);font-weight:600;padding:12px 0 0;cursor:pointer;font-size:14.5px;text-decoration:underline;min-height:44px}
+.lnk{border:0;background:none;color:var(--acc-t);font-weight:600;padding:12px 0 0;cursor:pointer;font-size:14.5px;text-decoration:underline;min-height:44px}
 .cum{display:flex;gap:8px}.cum select{flex:1;min-width:0}
 .dcbox{margin-top:14px;padding:10px 12px;border:1px dashed var(--acc);border-radius:12px}
 .dcbox .gcin input{font-size:17px}
@@ -236,37 +236,37 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .polbox{margin:14px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:14px;font-size:13.5px;line-height:1.45;color:var(--mut)}.polbox b{display:block;color:var(--ink);margin-bottom:2px}
 /* ===== Maderoterapia (formato experiencia) ===== */
 .madintro{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:6px 0 4px;text-align:center}
-.madintro .msub{font:600 13px Barlow,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--acc);margin:0}
+.madintro .msub{font:600 13px Barlow,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--acc-t);margin:0}
 .madintro .mtags{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin:6px 0 10px}
 .madintro .mdesc{margin:0;font-size:14.5px;line-height:1.5}
 .svc.xp{flex-direction:column;align-items:stretch;gap:10px}
 .ben{margin:8px 0 0;padding:0;list-style:none;font-size:14px;line-height:1.45}
 .ben li{position:relative;padding-left:18px;margin:2px 0}
-.ben li::before{content:'✓';position:absolute;left:0;color:var(--acc);font-weight:700}
+.ben li::before{content:'✓';position:absolute;left:0;color:var(--acc-t);font-weight:700}
 .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
 .opt{position:relative;display:block;cursor:pointer}
 .opt input{position:absolute;opacity:0;pointer-events:none}
 .opt span{display:block;border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center;line-height:1.25;background:var(--bg);min-height:62px}
-.opt b{display:block;font-size:14px}.opt small{display:block;font-size:12.5px;color:var(--mut)}.opt i{display:block;font-style:normal;font-size:11.5px;color:var(--acc);font-weight:600;margin-top:1px}
+.opt b{display:block;font-size:14px}.opt small{display:block;font-size:12.5px;color:var(--mut)}.opt i{display:block;font-style:normal;font-size:12.5px;color:var(--acc-t);font-weight:600;margin-top:1px}
 .opt input:checked+span{border:2px solid var(--acc);background:var(--tint);padding:8px 5px}
 .opt input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
 .madnote{display:flex;gap:12px;align-items:flex-start;background:var(--tint);border-radius:14px;padding:12px 14px;margin:10px 0 0;font-size:14px;line-height:1.45}
 .madnote .ico{font-size:22px;line-height:1}
 .madnote b{display:block;font-size:13px;letter-spacing:1px;text-transform:uppercase}
-.madnote .rbtn{margin-top:8px;padding:8px 14px;min-height:40px;font-size:14px}
+.madnote .rbtn{margin-top:8px;padding:8px 14px;min-height:44px;font-size:14px}
 /* ventana emergente abierta: la página de fondo no se mueve */
 body.mlock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 .modal,.mbox,.lb{overscroll-behavior:contain}
 
 /* ===== Rediseño estilo "diario de bienestar" con colores Catarsis ===== */
-:root{--bg:#EDE2CC;--card:#F7F1E6;--ink:#2a211a;--acc:#8a6428;--tint:#E4D5B8;--line:#D8CAB0;--mut:#6b5a45;--btn:#8a6428;--btnink:#FBF6EC;--onacc:#FBF6EC;--teal:#8a6428;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+:root{--bg:#EDE2CC;--card:#F7F1E6;--ink:#2a211a;--acc:#8a6428;--acc-t:#7a5721;--tint:#E4D5B8;--line:#D8CAB0;--mut:#6b5a45;--btn:#8a6428;--btnink:#FBF6EC;--onacc:#FBF6EC;--teal:#8a6428;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 body{font:400 15.5px/1.5 var(--sans);letter-spacing:-.023em}
 button,input,select,textarea{letter-spacing:-.023em}
 .cond,h1,h2,h3,.pre h1{font-family:var(--serif);font-weight:400;letter-spacing:0}
-h1 i,h2 i,h3 i{font-style:italic;color:var(--acc);font-weight:400}
+h1 i,h2 i,h3 i{font-style:italic;color:var(--acc-t);font-weight:400}
 h3{font-size:26px;line-height:1.15}
-.sec>h3{font-size:30px}.sec>h3 small,.grp,.tgrp{font-family:var(--sans)}
-.grp,.tgrp{font-weight:600;font-size:12px;letter-spacing:.12em;color:var(--acc)}
+.sec>h3,.sec>h2{font-size:30px}.sec>h3 small,.sec>h2 small,.grp,.tgrp{font-family:var(--sans)}
+.grp,.tgrp{font-weight:600;font-size:12px;letter-spacing:.12em;color:var(--acc-t)}
 .hero h1{font-size:clamp(32px,6vw,44px);line-height:1.04;margin-top:4px}
 .hero .sub{font-size:14px;color:var(--mut)}
 .hero .inf{font-size:14px}
@@ -278,10 +278,10 @@ h3{font-size:26px;line-height:1.15}
 .card,.svc,.bacard,.madintro{background:var(--card);border-color:transparent;border-radius:24px}
 .card{padding:24px}
 .svc{padding:20px 22px;margin:12px 0}
-.svc h4{font:400 20px/1.25 var(--serif);letter-spacing:0}
+.svc h4,.svc h3{font:400 20px/1.25 var(--serif);letter-spacing:0}
 .pr{font-weight:600}
 .rbtn,.cta{border-radius:40px;font-weight:600}
-.rbtn.wa,.cta.alt{border:1.5px solid var(--acc);color:var(--acc);background:transparent}
+.rbtn.wa,.cta.alt{border:1.5px solid var(--acc);color:var(--acc-t);background:transparent}
 .cta:disabled{background:var(--tint);color:var(--mut)}
 .back{border-radius:50%;background:var(--card)}
 .st li:not(:first-child)::before{height:1px;top:11px}
@@ -310,8 +310,8 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(1
 .timer b{font:400 32px/1 var(--serif);font-variant-numeric:tabular-nums}
 .ok{border:0;border-radius:24px;background:var(--card);box-shadow:rgba(42,33,26,.10) 12px 32px 80px 0}
 .bnf span{background:var(--bg);border:1px solid var(--line)}
-.bnf span::before{color:var(--acc)}
-.qb summary{color:var(--acc)}
+.bnf span::before{color:var(--acc-t)}
+.qb summary{color:var(--acc-t)}
 .hl{background:var(--card)}
 .pz{border-radius:9999px;padding:2px 8px}
 .qopt span,.opt span{border-radius:16px}
@@ -319,10 +319,14 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(1
 .madintro .msub{font-family:var(--sans);letter-spacing:.14em;font-size:12px}
 .ctabar{background:linear-gradient(rgba(237,226,204,0),var(--bg) 35%)}
 .foot{font-size:13px}
-.lnk{color:var(--acc)}
+.lnk{color:var(--acc-t)}
 .polbox{border-radius:18px}
 .dcbox,.dcban{border-radius:18px}
 :focus-visible{outline:3px solid rgba(138,100,40,.4);outline-offset:2px}
+
+.sec>h2,.info h2{line-height:1.15}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+.st li:not(.done):not(.cur) .dot{color:var(--ink)}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
 <div id="app"><div class="pre"><h1>Catarsis Estética y Bienestar</h1><p>Reserva online tu hora de masajes y tratamientos estéticos.</p><p>Cochrane 450, Osorno · <a href="https://www.instagram.com/catarsis_osorno" rel="noopener">@catarsis_osorno</a></p><p class="mut">Cargando servicios…</p></div></div>
@@ -577,7 +581,7 @@ function render0(){
 }
 // ===== Collage de fotos (archivos galeria-1.jpg … galeria-6.jpg en la misma carpeta) =====
 const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje de espalda','72% 40%'],['galeria-3.jpg','Tratamiento facial','50% 30%'],['galeria-4.jpg','Terapia con ventosas','50% 40%'],['galeria-5.jpg','Mascarilla facial','50% 40%'],['galeria-6.jpg','Masaje facial con piedras de jade','50% 35%']];
-const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-m.jpg')}" alt="${a}" style="object-position:${pos}" decoding="async" onerror="if(!this.dataset.o){this.dataset.o=1;this.src='${f}'}else this.parentNode.remove()"></button>`).join('')}</div>`;
+const galHtml=()=>`<div class="collage" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-t.webp')}" alt="${a}" style="object-position:${pos}" decoding="async" fetchpriority="${i<3?'high':'auto'}" onerror="const n=+(this.dataset.o||0);this.dataset.o=n+1;if(n===0)this.src='${f.replace(/\.jpg$/,'-m.jpg')}';else if(n===1)this.src='${f}';else this.parentNode.remove()"></button>`).join('')}</div>`;
 
 // ===== Fotos editables desde el panel (Menú → Imágenes de reservas): collage del inicio y foto de la giftcard =====
 const GCSRC={v:'giftcard-plantilla.jpg'};
@@ -700,7 +704,7 @@ function qbHtml(s,t,t2){const c=infoQ(s,t,t2),b=(Array.isArray(s&&s.b)&&s.b.leng
   return `<div class="bnf">${b.map(x=>`<span>${esc(x)}</span>`).join('')}</div><details class="qb"><summary>Más información</summary><p class="sd">${esc(d)}</p><p class="pnote">${esc(DISCQ)}${c.n?' '+esc(c.n):''}</p></details>`}
 function svcCard(it){
   if(it.duo){const L=DL(),mn=Math.min(...L.map(pD))*2;
-    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h4>Masaje dúo<span class="pz">Dúo</span></h4><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">${durTxt(DM())}${duoHorTxt()?` · ${duoHorTxt()}`:''}</span>${qbHtml({},'masaje duo pareja','masaje duo pareja')}</div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
+    return `<article class="svc" data-q="${esc(norm('masaje duo pareja dos personas '+L.map(x=>x.n).join(' ')))}"><div class="si"><h3>Masaje dúo<span class="pz">Dúo</span></h3><p class="sd">Dos personas al mismo tiempo: cada una elige su masaje.</p><span class="meta">${durTxt(DM())}${duoHorTxt()?` · ${duoHorTxt()}`:''}</span>${qbHtml({},'masaje duo pareja','masaje duo pareja')}</div><div class="sp"><span class="pr"><small>Desde</small> ${money(mn)}</span><button class="rbtn" data-res="duo">Reservar</button></div></article>`}
   if(it.s&&esMad(it.s)&&!it.s.w)return madCard(it);
   const s=it.s,nm=nomS(s),ev=!s.promo&&/^evaluaci/i.test(s.n),wl=s.w?waLink(waTxtSvc(s)):'';
   const btn=s.w?(wl?`<a class="rbtn wa" href="${wl}" target="_blank" rel="noopener">Agendar por WhatsApp</a>`:''):`<button class="rbtn" data-res="${it.i}">Reservar</button>`;
@@ -708,7 +712,7 @@ function svcCard(it){
   const desde=s.ev&&+s.v>0?`Desde ${money(s.v)}. `:'',desc=s.ds||desde?`<p class="sd">${desde}${esc(s.ds||'')}</p>`:'';
   const pr=s.ev?'<span class="pr ev">Valor según evaluación</span>':q.length?`<span class="pr" data-prc><small>Desde</small> ${money(Math.min(...q.map(t=>+t.v)))}</span>`:`<span class="pr">${money(s.v)}${+s.vo>+s.v?`<s>${money(s.vo)}</s>`:''}</span>`;
   const qo=q.length?`<div class="qopts" role="radiogroup" aria-label="Cantidad">${q.map((t,j)=>`<label class="qopt"><input type="radio" name="q${it.i}" value="${t.n}" ${j?'':'checked'}><span><i>${t.n} ×</i><b>${money(t.v)}</b></span></label>`).join('')}</div>`:'';
-  return `<article class="svc${q.length?' xp':''}" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')+' '+(s.ds||'')+(s.combo?' pack '+s.ca+' '+s.cb:'')))}"><div class="si"><h4>${esc(nm)}${s.promo?`<span class="pz">${s.combo?'Pack':'Promoción'}</span>`:''}</h4>${s.madp?`<p class="sd">Pack de <b>${s.ses} sesiones</b> de ${durTxt(s.m)} (${money(Math.round(s.v/s.ses))} c/u). ${pagaTodo(s)?'Pagas el valor completo al reservar y agendas tu primera sesión.':'Agendas tu primera sesión; las siguientes las coordinamos contigo.'}</p>`:''}${s.combo?(s.nom===s.ca+' + '+s.cb?'<p class="sd">Masaje y limpieza facial en la misma hora, con precio especial.</p>':`<p class="sd">Incluye <b>${esc(s.ca)}</b> + <b>${esc(s.cb)}</b>, en la misma hora.</p>`):''}${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${desc}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">${durTxt(s.m)}${s.madp?' por sesión':''}</span>${qbHtml(s,nm+(s.combo?' pack':''),nm+' '+(s.g||'')+' '+(s.c||'')+(s.combo?' pack':''))}</div>${qo}<div class="sp">${pr}${btn}</div></article>`;
+  return `<article class="svc${q.length?' xp':''}" data-q="${esc(norm(nm+' '+(s.g||'')+' '+(s.c||'')+' '+(s.ds||'')+(s.combo?' pack '+s.ca+' '+s.cb:'')))}"><div class="si"><h3>${esc(nm)}${s.promo?`<span class="pz">${s.combo?'Pack':'Promoción'}</span>`:''}</h3>${s.madp?`<p class="sd">Pack de <b>${s.ses} sesiones</b> de ${durTxt(s.m)} (${money(Math.round(s.v/s.ses))} c/u). ${pagaTodo(s)?'Pagas el valor completo al reservar y agendas tu primera sesión.':'Agendas tu primera sesión; las siguientes las coordinamos contigo.'}</p>`:''}${s.combo?(s.nom===s.ca+' + '+s.cb?'<p class="sd">Masaje y limpieza facial en la misma hora, con precio especial.</p>':`<p class="sd">Incluye <b>${esc(s.ca)}</b> + <b>${esc(s.cb)}</b>, en la misma hora.</p>`):''}${ev?'<p class="sd">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas se descuenta del tratamiento.</p>':''}${desc}${s.w?'<p class="sd">Se agenda por mensaje: te respondemos con los horarios disponibles.</p>':''}<span class="meta">${durTxt(s.m)}${s.madp?' por sesión':''}</span>${qbHtml(s,nm+(s.combo?' pack':''),nm+' '+(s.g||'')+' '+(s.c||'')+(s.combo?' pack':''))}</div>${qo}<div class="sp">${pr}${btn}</div></article>`;
 }
 function gcCanje(){
   const nm=gcV&&gcV.p?gcV.p:GC_NOM;let body;
@@ -722,13 +726,13 @@ function gcCanje(){
       <p class="sd">Tu giftcard cubre ${money(gcV.m)}. Si el servicio vale más, pagas la diferencia en el local.</p>`}
     body=`<p class="gcok">✓ Giftcard verificada</p><dl><dt>Número</dt><dd>${fmtN(gcV.n)}</dd><dt>Para</dt><dd>${esc(gcV.p||'—')}</dd><dt>Vale por</dt><dd>${esc(gcV.s||money(gcV.m)+' en servicios')}</dd><dt>Válida hasta</dt><dd>${fLarga(gcV.h)}</dd></dl>${sel}
     <button type="button" class="rbtn gcgo" data-gcres ${gcIdx()<0?'disabled':''}>Elegir fecha y hora</button><button type="button" class="lnk" data-gcotra>Usar otro número</button>`}
-  return `<article class="svc gcx" data-q=""><div class="si"><h4>${nm?'Giftcard para '+esc(nm):'Tu giftcard de regalo'}</h4>${body}</div></article>`;
+  return `<article class="svc gcx" data-q=""><div class="si"><h3>${nm?'Giftcard para '+esc(nm):'Tu giftcard de regalo'}</h3>${body}</div></article>`;
 }
 // Venta de giftcards: contacto directo por WhatsApp
 const GC_VENTA='Hola, me gustaría comprar una giftcard de regalo. ¿Me pueden ayudar?';
-const gcVenta=()=>`<article class="svc gcv" data-q="${esc(norm('giftcard gift card regalo regalar tarjeta cumpleanos aniversario'))}"><img class="gcimg" src="${GCSRC.v}" alt="Giftcard de regalo Catarsis" loading="lazy" onerror="this.remove()"><div class="si"><h4>Regala una giftcard</h4><p class="sd">Sorprende a alguien especial con un masaje o tratamiento de regalo. Elige el servicio y te enviamos la giftcard digital o coordinamos la entrega física, con su número único, lista para regalar. Es válida por 30 días: una vez vencido el plazo, no se devuelve el dinero ni se agendan horas fuera de plazo.</p><span class="meta">Para cualquier servicio o monto</span></div><div class="sp"><a class="rbtn" href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">Comprar por WhatsApp</a></div></article>`;
+const gcVenta=()=>`<article class="svc gcv" data-q="${esc(norm('giftcard gift card regalo regalar tarjeta cumpleanos aniversario'))}"><img class="gcimg" src="${GCSRC.v}" alt="Giftcard de regalo Catarsis" loading="lazy" onerror="this.remove()"><div class="si"><h3>Regala una giftcard</h3><p class="sd">Sorprende a alguien especial con un masaje o tratamiento de regalo. Elige el servicio y te enviamos la giftcard digital o coordinamos la entrega física, con su número único, lista para regalar. Es válida por 30 días: una vez vencido el plazo, no se devuelve el dinero ni se agendan horas fuera de plazo.</p><span class="meta">Para cualquier servicio o monto</span></div><div class="sp"><a class="rbtn" href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">Comprar por WhatsApp</a></div></article>`;
 const gcSec=its=>{const canje=its.some(x=>x.gift),venta=its.some(x=>x.venta);
-  return `<section class="sec" data-sec="${GIFT}"><h3>${GIFT}<small>${canje?'Solo con tu número único':'Regala bienestar'}</small></h3>${canje?gcCanje():''}${venta?gcVenta():''}</section>`};
+  return `<section class="sec" data-sec="${GIFT}"><h2>${GIFT}<small>${canje?'Solo con tu número único':'Regala bienestar'}</small></h2>${canje?gcCanje():''}${venta?gcVenta():''}</section>`};
 async function gcVerifica(){
   if(gcBusy)return;const inp=$('gcNum');if(inp)gcTxt=inp.value;const num=gcTxt.replace(/\D/g,'');
   if(num.length!==8){gcMsg='El número tiene 8 dígitos (por ejemplo 1234-5678).';render();return}
@@ -746,7 +750,7 @@ function madCard({i,s}){
   const ks=(Array.isArray(s.k)?s.k:[]).filter(q=>+q.s>1&&+q.v>0),nm=`mo${i}`;
   const op=[`<label class="opt"><input type="radio" name="${nm}" value="1" checked><span><b>1 sesión</b><small>${money(s.v)}</small></span></label>`]
     .concat(ks.map(q=>{const u=Math.round(q.v/q.s),ah=s.v*q.s-q.v;return `<label class="opt"><input type="radio" name="${nm}" value="${q.s}"><span><b>Pack ${q.s}</b><small>${money(q.v)}</small>${ah>0?`<i>${money(u)} c/u</i>`:''}</span></label>`}));
-  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h4>${esc(s.n)}</h4><span class="meta">${durTxt(s.m)} por sesión</span>${qbHtml(s,s.n,s.n+' maderoterapia')}</div>
+  return `<article class="svc xp" data-q="${esc(norm(s.n+' '+(s.g||'')+' '+(s.c||'')+' '+(s.b||[]).join(' ')))}"><div class="si"><h3>${esc(s.n)}</h3><span class="meta">${durTxt(s.m)} por sesión</span>${qbHtml(s,s.n,s.n+' maderoterapia')}</div>
   ${ks.length?`<div class="opts" role="radiogroup" aria-label="Sesiones">${op.join('')}</div>`:''}
   <div class="sp"><span class="pr" data-prc>${money(s.v)}</span><button class="rbtn" data-res="${i}">Reservar</button></div></article>`;
 }
@@ -754,9 +758,9 @@ function madCard({i,s}){
 const madTags=M=>{const t=String((M&&M.tags)||'').trim();return !t||t==='Bienestar · Drenaje · Tonificación · Armonía'?'Drenaje · Modelación · Reducción':t};
 function madSec(c,its){
   const M=MADX(),ev=M.ev?waLink(`Hola, me gustaría agendar la evaluación gratuita de ${String(c).toLowerCase()}.`):'';
-  return `<section class="sec" data-sec="${esc(c)}"><h3>${esc(c)}<small>${its.length} tratamiento${its.length==1?'':'s'}</small></h3>
+  return `<section class="sec" data-sec="${esc(c)}"><h2>${esc(c)}<small>${its.length} tratamiento${its.length==1?'':'s'}</small></h2>
   <div class="madintro">${M.sub?`<p class="msub">${esc(M.sub)}</p>`:''}${madTags(M)?`<p class="mtags">${esc(madTags(M))}</p>`:''}${M.desc?`<p class="mdesc">${esc(M.desc)}</p>`:''}</div>`
-  +(()=>{const gs={};its.forEach(it=>{const g=it.s.g&&it.s.g!==c?it.s.g:'';(gs[g]=gs[g]||[]).push(it)});return Object.entries(gs).map(([g,l])=>(g?`<h5 class="grp">${esc(g)}</h5>`:'')+l.map(svcCard).join('')).join('')})()
+  +(()=>{const gs={};its.forEach(it=>{const g=it.s.g&&it.s.g!==c?it.s.g:'';(gs[g]=gs[g]||[]).push(it)});return Object.entries(gs).map(([g,l])=>(g?`<p class="grp">${esc(g)}</p>`:'')+l.map(svcCard).join('')).join('')})()
   +(M.ev?`<div class="madnote"><div><b>Evaluación gratuita</b>${esc(M.ev)}${ev?`<br><a class="rbtn wa" href="${ev}" target="_blank" rel="noopener">Agendar evaluación</a>`:''}</div></div>`:'')
   +(M.full!==false?`<div class="madnote"><div><b>Importante</b>Para realizar el tratamiento se debe cancelar el valor completo de la sesión o pack.</div></div>`:'')+'</section>';
 }
@@ -765,7 +769,7 @@ function view0(app){
   const ae=document.activeElement,foc=ae&&['q','gcNum'].includes(ae.id)?ae.id:'';
   const ic=c=>'';
   const secs=cats.map(c=>{let last=null;const its=by[c];if(c===GIFT&&its.some(x=>x.gift||x.venta))return gcSec(its);if(MADX()&&c===MADC())return madSec(c,its);
-    return `<section class="sec" data-sec="${esc(c)}"><h3>${ic(c)}${esc(c)}<small>${its.length} servicio${its.length==1?'':'s'}</small></h3>`+its.map(it=>{const g=it.s&&it.s.g&&it.s.g!==c?it.s.g:'';let h='';if(g!==last){if(g)h=`<h5 class="grp">${esc(g)}</h5>`;last=g}return h+svcCard(it)}).join('')+'</section>'}).join('');
+    return `<section class="sec" data-sec="${esc(c)}"><h2>${ic(c)}${esc(c)}<small>${its.length} servicio${its.length==1?'':'s'}</small></h2>`+its.map(it=>{const g=it.s&&it.s.g&&it.s.g!==c?it.s.g:'';let h='';if(g!==last){if(g)h=`<p class="grp">${esc(g)}</p>`;last=g}return h+svcCard(it)}).join('')+'</section>'}).join('');
   const A=+(ag&&ag.abono)||0,ab=A>0&&A<=100?A+'% del valor':money(A);
   app.innerHTML=`<header class="hero">${galHtml()}<div class="hb"><div class="lgc"><img class="logo" alt="Catarsis" src="${LOGO}"></div>
   <h1>Catarsis <i>Estética y Bienestar</i></h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
@@ -780,13 +784,13 @@ function view0(app){
    <p class="mut" id="noRes" hidden>No encontramos servicios con ese nombre.</p>
   </div>
   <div class="pane info card" ${ptab==='info'?'':'hidden'}>
-   <h3>Dirección</h3><p>${ADDR} · <a href="${MAPS}" target="_blank" rel="noopener">Ver en el mapa</a></p>
-   ${horarioTxt()?`<h3>Horario de atención</h3><p>${horarioTxt()}</p>`:''}${DL().length&&duoHorTxt()?`<p style="margin-top:4px">Masajes dúo: ${duoHorTxt()}</p>`:''}
-   <h3>Atiende</h3><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
-   <h3>Contacto</h3><p>${WA()?`<a href="${waLink()}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><br>`:''}<a href="${IG}" target="_blank" rel="noopener">Síguenos en Instagram</a></p>
-   ${WA()?`<h3>Giftcards</h3><p>Regala un masaje o tratamiento: <a href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">compra tu giftcard por WhatsApp</a>.</p>`:''}
-   ${POL()?`<h3>Cambios y cancelaciones</h3><p>${polHtml()}</p>`:''}
-   <h3>Cómo reservar</h3><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
+   <h2>Dirección</h2><p>${ADDR} · <a href="${MAPS}" target="_blank" rel="noopener">Ver en el mapa</a></p>
+   ${horarioTxt()?`<h2>Horario de atención</h2><p>${horarioTxt()}</p>`:''}${DL().length&&duoHorTxt()?`<p style="margin-top:4px">Masajes dúo: ${duoHorTxt()}</p>`:''}
+   <h2>Atiende</h2><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
+   <h2>Contacto</h2><p>${WA()?`<a href="${waLink()}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><br>`:''}<a href="${IG}" target="_blank" rel="noopener">Síguenos en Instagram</a></p>
+   ${WA()?`<h2>Giftcards</h2><p>Regala un masaje o tratamiento: <a href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">compra tu giftcard por WhatsApp</a>.</p>`:''}
+   ${POL()?`<h2>Cambios y cancelaciones</h2><p>${polHtml()}</p>`:''}
+   <h2>Cómo reservar</h2><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
   <p class="foot">${NEGOCIO} · ${ADDR}</p>${RCAP}</div>`;
   applyF();
@@ -868,7 +872,7 @@ function view3(app){
   const ab=a.ab!=null?a.ab:abonoDe(a.v);
   const msg=encodeURIComponent(`Hola, soy ${a.n}. Reservé ${a.s} el ${fmtD(a.d)} a las ${fmt(a.t)}. Te envío el comprobante ${a.full?'del pago':'del abono'}.`);
   app.innerHTML=`<div class="ok"><h3 style="color:var(--grn)">Solicitud enviada</h3><p><b>${esc(a.s)}</b>${a.th?' con '+esc(a.th):''}<br>${cap(fmtD(a.d))} · ${fmt(a.t)} a ${fmt(a.t+a.m)}</p>
-  <p style="margin:0 0 10px"><b>Dirección:</b> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Cochrane 450, Osorno')}" target="_blank" rel="noopener">Cochrane 450, Osorno</a></p>
+  <p style="margin:0 0 10px"><b>Dirección:</b> <a class="amp" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Cochrane 450, Osorno')}" target="_blank" rel="noopener">Cochrane 450, Osorno</a></p>
   ${a.dc?`<p class="mut" style="margin:0 0 10px">Código <b>${esc(a.dc.c)}</b> aplicado: ${a.dc.p}% de descuento. Valor: <b>${money(a.v)}</b>.</p>`:''}
   ${MAIL_ON&&a.mail?`<p class="mut" style="margin:0 0 8px">Te enviamos el detalle a <b>${esc(a.mail)}</b>. Si no lo ves, revisa la carpeta de spam.</p>`:''}
   <p>Tu hora queda <b>pendiente hasta que se pague ${a.full?'el valor completo':'el abono'}</b>${ab?` de <b>${money(ab)}</b>${a.full?'':' (se descuenta del valor del servicio)'}`:''}. Tienes <b class="hl">${plz(ag&&ag.plazoMin)}</b> para ${mpPara(ab)?'pagarlo':'transferirlo'}; pasado ese plazo la hora puede liberarse.</p>
