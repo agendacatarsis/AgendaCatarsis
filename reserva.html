@@ -325,6 +325,17 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(1
 :focus-visible{outline:3px solid rgba(138,100,40,.4);outline-offset:2px}
 
 .sec>h2,.info h2{line-height:1.15}
+/* ===== Mejoras de recorrido (atrás del teléfono, errores junto al campo, resumen compacto, filtros fijos) ===== */
+.ferr{color:var(--red);font-size:13.5px;font-weight:600;margin:6px 4px 0}
+input[aria-invalid="true"],select[aria-invalid="true"]{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(184,57,43,.15)}
+.sumc .sum1{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sumc .sum1 span{font-weight:600;line-height:1.35}.sumc .sum1 small{display:block;font-weight:400;color:var(--mut);font-size:14px}
+.sumc .sum1 .lnk{padding:0 4px;flex:none}
+.sumd{margin-top:8px}.sumd summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--acc-t);list-style:none}
+.sumd summary::-webkit-details-marker{display:none}.sumd summary::after{content:"▾";margin-left:6px}.sumd[open] summary::after{content:"▴"}
+.sumc .thsel{margin-top:10px}
+.cchips{position:sticky;top:0;z-index:6;background:var(--bg);padding-top:8px}
+.day small,.chip small{font-size:12px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .st li:not(.done):not(.cur) .dot{color:var(--ink)}
 </style></head><body>
@@ -554,6 +565,8 @@ function card(){
   if(sv&&sv.duo)dl=`<dl><dt>Servicio</dt><dd>Masaje dúo<span class="pz">Dúo</span></dd><dt>Persona 1</dt><dd>${esc(sv.a.n)}</dd><dt>Persona 2</dt><dd>${esc(sv.b.n)}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos, al mismo tiempo</dd><dt>Valor</dt><dd>${money(sv.v)}${sv.vo>sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}</dd><dt>Abono</dt><dd>${money(abonoSv(sv))}</dd></dl>`;
   else if(sv&&sv.gcard)dl=`<dl><dt>Servicio</dt><dd>${esc(sv.nom)}<span class="pz">Giftcard</span></dd><dt>Giftcard</dt><dd>N° ${fmtN(gcV.n)}${gcV.p?' · para '+esc(gcV.p):''}</dd><dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos</dd><dt>Pago</dt><dd>${sv.dif>0?`Giftcard ${money(sv.gm)} · diferencia ${money(sv.dif)} en el local`:'Pagado con tu giftcard ✓'}</dd></dl>${step===1?`<p class="pnote">Puedes reservar hasta el ${fLarga(sv.hasta)}, fecha en que vence tu giftcard.</p>`:''}`;
   else if(sv)dl=`<dl><dt>Servicio</dt><dd>${esc(nomS(sv))}${sv.promo?`<span class="pz">${sv.combo?'Pack':'Promoción'}</span>`:''}</dd>${sv.combo&&sv.nom!==sv.ca+' + '+sv.cb?`<dt>Incluye</dt><dd>${esc(sv.ca)}<br>+ ${esc(sv.cb)}</dd>`:''}${sv.madp?`<dt>Plan</dt><dd>Pack ${sv.ses} sesiones <span class="mut" style="font-weight:400">(${money(Math.round(sv.v/sv.ses))} c/u)</span></dd>`:esMad(sv)?`<dt>Plan</dt><dd>${sv.pack?`Pack ${sv.pack} sesiones <span class="mut" style="font-weight:400">(${money(sv.unit)} c/u)</span>`:'1 sesión'}</dd>`:''}<dt>Profesional</dt><dd>${esc(th.n)}</dd>${cuando}<dt>Duración</dt><dd>${sv.m} minutos${sv.pack||sv.madp?' por sesión':''}</dd>${sv.qty?`<dt>Cantidad</dt><dd>${sv.qty}</dd>`:''}${sv.dc?`<dt>Descuento</dt><dd>${sv.dc.p}% · código ${esc(sv.dc.c)}<span class="pz">${dcTipo(sv.dc.t)}</span></dd>`:''}<dt>Valor</dt><dd>${sv.ev?(+sv.v>0?`Según evaluación <span class="mut" style="font-weight:400">(desde ${money(sv.v)})</span>`:'Según evaluación'):money(sv.v)}${!sv.ev&&!sv.pack&&!sv.qty&&+sv.vo>+sv.v?` <s class="mut" style="font-weight:400">${money(sv.vo)}</s>`:''}${sv.pack&&sv.base*sv.pack>sv.v?` <s class="mut" style="font-weight:400">${money(sv.base*sv.pack)}</s>`:''}</dd>${sv.w?'':`<dt>${pagaTodo(sv)?'Pago al reservar':'Abono'}</dt><dd>${money(abonoSv(sv))}${pagaTodo(sv)?' <span class="mut" style="font-weight:400">(valor completo)</span>':''}</dd>`}</dl>${sv.pack||sv.madp?`<p class="pnote">Reservas tu primera sesión; las ${(sv.pack||sv.ses)-1} siguientes las coordinamos contigo.</p>`:''}`;
+  if(step===1&&sv){const nm=sv.duo?'Masaje dúo':sv.gcard?sv.nom:nomS(sv),val=sv.gcard?'Giftcard':sv.ev?'Valor según evaluación':money(sv.v);
+    return `<aside class="card sumc" aria-label="Tu reserva"><div class="sum1"><span>${esc(nm)}<small>${sv.m} min · ${val}</small></span><button type="button" class="lnk" data-go="svc">Cambiar</button></div>${thSel?`<div class="thsel">${thSel}</div>`:''}${duo?duoCtl(sv):''}${notes}<details class="sumd"><summary>Ver detalle de tu reserva</summary>${dl}</details></aside>`}
   return `<aside class="card"><h3 class="sumh">Tu reserva</h3>${thSel}${step===1&&duo?duoCtl(sv):''}${notes}${dl}${step===1?'<button type="button" class="lnk" data-go="svc">← Cambiar servicio</button>':''}</aside>`;
 }
 function duoCtl(sv){
@@ -568,7 +581,21 @@ function errBox(m){try{let b=document.getElementById('errBox');if(!b){b=document
   b.innerHTML='<button type="button" aria-label="Cerrar aviso" onclick="this.parentNode.remove()" style="float:right;border:0;background:none;color:#fff;font-size:20px;line-height:1;padding:0 0 6px 10px;cursor:pointer">✕</button>No pudimos continuar. Recarga la página e inténtalo de nuevo, o escríbenos por WhatsApp.<br><small style="opacity:.85">Detalle: '+String(m||'error').replace(/[<>&]/g,'').slice(0,220)+' · paso '+step+'</small>'}catch(_){}}
 window.addEventListener('error',e=>errBox((e.message||'error')+(e.lineno?' (línea '+e.lineno+':'+e.colno+')':'')));
 window.addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&/firebase|firestore|network|unavailable|serviceworker/i.test(String(r.code||'')+' '+String(r.message||r)))return;errBox(r&&r.message?r.message:String(r))});
-function render(){try{render0();abCargar()}catch(err){errBox((err&&err.message||String(err))+(err&&err.stack?' · '+String(err.stack).split('\n').slice(0,2).join(' '):''));throw err}}
+// Historial: cada paso queda en el botón «atrás» del teléfono/navegador
+let hStep=0,hIgn=false;
+try{if(history.state&&history.state.rs!=null)history.replaceState(null,'')}catch(_){}
+const hD=()=>(history.state&&history.state.d)||0;
+function histSync(){if(step===hStep)return;try{
+  if(step>hStep&&step<=2)history.pushState({rs:step,d:hD()+1},'');
+  else if(step===3)history.replaceState({rs:3,d:hD()},'');
+  else if(step<hStep){const tgt=step===0?0:Math.min(step,hD()),n=hD()-tgt;if(n>0){hIgn=true;history.go(-n)}}
+}catch(_){}hStep=step}
+addEventListener('popstate',e=>{if(hIgn){hIgn=false;return}if(busy)return;
+  const st=(e.state&&e.state.rs)||0;
+  if(step===3){step=0;selT=null;notice='';if(booked&&booked.gc){gcV=null;gcMode=false;gcTxt=''}booked=null;const n=hD();hStep=0;if(n>0){hIgn=true;history.go(-n)}render();return}
+  if(st===step)return;
+  step=Math.min(st,selT===null?1:2);if(step===0){selT=null;notice=''}hStep=step;render();try{scrollTo(0,0)}catch(_){}});
+function render(){histSync();try{render0();abCargar()}catch(err){errBox((err&&err.message||String(err))+(err&&err.stack?' · '+String(err.stack).split('\n').slice(0,2).join(' '):''));throw err}}
 function render0(){
   if(ptab==='ab'&&!GALX().length)ptab='svc';
   stepper();
@@ -912,14 +939,19 @@ document.addEventListener('change',e=>{if(e.target.id==='gcSv'){gcPick=+e.target
   if(e.target.id==='th'){tid=e.target.value;selT=null;notice='';recompute();render();return}
   if(e.target.id==='svc'){svcIdx=+e.target.value;selT=null;notice='';recompute();render()}
   if(e.target.id==='duo1'||e.target.id==='duo2'){if(e.target.id==='duo1')dA=+e.target.value;else dB=+e.target.value;selT=null;notice='';recompute();render()}});
+// Error junto al campo: lo marca, muestra el aviso debajo y lleva el cursor ahí
+function fErr(id,msg){const f=$(id);if(!f){const er=$('err');if(er)er.textContent=msg;return}
+  f.setAttribute('aria-invalid','true');let m=$(id+'-err');if(!m){m=document.createElement('p');m.id=id+'-err';m.className='ferr';m.setAttribute('role','alert');f.insertAdjacentElement('afterend',m)}
+  m.textContent=msg;f.setAttribute('aria-describedby',m.id);try{f.focus({preventScroll:true});f.scrollIntoView({behavior:'smooth',block:'center'})}catch(_){}}
+document.addEventListener('input',e=>{const f=e.target;if(f&&f.getAttribute&&f.getAttribute('aria-invalid')==='true'){f.removeAttribute('aria-invalid');const m=$(f.id+'-err');if(m)m.remove();f.removeAttribute('aria-describedby')}});
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='form')return;e.preventDefault();
   const n=$('nom').value.trim(),t=$('tel').value.trim(),sv=svc(),er=$('err');
   if(!sv||sv.w||selT===null){step=1;render();return}
-  if(n.length<2){er.textContent='Escribe tu nombre.';return}
-  if(t.replace(/\D/g,'').length<8){er.textContent='Escribe un teléfono válido.';return}
+  if(n.length<2){fErr('nom','Escribe tu nombre y apellido.');return}
+  if(t.replace(/\D/g,'').length<8){fErr('tel','Escribe un teléfono válido, por ejemplo 9 1234 5678.');return}
   const mail=MAIL_ON?$('mail').value.trim():'';
-  if(MAIL_ON&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){er.textContent='Escribe un correo válido.';return}
+  if(MAIL_ON&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){fErr('mail','Escribe un correo válido.');return}
   const disp=sv.duo||sv.pack||sv.gcard||sv.qty||sv.dc?sv.txt:sv.n,ab=abonoSv(sv),full=pagaTodo(sv),gcB=sv.gcard?{n:gcV.n,p:gcV.p||'',dif:sv.dif}:null,vis=sv.gcard?sv.nom:disp;
   if($('hp').value||Date.now()-t2<2500){booked={d:selDay,t:selT,s:vis,m:+sv.m,v:+sv.v,ab,full,n,th:curTh().n,at:Date.now(),gc:gcB};step=3;selT=null;render();return}
   if(!(fresh&&db)){$('send').disabled=true;$('send').textContent='Actualizando horarios…';er.textContent='';
