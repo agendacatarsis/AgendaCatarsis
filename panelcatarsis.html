@@ -73,6 +73,12 @@ input,select,textarea{font:inherit;background:var(--bg);border:1px solid var(--l
 .bapick input[type=file]{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;overflow:hidden;min-height:0;padding:0;border:0}
 .barow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
 .barow .bth{display:flex;gap:3px;flex:none}.barow .bth span{width:40px;height:50px;border-radius:6px;background:var(--tint) center/cover no-repeat}
+.bae-v{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:#1f1b16;max-width:340px;margin:8px auto 0;touch-action:none;cursor:grab}
+.bae-v canvas{position:absolute;inset:0;width:100%;height:100%}
+.bae-v .bae-l{position:absolute;top:8px;left:8px;background:rgba(31,27,22,.72);color:#fff;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:999px;pointer-events:none}
+.bae-seg{display:flex;gap:6px;margin:12px 0 4px}.bae-seg button{flex:1;min-height:44px}.bae-seg button[aria-pressed="true"]{background:var(--btn);color:var(--btnink);border-color:var(--btn)}
+.bae-row{display:flex;align-items:center;gap:10px;margin:8px 0}.bae-row label{flex:0 0 104px;font-size:13.5px;font-weight:600}.bae-row input[type=range]{flex:1;min-height:36px;padding:0;border:0;background:none}
+.bae-btns{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.bae-btns button{flex:1 1 auto;min-height:44px}
 .barow .bi{flex:1;min-width:0}.barow .bi small{display:block;color:var(--mut);font-size:12.5px}
 .pgrow{flex-wrap:wrap}.pgrow .bth span{width:56px;height:56px}.pgrow input.pgcap{width:100%;margin:2px 0 0;padding:6px 8px;font-size:14px;min-height:0}.pgrow .pa{display:flex;gap:6px;flex:none}.pgrow .pa button{min-height:36px;padding:0 12px;font-size:13px}.baok{display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px;font-size:14px}.baok input{margin-top:3px}
 .chk{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;margin:0 6px 6px 0;background:var(--card)}.chk input{width:auto;margin:0}
@@ -680,6 +686,25 @@ window.__splOff=function(){};</script>
   <button class="pill" style="width:100%;margin-top:12px" type="button" data-baclose>Cerrar</button>
  </div>
 </div>
+<div id="baeModal" class="modal nobox conf" hidden role="dialog" aria-modal="true" aria-labelledby="baeTitle">
+ <div class="mbox" style="max-width:480px">
+  <div class="mhead"><h3 id="baeTitle">Ajustar fotos</h3><button type="button" class="x" data-baeclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:13.5px;margin:4px 0 0">Gira las fotos si quedaron de cabeza y alinea la de antes sobre la de después: ojos, nariz y boca deben coincidir para que al deslizar se vea solo el cambio.</p>
+  <div class="bae-v" id="baeV"><canvas id="baeCD" width="360" height="450"></canvas><canvas id="baeCA" width="360" height="450"></canvas><span class="bae-l" id="baeLbl">Antes encima</span></div>
+  <div class="bae-row"><label for="baeOp">Transparencia</label><input type="range" id="baeOp" min="0" max="100" value="50"></div>
+  <div class="bae-btns"><button type="button" class="pill" data-baerot2>Girar las dos 180°</button></div>
+  <div class="bae-seg" role="group" aria-label="Foto que estás ajustando"><button type="button" class="pill" data-baeq="a" aria-pressed="true">Foto de antes</button><button type="button" class="pill" data-baeq="d" aria-pressed="false">Foto de después</button></div>
+  <div class="bae-btns"><button type="button" class="pill" data-baerot="-90">↺ Girar</button><button type="button" class="pill" data-baerot="90">↻ Girar</button><button type="button" class="pill" data-baereset>Deshacer cambios</button></div>
+  <div class="bae-row"><label for="baeZ">Acercar</label><input type="range" id="baeZ" data-baek="z" min="100" max="200" value="100"></div>
+  <div class="bae-row"><label for="baeX">Mover ↔</label><input type="range" id="baeX" data-baek="x" min="-30" max="30" step="0.5" value="0"></div>
+  <div class="bae-row"><label for="baeY">Mover ↕</label><input type="range" id="baeY" data-baek="y" min="-30" max="30" step="0.5" value="0"></div>
+  <div class="bae-row"><label for="baeT">Enderezar</label><input type="range" id="baeT" data-baek="t" min="-15" max="15" step="0.5" value="0"></div>
+  <div class="bae-row"><label for="baeB">Luz</label><input type="range" id="baeB" data-baek="b" min="70" max="130" value="100"></div>
+  <div class="bae-row"><label for="baeW">Tono cálido</label><input type="range" id="baeW" data-baek="w" min="-20" max="20" value="0"></div>
+  <p class="mut" style="font-size:12.5px;margin:2px 0 10px">También puedes arrastrar sobre la foto para moverla. Usa «Luz» y «Tono cálido» para que las dos fotos tengan una iluminación parecida.</p>
+  <button class="btn" style="width:100%" type="button" data-baesave>Guardar</button><div class="mut" id="baeMsg" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>
+ </div>
+</div>
 <div id="clModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="clTitle">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="clTitle">Clientas</h3><button type="button" class="x" data-clclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
@@ -1156,7 +1181,7 @@ async function baProc(file){
   finally{URL.revokeObjectURL(url)}}
 function baDraw(){
   const L=GALP();
-  baList.innerHTML=L.length?L.map((x,i)=>{const th=baThumb[x.id];return `<div class="barow"><span class="bth"><span${th?` style="background-image:url('${th.a}')"`:''}></span><span${th?` style="background-image:url('${th.d}')"`:''}></span></span><span class="bi"><b>${esc(x.t||'Sin título')}</b><small>${esc([x.x,x.s?'Botón: '+x.s:''].filter(Boolean).join(' · ')||'—')}</small></span><button type="button" class="x" style="flex-basis:38px;height:38px" data-baup="${i}" aria-label="Subir" ${i&&!readOnly?'':'disabled'}>↑</button><button type="button" class="x" style="flex-basis:38px;height:38px" data-bax="${i}" aria-label="Eliminar ${esc(x.t||'')}" ${readOnly?'disabled':''}>✕</button></div>`}).join('')+`<div class="mut" style="font-size:12.5px;margin-top:6px">${L.length} de 12 · la primera aparece arriba en tu página.</div>`:'<p class="mut" style="font-size:14px">Aún no tienes fotos publicadas.</p>';
+  baList.innerHTML=L.length?L.map((x,i)=>{const th=baThumb[x.id];return `<div class="barow"><span class="bth"><span${th?` style="background-image:url('${th.a}')"`:''}></span><span${th?` style="background-image:url('${th.d}')"`:''}></span></span><span class="bi"><b>${esc(x.t||'Sin título')}</b><small>${esc([x.x,x.s?'Botón: '+x.s:''].filter(Boolean).join(' · ')||'—')}</small></span><button type="button" class="pill" style="flex:none;min-height:38px;padding:0 12px" data-baed="${i}" ${readOnly||!th?'disabled':''}>Ajustar</button><button type="button" class="x" style="flex-basis:38px;height:38px" data-baup="${i}" aria-label="Subir" ${i&&!readOnly?'':'disabled'}>↑</button><button type="button" class="x" style="flex-basis:38px;height:38px" data-bax="${i}" aria-label="Eliminar ${esc(x.t||'')}" ${readOnly?'disabled':''}>✕</button></div>`}).join('')+`<div class="mut" style="font-size:12.5px;margin-top:6px">${L.length} de 12 · la primera aparece arriba en tu página.</div>`:'<p class="mut" style="font-size:14px">Aún no tienes fotos publicadas.</p>';
   L.forEach(x=>{if(!(x.id in baThumb)){baThumb[x.id]=null;firebase.firestore().collection('publico').doc('ga_'+x.id).get().then(d=>{if(d.exists){const v=d.data();baThumb[x.id]={a:v.a,d:v.d};if(!baModal.hidden)baDraw()}}).catch(()=>{})}});
   if(ENAPP&&!APPFOTOS){baForm.innerHTML=`<div class="mut" style="font-size:13.5px;margin-bottom:8px">Para elegir fotos desde la app, instala la versión 1.8 de la app de Android. Mientras tanto, abre el panel en Chrome, entra con tu cuenta y vuelve a Menú → Antes y después.</div><button class="btn" style="width:100%" type="button" data-bkchrome>${ic('globe')}Abrir el panel en Chrome</button>`;return}
   if(readOnly){baForm.innerHTML='<p class="mut" style="font-size:14px">Tu cuenta solo puede ver la agenda.</p>';return}
@@ -1164,13 +1189,14 @@ function baDraw(){
   const sv=S.services.filter(x=>!x.p).map(x=>x.n);
   baForm.innerHTML=`<div class="bapick"><label for="baFA">Foto de antes<span class="babox" id="baPA">${baA?`<img src="${baA}" alt="Antes">`:ic('camera')+'Toca para elegir'}</span><input type="file" id="baFA" accept="image/*"></label><label for="baFD">Foto de después<span class="babox" id="baPD">${baD?`<img src="${baD}" alt="Después">`:ic('camera')+'Toca para elegir'}</span><input type="file" id="baFD" accept="image/*"></label></div>
   <div class="mut" style="font-size:12.5px;margin-top:4px">Se recortan al centro en formato vertical. Usa fotos con el mismo encuadre y la misma luz para que se note el cambio.</div>
+  ${baA&&baD?`<button class="pill" style="width:100%;margin-top:8px;min-height:44px" type="button" data-baed="new">Girar y alinear estas fotos</button>`:''}
   <label class="f" for="baT">Tratamiento</label><input id="baT" maxlength="60" placeholder="Ej. Limpieza facial profunda">
   <label class="f" for="baX">Detalle (opcional)</label><input id="baX" maxlength="60" placeholder="Ej. 3 sesiones · 1 mes">
   <label class="f" for="baS">Botón «Reservar» (opcional)</label><select id="baS"><option value="">Sin botón</option>${sv.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select>
   <label class="baok"><input type="checkbox" id="baOk"> <span>La clienta autorizó publicar estas fotos en mi página.</span></label>
   <button class="btn" style="width:100%" type="button" data-basave>Publicar</button><div class="mut" id="baMsg" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>`}
 async function baFile(inp,cual){const f=inp.files&&inp.files[0];if(!f)return;const box=cual==='a'?document.getElementById('baPA'):document.getElementById('baPD');box.textContent='Preparando…';
-  try{const d=await baProc(f);if(cual==='a')baA=d;else baD=d;box.innerHTML=`<img src="${d}" alt="${cual==='a'?'Antes':'Después'}">`}
+  try{const d=await baProc(f);if(cual==='a')baA=d;else baD=d;box.innerHTML=`<img src="${d}" alt="${cual==='a'?'Antes':'Después'}">`;if(baA&&baD)baKeep(baDraw)}
   catch(e){box.textContent='No se pudo leer esa foto. Prueba con otra.'}}
 async function baSave(){
   if(readOnly||baBusy)return;const msg=document.getElementById('baMsg'),t=document.getElementById('baT').value.trim(),x=document.getElementById('baX').value.trim(),sv=document.getElementById('baS').value;
@@ -1184,6 +1210,46 @@ async function baSave(){
     baThumb[id]={a:baA,d:baD};GALP().unshift({id,t:t.slice(0,60),x:x.slice(0,60),s:sv,at:Date.now()});baA='';baD='';baBusy=false;
     render();baDraw();showToast('Antes y después publicado ✓')}
   catch(e){baBusy=false;msg.textContent=e&&e.code==='permission-denied'?'Firebase no permitió guardar las fotos. Envíame una captura de tus reglas de Firestore y te digo qué agregar.':'No se pudo publicar. Revisa tu conexión e intenta de nuevo.'}}
+// Redibuja el formulario sin perder lo que ya se escribió
+function baKeep(fn){const v={};['baT','baX','baS'].forEach(k=>{const e=document.getElementById(k);if(e)v[k]=e.value});const ok=document.getElementById('baOk'),c=ok&&ok.checked;fn();
+  Object.entries(v).forEach(([k,x])=>{const e=document.getElementById(k);if(e)e.value=x});const o2=document.getElementById('baOk');if(o2)o2.checked=!!c}
+// --- ajustar un antes y después: girar, alinear, enderezar e igualar la luz. Se guarda la foto ya corregida (720×900), así la página no cambia ---
+const BAE0=()=>({r:0,t:0,z:100,x:0,y:0,b:100,w:0});
+let bae=null;
+function baeImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('img'));i.src=src})}
+function baePaint(cv,im,p,W,H){const c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.fillStyle='#1f1b16';c.fillRect(0,0,W,H);
+  const rad=(p.r+p.t)*Math.PI/180,q=((p.r%180)+180)%180===90,iw=q?im.naturalHeight:im.naturalWidth,ih=q?im.naturalWidth:im.naturalHeight,k=Math.max(W/iw,H/ih)*p.z/100;
+  c.translate(W/2+p.x*W/100,H/2+p.y*H/100);c.rotate(rad);c.scale(k,k);
+  c.drawImage(im,-im.naturalWidth/2,-im.naturalHeight/2);c.setTransform(1,0,0,1,0,0);
+  // luz y tono a mano, pixel por pixel (Safari en iPhone no aplica filtros al canvas)
+  if(p.b!==100||p.w){const d=c.getImageData(0,0,W,H),a=d.data,l=p.b/100,f=p.w/100;for(let i=0;i<a.length;i+=4){a[i]=Math.min(255,a[i]*l*(1+f));a[i+1]=Math.min(255,a[i+1]*l);a[i+2]=Math.min(255,a[i+2]*l*(1-f))}c.putImageData(d,0,0)}}
+function baeDraw(){if(!bae)return;baePaint(baeCD,bae.im.d,bae.p.d,360,450);baePaint(baeCA,bae.im.a,bae.p.a,360,450);
+  baeCA.style.opacity=document.getElementById('baeOp').value/100;
+  const p=bae.p[bae.q];document.querySelectorAll('#baeModal [data-baek]').forEach(e=>{e.value=p[e.dataset.baek]});
+  document.querySelectorAll('#baeModal [data-baeq]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.baeq===bae.q))}
+async function baeOpen(k){let a,d,id=null;
+  if(k==='new'){a=baA;d=baD}else{const x=GALP()[+k],th=x&&baThumb[x.id];if(!th)return;a=th.a;d=th.d;id=x.id}
+  if(!a||!d)return;
+  try{bae={id,q:'a',im:{a:await baeImg(a),d:await baeImg(d)},p:{a:BAE0(),d:BAE0()}}}catch(e){showToast('No se pudieron abrir las fotos');return}
+  document.getElementById('baeOp').value=50;document.getElementById('baeMsg').textContent='';baeModal.hidden=false;baeDraw()}
+function baeOut(im,p){const c=document.createElement('canvas');c.width=720;c.height=900;baePaint(c,im,p,720,900);
+  let q=.85,d=c.toDataURL('image/jpeg',q);while(d.length>190000&&q>.45){q-=.07;d=c.toDataURL('image/jpeg',q)}return d}
+async function baeSave(){if(!bae||readOnly)return;const msg=document.getElementById('baeMsg'),a=baeOut(bae.im.a,bae.p.a),d=baeOut(bae.im.d,bae.p.d);
+  if(!bae.id){baA=a;baD=d;baeModal.hidden=true;bae=null;baKeep(baDraw);return}
+  msg.textContent='Guardando…';
+  try{await firebase.firestore().collection('publico').doc('ga_'+bae.id).set({a,d,at:Date.now()});baThumb[bae.id]={a,d};baeModal.hidden=true;bae=null;baDraw();showToast('Fotos ajustadas ✓')}
+  catch(e){msg.textContent=e&&e.code==='permission-denied'?'Firebase no permitió guardar las fotos.':'No se pudo guardar. Revisa tu conexión e intenta de nuevo.'}}
+baeModal.addEventListener('click',e=>{const t=e.target.closest('button');if(e.target===baeModal||t&&t.hasAttribute('data-baeclose')){baeModal.hidden=true;bae=null;return}if(!t||!bae)return;
+  if(t.dataset.baeq){bae.q=t.dataset.baeq;document.getElementById('baeLbl').textContent=bae.q==='a'?'Antes encima':'Ajustando después'}
+  else if(t.hasAttribute('data-baerot2')){bae.p.a.r=(bae.p.a.r+180)%360;bae.p.d.r=(bae.p.d.r+180)%360}
+  else if(t.dataset.baerot){const p=bae.p[bae.q];p.r=(p.r+ +t.dataset.baerot+360)%360}
+  else if(t.hasAttribute('data-baereset'))bae.p[bae.q]=BAE0();
+  else if(t.hasAttribute('data-baesave')){baeSave();return}
+  baeDraw()});
+baeModal.addEventListener('input',e=>{if(!bae)return;const k=e.target.dataset.baek;if(k)bae.p[bae.q][k]=+e.target.value;baeDraw()});
+{let g=null;baeV.addEventListener('pointerdown',e=>{if(!bae)return;g={x:e.clientX,y:e.clientY,p:{...bae.p[bae.q]}};try{baeV.setPointerCapture(e.pointerId)}catch(_){}});
+ baeV.addEventListener('pointermove',e=>{if(!g||!bae)return;const r=baeV.getBoundingClientRect(),p=bae.p[bae.q];p.x=Math.max(-30,Math.min(30,g.p.x+(e.clientX-g.x)/r.width*100));p.y=Math.max(-30,Math.min(30,g.p.y+(e.clientY-g.y)/r.height*100));baeDraw()});
+ ['pointerup','pointercancel'].forEach(n=>baeV.addEventListener(n,()=>{g=null}))}
 // --- imágenes de la página de presentación (lista en publico/ga_pgweb; cada foto en publico/ga_pgi_<id>) ---
 const PGDEF=[['d1','Masaje de piernas'],['d2','Masaje de piernas y pies'],['d3','Masaje de espalda'],['d4','Masaje facial con jade'],['d5','Masaje de cabeza y cuello'],['d6','Masaje relajante de espalda']];
 const PGORIG={hero:'inicio-img/galeria-3.jpg',fin:'inicio-img/galeria-1.jpg'};
@@ -2114,6 +2180,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-pgdel')){const i=+el.dataset.pgdel,x=pgM.gal[i];if(!x)return;askConfirm('Quitar foto',`¿Quitar «${x.c||'esta foto'}» de la galería?`,()=>pgAct(async()=>{pgM.gal.splice(i,1);await pgRef('ga_pgi_'+x.id).delete().catch(()=>{})},'Foto quitada'));return}
   else if(el=g('data-baopen')){baDraw();baModal.hidden=false;return}
   else if(el=g('data-baclose')){baModal.hidden=true;return}
+  else if(el=g('data-baed')){baeOpen(el.dataset.baed);return}
   else if(el=g('data-basave')){baSave();return}
   else if(el=g('data-baup')){const i=+el.dataset.baup,L=GALP();if(readOnly||i<1||i>=L.length)return;[L[i-1],L[i]]=[L[i],L[i-1]];render();baDraw();return}
   else if(el=g('data-bax')){const i=+el.dataset.bax,L=GALP(),x=L[i];if(readOnly||!x)return;askConfirm('Eliminar antes y después',`¿Eliminar «${x.t||'estas fotos'}»? Dejarán de verse en tu página.`,()=>{const k=GALP().indexOf(x);if(k>=0)GALP().splice(k,1);firebase.firestore().collection('publico').doc('ga_'+x.id).delete().catch(()=>{});delete baThumb[x.id];render();baDraw()});return}
@@ -2270,7 +2337,7 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
   const b=e.target.closest('[data-pko]');if(b){choosePick(+b.dataset.pko);return}
   if(e.target.closest('[data-pickclose]')||e.target.id==='pickModal')closePick()});
 pickQ.addEventListener('input',pickDraw);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!pickModal.hidden){closePick();return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!baeModal.hidden){baeModal.hidden=true;bae=null;return}if(!pickModal.hidden){closePick();return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
   if(e.target&&e.target.id==='rsFile'){rsPicked(e.target);return}
   if(e.target&&e.target.dataset&&e.target.dataset.rscap!==undefined){const x=rsM&&rsM.gal.find(x=>x.id===e.target.dataset.rscap);if(x&&!readOnly){x.c=e.target.value.trim().slice(0,50);rsSaveM().then(()=>showToast('Nombre guardado ✓')).catch(()=>rsMsg('No se pudo guardar el nombre.'))}return}
