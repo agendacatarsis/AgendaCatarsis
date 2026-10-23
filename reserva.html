@@ -345,6 +345,21 @@ input[aria-invalid="true"],select[aria-invalid="true"]{border-color:var(--red)!i
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .lgc img{filter:none!important;mix-blend-mode:multiply}}
 /* Sin «deslizar para recargar» del navegador: un tirón accidental hacia abajo recargaba la página y se perdía la reserva en curso */
 html,body{overscroll-behavior-y:none}
+/* ===== Ajustes de la revisión de octubre 2026 ===== */
+/* iPhone agranda la página al tocar un campo con letra menor a 16 px */
+input,select,textarea{font-size:16px}
+/* Celular: el collage ocupa menos alto para que el buscador y los servicios asomen en la primera pantalla */
+@media(max-width:759px){.collage{grid-auto-rows:112px}}
+/* Filtros: en celular se difuminan a la derecha mientras queden más por deslizar; en escritorio pasan a una segunda línea */
+.cchips.mas{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
+@media(min-width:760px){.cchips{flex-wrap:wrap;overflow:visible}.cchips.mas{-webkit-mask-image:none;mask-image:none}}
+/* Textos que estaban en 12 px */
+.pz{font-size:13px}.grp,.tgrp{font-size:13px}.qb .pnote{font-size:13.5px}.madintro .msub,.madintro .mtags{font-size:13px}
+.opt small,.opt i{font-size:13.5px}.rcap{font-size:13px}
+/* Antes y después: en escritorio dos por fila, para que la foto completa quepa en pantalla y no se agrande más que su tamaño real (720×900) */
+@media(min-width:700px){.balist{grid-template-columns:repeat(2,1fr)}}
+.bacard:not(.ba-ok) .baimg{background:linear-gradient(100deg,var(--tint) 30%,var(--card) 50%,var(--tint) 70%) 0 0/300% 100%;animation:baCarga 1.4s linear infinite}
+@keyframes baCarga{to{background-position:-150% 0}}
 </style></head><body>
 <div class="bar"><button class="back" id="back" aria-label="Volver" hidden>‹</button><div id="stepper" style="flex:1"></div></div>
 <div id="app"><div class="pre"><h1>Catarsis Estética y Bienestar</h1><p>Reserva online tu hora de masajes y tratamientos estéticos.</p><p>Cochrane 450, Osorno · <a href="https://www.instagram.com/catarsis_osorno" rel="noopener">@catarsis_osorno</a></p><p class="mut">Cargando servicios…</p></div></div>
@@ -642,7 +657,7 @@ try{rsDoc('ga_rsweb').then(m=>{if(!m)return;
 }).catch(()=>{})}catch(e){}
 function abHtml(){const L=GALX();
   return `<div class="balist">${L.map(x=>{const t=esc(String(x.t||'Antes y después').slice(0,60)),d=esc(String(x.x||'').slice(0,60)),si=x.s?SV().findIndex(v=>v&&v.n===x.s&&!v.w):-1;
-    return `<figure class="bacard" data-gid="${esc(x.id)}"><div class="baimg"><img class="ba-d" alt="Después: ${t}"><div class="ba-aw"><img class="ba-a" alt="Antes: ${t}"></div><span class="ba-st">Cargando fotos…</span><span class="ba-l">Antes</span><span class="ba-r">Después</span><span class="ba-h" aria-hidden="true"></span><input type="range" class="ba-rg" min="0" max="100" value="50" aria-label="Comparar antes y después: ${t}"></div>
+    return `<figure class="bacard" data-gid="${esc(x.id)}"><div class="baimg"><img class="ba-d" alt="Después: ${t}"><div class="ba-aw"><img class="ba-a" alt="Antes: ${t}"></div><span class="ba-st" aria-live="polite"></span><span class="ba-l">Antes</span><span class="ba-r">Después</span><span class="ba-h" aria-hidden="true"></span><input type="range" class="ba-rg" min="0" max="100" value="50" aria-label="Comparar antes y después: ${t}"></div>
     <figcaption><span><b>${t}</b>${d?`<small>${d}</small>`:''}</span>${si>=0?`<button type="button" class="rbtn" data-res="${si}">Reservar</button>`:''}</figcaption></figure>`}).join('')}</div>
   <p class="banote">Desliza sobre cada foto para comparar. Son resultados reales de clientas de Catarsis, publicados con su autorización; cada piel y cada cuerpo responden distinto.</p>`}
 const galImg={},galPend=new Set();let galIO=null,baDrag=null;
@@ -660,7 +675,7 @@ function abCargar(){const cs=[...document.querySelectorAll('.bacard[data-gid]')]
   if(galIO)galIO.disconnect();
   const pend=cs.filter(c=>{const id=c.dataset.gid;if(id in galImg){galPinta(id);return false}return true});
   if(!('IntersectionObserver' in window)){pend.forEach(c=>galFetch(c.dataset.gid));return}
-  galIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){galIO.unobserve(e.target);galFetch(e.target.dataset.gid)}}),{rootMargin:'400px 0px'});
+  galIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){galIO.unobserve(e.target);galFetch(e.target.dataset.gid)}}),{rootMargin:'1200px 0px'});
   pend.forEach(c=>galIO.observe(c))}
 function baSet(card,p){p=Math.max(0,Math.min(100,p));card.style.setProperty('--p',p+'%');const rg=card.querySelector('.ba-rg');if(rg)rg.value=Math.round(p)}
 document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('.bacard.ba-ok .baimg');if(!b)return;baDrag={b,id:e.pointerId,x0:e.clientX,y0:e.clientY,on:false}});
@@ -670,6 +685,14 @@ document.addEventListener('pointermove',e=>{const d=baDrag;if(!d||e.pointerId!==
 document.addEventListener('pointerup',e=>{const d=baDrag;baDrag=null;if(d&&!d.on&&e.pointerId===d.id&&Math.abs(e.clientY-d.y0)<8){const r=d.b.getBoundingClientRect();baSet(d.b.parentNode,(e.clientX-r.left)/r.width*100)}});
 document.addEventListener('pointercancel',()=>{baDrag=null});
 document.addEventListener('input',e=>{if(e.target.classList&&e.target.classList.contains('ba-rg'))baSet(e.target.closest('.bacard'),+e.target.value)});
+// Filtros: difuminado a la derecha solo mientras queden filtros por deslizar
+function chipsMas(){document.querySelectorAll('.cchips').forEach(c=>c.classList.toggle('mas',c.scrollLeft+c.clientWidth<c.scrollWidth-4))}
+document.addEventListener('scroll',e=>{if(e.target.classList&&e.target.classList.contains('cchips'))chipsMas()},true);
+addEventListener('resize',chipsMas);
+// Pestañas con teclado (patrón de pestañas: flechas, Inicio y Fin cambian de pestaña)
+document.addEventListener('keydown',e=>{const t=e.target;if(!t||t.getAttribute&&t.getAttribute('role')!=='tab')return;
+  const L=[...t.parentNode.querySelectorAll('[role=tab]')],i=L.indexOf(t),k={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:L.length-1}[e.key];if(k===undefined)return;
+  e.preventDefault();const n=L[(k+L.length)%L.length];n.click();requestAnimationFrame(()=>{const m=document.getElementById(n.id);if(m)m.focus()})});
 let lbI=0;
 function lbShow(i){lbI=(i+GAL.length)%GAL.length;const [f,a,_p,rid,full]=GAL[lbI],im=$('lbImg'),fm=f.replace(/\.jpg$/,'-m.jpg');im.onerror=()=>{im.onerror=null;im.src=fm};im.src=full||f;if(rid&&!full){const k=lbI;rsDoc('ga_rsi_'+rid,'d').then(d=>{if(d&&d.d&&/^data:image\//.test(d.d)){GAL[k][4]=d.d;if(lbI===k&&!$('lb').hidden)im.src=d.d}}).catch(()=>{})}$('lbImg').alt=a;$('lbCap').textContent=`${a} · ${lbI+1} de ${GAL.length}`;$('lb').hidden=false}
 const lbClose=()=>{$('lb').hidden=true};
@@ -706,6 +729,7 @@ function catalogo(){
 const DISCQ='Los resultados varían según cada persona. En tu primera sesión evaluamos y adaptamos el protocolo.';
 const E_=(d,b,n)=>({d,b,n});
 const INFOQ=[
+ [/ pack$/,E_('Masaje y limpieza facial en la misma hora, con precio especial.',['Cuerpo y rostro en una sola visita','Precio especial','Relajación total'])],
  [/embarazad|prenatal/,E_('Masaje suave y seguro de cuerpo completo, en una posición cómoda con cojines, pensado para acompañar tu embarazo.',['Relaja espalda, cintura y piernas','Un momento de calma para ti y tu bebé','Posición cómoda y segura'],'Consulta con tu médico o matrona antes de agendar.')],
  [/fibromialg/,E_('Masaje de cuerpo completo adaptado a la fibromialgia, con presión suave y progresiva que respeta tu sensibilidad.',['Presión adaptada a tu tolerancia','Ayuda a relajar y a sentir más alivio','Ambiente tranquilo y sin apuro'],'Si tienes dudas, consulta con tu médico tratante.')],
  [/ventosa/,E_('Masaje descontracturante complementado con ventosas para llegar a la musculatura más profunda de todo el cuerpo.',['Ayuda a soltar contracturas rebeldes','Estimula la circulación de la zona','Sensación de liviandad muscular'])],
@@ -823,15 +847,15 @@ function view0(app){
   <h1>Catarsis <i>Estética y Bienestar</i></h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
   <p class="inf"><a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a>${horarioTxt()?`<br>${horarioTxt()}`:''}</p>
   <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">Cómo llegar</a></div>${DCQ&&!GC_ON?`<p class="dcban">Tienes el código <b>${esc(DCQ)}</b>. Elige tu servicio: el descuento se aplica al confirmar tu reserva.</p>`:''}</div></header>
-  <div class="cat-wrap"><div class="ptabs${GALX().length?' t3':''}" role="tablist"><button role="tab" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button>${GALX().length?`<button role="tab" data-pt="ab" aria-selected="${ptab==='ab'}" class="${ptab==='ab'?'on':''}">Antes y después</button>`:''}<button role="tab" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
-  ${ptab==='ab'?`<div class="pane">${abHtml()}</div>`:''}
-  <div class="pane" ${ptab==='svc'?'':'hidden'}>
+  <main class="cat-wrap"><div class="ptabs${GALX().length?' t3':''}" role="tablist" aria-label="Secciones"><button role="tab" id="pt-svc" aria-controls="pp-svc" tabindex="${ptab==='svc'?0:-1}" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button>${GALX().length?`<button role="tab" id="pt-ab" aria-controls="pp-ab" tabindex="${ptab==='ab'?0:-1}" data-pt="ab" aria-selected="${ptab==='ab'}" class="${ptab==='ab'?'on':''}">Antes y después</button>`:''}<button role="tab" id="pt-info" aria-controls="pp-info" tabindex="${ptab==='info'?0:-1}" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
+  ${ptab==='ab'?`<div class="pane" role="tabpanel" id="pp-ab" aria-labelledby="pt-ab">${abHtml()}</div>`:''}
+  <div class="pane" role="tabpanel" id="pp-svc" aria-labelledby="pt-svc" ${ptab==='svc'?'':'hidden'}>
    <div class="srch"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="display:block"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span><input id="q" type="search" placeholder="Buscar servicio" autocomplete="off" aria-label="Buscar servicio" value="${esc(qTxt)}"></div>
    ${cats.length>1?`<div class="cchips">${['Todos',...cats].map(c=>`<button data-cf="${esc(c)}" class="${c===catF?'on':''}">${ic(c)}${esc(c)}</button>`).join('')}</div>`:''}
    ${secs||'<p class="mut">Pronto publicaremos nuestros servicios.</p>'}
    <p class="mut" id="noRes" hidden>No encontramos servicios con ese nombre.</p>
   </div>
-  <div class="pane info card" ${ptab==='info'?'':'hidden'}>
+  <div class="pane info card" role="tabpanel" id="pp-info" aria-labelledby="pt-info" ${ptab==='info'?'':'hidden'}>
    <h2>Dirección</h2><p>${ADDR} · <a href="${MAPS}" target="_blank" rel="noopener">Ver en el mapa</a></p>
    ${horarioTxt()?`<h2>Horario de atención</h2><p>${horarioTxt()}</p>`:''}${DL().length&&duoHorTxt()?`<p style="margin-top:4px">Masajes dúo: ${duoHorTxt()}</p>`:''}
    <h2>Atiende</h2><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
@@ -840,8 +864,8 @@ function view0(app){
    ${POL()?`<h2>Cambios y cancelaciones</h2><p>${polHtml()}</p>`:''}
    <h2>Cómo reservar</h2><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
   </div>
-  <p class="foot">${NEGOCIO} · ${ADDR}</p>${RCAP}</div>`;
-  keepSwap(app);applyF();deepLink();
+  </main><footer class="cat-wrap"><p class="foot">${NEGOCIO} · ${ADDR}</p>${RCAP}</footer>`;
+  keepSwap(app);applyF();deepLink();chipsMas();
   if(foc){const q=$(foc);if(q){q.focus();try{q.setSelectionRange(q.value.length,q.value.length)}catch(_){}}}
   // al abrir el link de la giftcard, baja directo a su sección
   if(GC_ON&&!gcIr&&catF===GIFT){gcIr=true;requestAnimationFrame(()=>{const c=document.querySelector('.cchips');if(c)c.scrollIntoView({block:'start'})})}
@@ -897,7 +921,7 @@ function view2(app){acLazy();
   <input id="hp" name="sitio_web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   ${POL()?`<div class="polbox"><b>Cambios y cancelaciones</b>${polHtml()}</div>`:''}
   <div class="err" id="err" role="alert"></div><div class="acts"><button class="cta alt" type="button" data-go="back">Volver</button><button class="cta" id="send" type="submit">Confirmar reserva</button></div>${RCAP}</form></div>`;
-  if(ent2){ent2=false;t2=Date.now();$('nom').focus()}
+  if(ent2){ent2=false;t2=Date.now();const h=$('form').querySelector('h3');if(matchMedia('(pointer:coarse)').matches&&h){h.tabIndex=-1;h.focus({preventScroll:true})}else $('nom').focus()}
   if(dcAuto&&dcTxt&&!dcV&&!gcMode){dcAuto=false;setTimeout(dcVerifica,0)}
 }
 let cdT=null;
