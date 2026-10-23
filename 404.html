@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página no encontrada · Catarsis Estética y Bienestar</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Esta página no existe. Reserva tu hora en Catarsis Estética y Bienestar o vuelve al inicio.">
+<meta name="theme-color" content="#F7F1E6">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" href="/favicon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* Mismos colores y letras que la página de inicio */
+:root{--canvas:#F7F1E6;--paper:#EDE2CC;--ink:#2a211a;--char:#3d3127;--graph:#6b5a45;--seal:#8a6428;--seal-t:#7a5721;--cream:#FBF6EC;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color-scheme:light}
+*{box-sizing:border-box;margin:0}
+body{background:var(--canvas);color:var(--char);font:400 17px/1.55 var(--sans);letter-spacing:-.02em;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}img{max-width:100%;display:block}
+.skip{position:absolute;left:16px;top:-80px;z-index:9;background:var(--ink);color:var(--cream);padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:600}
+.skip:focus{top:12px}
+.wrap{width:100%;max-width:1280px;margin:0 auto;padding:0 24px}
+@media(min-width:900px){.wrap{padding:0 40px}}
+a:focus-visible,button:focus-visible{outline:3px solid rgba(138,100,40,.45);outline-offset:3px;border-radius:6px}
+
+/* barra superior */
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:76px}
+.top .logo{display:inline-flex;align-items:center;min-height:44px}
+.top .logo img{height:44px;width:auto}
+.top .wa{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;font-weight:600;color:var(--ink);text-decoration:none}
+.top .wa:hover{color:var(--seal-t)}
+
+/* contenido principal */
+main{flex:1}
+.hero{display:grid;gap:40px;padding-top:32px;padding-bottom:88px;align-items:center}
+@media(min-width:900px){.hero{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:72px;padding-top:56px;padding-bottom:128px}}
+h1,h2{font-family:var(--serif);font-weight:400;color:var(--ink);letter-spacing:0;text-wrap:balance}
+h1{font-size:clamp(44px,7.4vw,92px);line-height:1}
+.lead{margin-top:24px;max-width:34em;font-size:clamp(18px,1.6vw,21px);color:var(--char)}
+.sug{margin-top:18px;font-size:18px;color:var(--ink)}
+.sug[hidden]{display:none}
+.sug a{color:var(--seal-t);font-weight:600;text-underline-offset:4px;position:relative}
+.sug a::after{content:'';position:absolute;left:-4px;right:-4px;top:-12px;bottom:-12px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:14px 28px;border-radius:999px;background:var(--seal);color:var(--cream);border:1.5px solid var(--seal);font:600 17px var(--sans);letter-spacing:-.02em;text-decoration:none;transition:background-color .2s,transform .15s}
+.btn:hover{background:#7a5721}
+.btn:active{transform:scale(.98)}
+.btn.o{background:transparent;color:var(--seal-t)}
+.btn.o:hover{background:var(--paper)}
+
+/* foto propia del local */
+.ph{margin:0}
+.ph img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 30%;border-radius:24px;background:var(--paper)}
+.ph figcaption{margin-top:12px;font-size:15px;color:var(--graph)}
+@media(max-width:899px){.ph img{aspect-ratio:4/3}}
+
+/* accesos rápidos, sobre un fondo de otro tono en vez de líneas */
+.mas{background:var(--paper);padding:72px 0 88px}
+@media(min-width:900px){.mas{padding:96px 0 120px}}
+.mas .wrap{display:grid;gap:28px}
+@media(min-width:900px){.mas .wrap{grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:72px;align-items:start}}
+.mas h2{font-size:clamp(32px,4vw,48px);line-height:1.08}
+.mas p.s{margin-top:14px;color:var(--graph);font-size:17px}
+.lk{list-style:none;padding:0;display:grid;gap:8px}
+@media(min-width:700px){.lk{grid-template-columns:1fr 1fr}}
+.lk a{display:flex;flex-direction:column;justify-content:center;min-height:76px;padding:16px 22px;border-radius:18px;background:var(--canvas);text-decoration:none;transition:background-color .2s,transform .15s}
+.lk a:hover{background:var(--cream)}
+.lk a:active{transform:scale(.99)}
+.lk b{font-weight:600;color:var(--ink);font-size:18px}
+.lk span{font-size:15px;color:var(--graph)}
+
+/* pie, igual que en el inicio */
+footer{padding:40px 0;font-size:15px;color:var(--graph)}
+footer .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px}
+footer img{height:40px;width:auto}
+footer nav{display:flex;flex-wrap:wrap;gap:4px 20px}
+footer nav a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none}
+footer nav a:hover{color:var(--seal-t)}
+footer small{font-size:14px}
+
+/* entrada suave; sin movimiento si la persona lo pidió en su teléfono */
+@media (prefers-reduced-motion:no-preference){
+  .in{animation:sube .7s cubic-bezier(.2,.7,.2,1) both}
+  .d1{animation-delay:.07s}.d2{animation-delay:.14s}.d3{animation-delay:.21s}.d4{animation-delay:.28s}
+  @keyframes sube{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="top"><div class="wrap">
+  <a class="logo" href="/" aria-label="Catarsis Estética y Bienestar, ir al inicio"><img src="/inicio-img/logo-h-t.png" alt="Catarsis Estética y Bienestar" width="78" height="44"></a>
+  <a class="wa" href="https://wa.me/56942081582?text=Hola%2C%20quiero%20consultar%20por%20una%20hora">WhatsApp</a>
+</div></header>
+
+<main id="contenido">
+  <div class="wrap hero">
+    <div>
+      <h1 class="in">Esta página no existe</h1>
+      <p class="lead in d1">Puede que el enlace esté incompleto o que la página haya cambiado de lugar. Desde aquí puedes reservar tu hora o volver al inicio.</p>
+      <p class="sug in d1" id="sug" hidden></p>
+      <div class="cta in d2">
+        <a class="btn" href="/reserva.html">Reservar mi hora</a>
+        <a class="btn o" href="/">Ir al inicio</a>
+      </div>
+    </div>
+    <figure class="ph in d3">
+      <img src="/inicio-img/galeria-3.jpg" alt="Masaje de espalda en Catarsis" width="720" height="958" fetchpriority="high">
+      <figcaption><span translate="no">Catarsis</span> Estética y Bienestar · Cochrane 450, Osorno</figcaption>
+    </figure>
+  </div>
+
+  <section class="mas" aria-labelledby="mas-t">
+    <div class="wrap">
+      <div>
+        <h2 id="mas-t">Lo que más buscan</h2>
+        <p class="s">Elige y te llevamos directo.</p>
+      </div>
+      <ul class="lk">
+        <li><a href="/#servicios"><b>Servicios y valores</b><span>Masajes, faciales, maderoterapia y más</span></a></li>
+        <li><a href="/#como"><b>Cómo reservar</b><span>Eliges, abonas y listo</span></a></li>
+        <li><a href="/#preguntas"><b>Preguntas frecuentes</b><span>Abono, cambios y cancelaciones</span></a></li>
+        <li><a href="/#ubicacion"><b>Cómo llegar</b><span>Cochrane 450, Osorno</span></a></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <img src="/inicio-img/logo-h-t.png" alt="Catarsis" width="71" height="40" loading="lazy">
+  <nav aria-label="Pie"><a href="/#servicios">Servicios</a><a href="/#como">Cómo reservar</a><a href="/#preguntas">Preguntas</a><a href="/reserva.html">Reservar</a></nav>
+  <small>© <span translate="no">Catarsis</span> Estética y Bienestar · Osorno</small>
+</div></footer>
+
+<script>
+/* Si la dirección se parece a una página que sí existe, la sugiere (por ejemplo /reservas o /agenda) */
+(function(){
+  var p=decodeURIComponent(location.pathname||'').toLowerCase(),s=document.getElementById('sug');
+  var L=[[/reserv|agend|hora|turno|cita/,'/reserva.html','la página para reservar tu hora'],
+         [/gift|regalo|tarjeta/,'/giftcard.html','tu giftcard'],
+         [/panel|admin|catarsis\.html$/,'/panelcatarsis.html','el panel de la agenda'],
+         [/balance|finanz/,'/balance.html','el balance'],
+         [/servicio|precio|valor|tratamiento|masaje|facial/,'/#servicios','los servicios y valores'],
+         [/inicio|home|index/,'/','la página de inicio']];
+  for(var i=0;i<L.length;i++){if(L[i][0].test(p)){
+    s.textContent='¿Buscabas ';var a=document.createElement('a');a.href=L[i][1];a.textContent=L[i][2];s.appendChild(a);s.appendChild(document.createTextNode('?'));s.hidden=false;break}}
+})();
+</script>
+</body></html>

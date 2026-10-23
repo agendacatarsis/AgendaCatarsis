@@ -14,7 +14,7 @@
 <meta property="og:image:alt" content="Catarsis Estética y Bienestar · Reserva tu hora online">
 <meta property="og:locale" content="es_CL">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BeautySalon","name":"Catarsis Estética y Bienestar","url":"https://agenda.catarsisosorno.cl/reserva.html","image":"https://agenda.catarsisosorno.cl/og-catarsis.jpg","address":{"@type":"PostalAddress","streetAddress":"Cochrane 450","addressLocality":"Osorno","addressRegion":"Los Lagos","addressCountry":"CL"},"sameAs":["https://www.instagram.com/catarsis_osorno"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"HealthAndBeautyBusiness","@id":"https://agenda.catarsisosorno.cl/#negocio","name":"Catarsis Estética y Bienestar","url":"https://agenda.catarsisosorno.cl/","image":"https://agenda.catarsisosorno.cl/og-catarsis.jpg","logo":"https://agenda.catarsisosorno.cl/favicon-512.png","telephone":"+56942081582","address":{"@type":"PostalAddress","streetAddress":"Cochrane 450","addressLocality":"Osorno","addressRegion":"Los Lagos","addressCountry":"CL"},"hasMap":"https://www.google.com/maps/search/?api=1&query=Cochrane%20450%2C%20Osorno","sameAs":["https://www.instagram.com/catarsis_osorno"],"openingHours":"Mo-Fr 10:00-19:30","potentialAction":{"@type":"ReserveAction","target":{"@type":"EntryPoint","urlTemplate":"https://agenda.catarsisosorno.cl/reserva.html","actionPlatform":["https://schema.org/DesktopWebPlatform","https://schema.org/MobileWebPlatform"]}}}</script>
 <meta name="theme-color" content="#EDE2CC">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -602,7 +602,7 @@ addEventListener('popstate',e=>{if(hIgn){hIgn=false;return}if(busy)return;
   if(step===3){step=0;selT=null;notice='';if(booked&&booked.gc){gcV=null;gcMode=false;gcTxt=''}booked=null;const n=hD();hStep=0;if(n>0){hIgn=true;history.go(-n)}render();return}
   if(st===step)return;
   step=Math.min(st,selT===null?1:2);if(step===0){selT=null;notice=''}hStep=step;render();try{scrollTo(0,0)}catch(_){}});
-function render(){histSync();try{render0();abCargar()}catch(err){errBox((err&&err.message||String(err))+(err&&err.stack?' · '+String(err.stack).split('\n').slice(0,2).join(' '):''));throw err}}
+function render(){histSync();try{render0();abCargar();ldHor()}catch(err){errBox((err&&err.message||String(err))+(err&&err.stack?' · '+String(err.stack).split('\n').slice(0,2).join(' '):''));throw err}}
 function render0(){
   if(ptab==='ab'&&!GALX().length)ptab='svc';
   stepper();
@@ -613,6 +613,13 @@ function render0(){
   if(step===2)return view2($('app'));
   view3($('app'));
 }
+// Ficha del negocio para Google: el horario sale del panel, igual que en la página de inicio
+function ldHor(){try{const h=ag&&ag.horario;if(!h||!/^\d{1,2}:\d{2}$/.test(h.desde||'')||!/^\d{1,2}:\d{2}$/.test(h.hasta||''))return;
+  const SO=['Su','Mo','Tu','We','Th','Fr','Sa'],o=[1,2,3,4,5,6,0].filter(d=>(h.dias||[]).map(Number).includes(d));if(!o.length)return;
+  const ix=o.map(d=>(d+6)%7),seg=o.length===7||(o.length>2&&ix.every((v,i)=>!i||v===ix[i-1]+1));
+  const val=(seg?SO[o[0]]+'-'+SO[o[o.length-1]]:o.map(d=>SO[d]).join(','))+' '+h.desde+'-'+h.hasta;
+  const ld=document.querySelector('script[type="application/ld+json"]');if(!ld)return;const j=JSON.parse(ld.textContent);
+  if(j.openingHours!==val){j.openingHours=val;ld.textContent=JSON.stringify(j)}}catch(_){}}
 // ===== Collage de fotos (archivos galeria-1.jpg … galeria-6.jpg en la misma carpeta) =====
 const GAL=[['galeria-1.jpg','Masaje de piernas','50% 12%'],['galeria-2.jpg','Masaje de espalda','72% 40%'],['galeria-3.jpg','Tratamiento facial','50% 30%'],['galeria-4.jpg','Terapia con ventosas','50% 40%'],['galeria-5.jpg','Mascarilla facial','50% 40%'],['galeria-6.jpg','Masaje facial con piedras de jade','50% 35%']];
 const galHtml=()=>`<div class="collage" data-keep="col" aria-label="Fotos de Catarsis">${GAL.map(([f,a,pos],i)=>`<button type="button" data-gal="${i}" aria-label="Ver foto: ${a}"><img src="${f.replace(/\.jpg$/,'-t.webp')}" data-f="${i}" alt="${a}" style="object-position:${pos}" decoding="${i<3?'sync':'async'}" fetchpriority="${i<3?'high':'auto'}" onerror="galErr(this)"></button>`).join('')}</div>`;
