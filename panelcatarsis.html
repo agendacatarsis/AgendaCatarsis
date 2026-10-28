@@ -2252,7 +2252,8 @@ function render(){
     const mt=(at,t,sub,cl)=>`<button type="button" class="mt finbtn${cl?' '+cl:''}" ${at}><span class="mtt">${t}</span><small>${sub}</small></button>`;
     const mg=(k,t,body,def)=>{const o=mgOpen(k,def);return `<section class="mg${o?' on':''}"><button type="button" class="mgh" data-mg="${k}" aria-expanded="${o}" aria-controls="mg-${k}"><span>${t}</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="mgb" id="mg-${k}"${o?'':' hidden'}>${body}</div></section>`};
     // la terapeuta no ve balance, giftcards, promociones, packs ni la configuración de la página de Daniela
-    const EDX=TER?EDT.filter(([k])=>k!=='negocio'&&k!=='respaldo'):EDT;if(!EDX.some(([k])=>k===edTab))edTab='servicios';
+    const EDX=EDT.filter(([k])=>k!=='negocio'&&!(TER&&k==='respaldo'));   // «Sucursal y terapeuta» se reemplazó por Menú → Equipo (los datos no se tocan)
+    if(!EDX.some(([k])=>k===edTab))edTab='servicios';
     edit.innerHTML=(TER?mg('daniela','Agenda de Daniela',`<div class="mgrid">`
     +mt('data-daniopen',ic('cal')+'Ver horas de Daniela','Solo para ver, sin editar')
     +mt('data-dsvopen',ic('leaf')+'Servicios de Daniela',(n=>n?`Ofreces ${n}`:'Elige los que también haces')((S.cfg.dsv||[]).length))
