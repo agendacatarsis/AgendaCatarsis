@@ -230,7 +230,7 @@ let month=ymd(today).slice(0,7),D={appts:[],cfg:{},services:[],gastos:[]},F={gas
 const FIN=()=>db.collection('masajes').doc('finanzas');
 function toast(m){$('toastBox').textContent=m;$('toastBox').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('toastBox').classList.remove('on'),2400)}
 function ask(t,m,fn){$('confTitle').textContent=t;$('confMsg').textContent=m;confFn=fn;$('confModal').hidden=false}
-const real=a=>a.e!=='bloqueado'&&a.e!=='disponible'&&!a.bq;
+const real=a=>a.e!=='bloqueado'&&a.e!=='disponible'&&!a.bq&&(a.e!=='cancelada'||a.p==='pagado'||!!a.sp);
 const madTot=a=>{const M=(D.cfg||{}).madera;if(!M||M.full===false)return false;const x=(D.services||[]).find(z=>z.n===baseDe(a.s));return !!x&&(x.c||'')===(M.c||'Maderoterapia')};
 const abOf=a=>Math.min(+a.v||0,madTot(a)?(+a.v||0):String(a.s||'').startsWith('Dúo: ')?(x=>x>=0?x:20000)(+(((D.cfg||{}).duo||{}).ab)):(+(D.cfg||{}).abono||0));
 const saldoOk=a=>!!(a.sp||F.saldos[a.id]);
