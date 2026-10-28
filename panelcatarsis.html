@@ -1847,7 +1847,8 @@ function fiCodsDraw(){const L=Object.entries(CODS()).filter(([,x])=>x&&x.k===fiK
 const EDT=[['servicios','Servicios'],['horario','Horario'],['reservas','Reservas online'],['pagos','Pagos'],['negocio','Sucursal y terapeuta'],['respaldo','Respaldo']];
 let edTab='servicios',dayView='lista';
 const MGK='panel-menu-grupos';let MGS={};try{MGS=JSON.parse(localStorage.getItem(MGK)||'{}')||{}}catch(_){}
-const mgOpen=(k,def)=>k in MGS?!!MGS[k]:def;
+// Menú tipo acordeón: solo un grupo abierto a la vez (MGS._a = el grupo abierto; '' = todos cerrados)
+const mgOpen=k=>k===('_a' in MGS?MGS._a:(TER?'daniela':'ventas'));
 function pregunta(t,txt,si,ok){const f=document.createElement('div');f.className='ask';f.setAttribute('role','alertdialog');f.setAttribute('aria-modal','true');
   f.innerHTML='<div class="askb"><h3></h3><p></p><div class="askr"><button type="button" class="pill" data-no>Cancelar</button><button type="button" class="btn" data-si></button></div></div>';
   f.querySelector('h3').textContent=t;f.querySelector('p').textContent=txt;f.querySelector('[data-si]').textContent=si;
@@ -2327,7 +2328,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-sb'))S.branch=+el.dataset.sb;
   else if(el=g('data-st'))S.ther=+el.dataset.st;
   else if(el=g('data-d')){sel=el.dataset.d;custom=false}
-  else if(el=g('data-edtab')){edTab=el.dataset.edtab;if(el.hasAttribute('data-mgo'))MGS.config=true}
+  else if(el=g('data-edtab')){edTab=el.dataset.edtab;if(el.hasAttribute('data-mgo'))MGS={_a:'config'}}
   else if(el=g('data-daniopen')){if(!TER)return;daniDraw();daniModal.hidden=false;return}
   else if(el=g('data-daniclose')){daniModal.hidden=true;return}
   else if(el=g('data-dsvopen')){if(!TER)return;dsvDraw();dsvModal.hidden=false;return}
@@ -2357,7 +2358,9 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='horaModal'){horaModal.hidden=true;horaId=null;return}
   else if(el=g('data-horasave')){saveHora();return}
   else if(el=g('data-hrq')){const d=Math.min(480,Math.max(5,Math.round(+hrDur.value||0)+ +el.dataset.hrq));hrDur.value=d;if(hrIni.value)hrFin.value=hm(toMin(hrIni.value)+d);hrErr.textContent='';horaInfo();return}
-  else if(el=g('data-mg')){const k=el.dataset.mg,o=el.getAttribute('aria-expanded')!=='true';MGS[k]=o;try{localStorage.setItem(MGK,JSON.stringify(MGS))}catch(_){}el.setAttribute('aria-expanded',o);el.parentNode.classList.toggle('on',o);const b=document.getElementById('mg-'+k);if(b)b.hidden=!o;return}
+  else if(el=g('data-mg')){const k=el.dataset.mg,o=el.getAttribute('aria-expanded')!=='true';MGS={_a:o?k:''};try{localStorage.setItem(MGK,JSON.stringify(MGS))}catch(_){}
+    edit.querySelectorAll('[data-mg]').forEach(h=>{const on=o&&h===el;h.setAttribute('aria-expanded',on);h.parentNode.classList.toggle('on',on);const b=document.getElementById('mg-'+h.dataset.mg);if(b)b.hidden=!on});
+    if(o){const sc=el.parentNode;setTimeout(()=>{if(sc.getBoundingClientRect().top<0)sc.scrollIntoView({block:'start',behavior:'smooth'})},0)}return}
   else if(el=g('data-logoutask')){pregunta('¿Cerrar sesión?','Tendrás que volver a entrar con tu cuenta para ver la agenda.','Cerrar sesión',()=>outBtn.click());return}
   else if(el=g('data-copy')){copyLink();return}
   else if(el=g('data-copyuid')){const v=(document.getElementById('denyUid')||{}).textContent||'';(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>showToast('UID copiado ✓'),()=>showToast('Mantén presionado el UID para copiarlo'));return}
