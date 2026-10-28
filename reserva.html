@@ -176,6 +176,13 @@ select{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--l
 .srch span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
 .cchips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 4px;padding:2px 16px 8px;scrollbar-width:none}
 .cchips::-webkit-scrollbar{display:none}
+.prosel{margin:2px 0 14px}
+.prolbl{font-size:14px;color:var(--mut);margin:0 0 8px}
+.prochips{display:flex;gap:8px;flex-wrap:wrap}
+.prochips button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:8px 14px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;min-height:44px;text-align:left}
+.prochips button small{display:block;font-size:12px;font-weight:400;color:var(--mut)}
+.prochips button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.prochips button.on small{color:inherit;opacity:.85}
 .cchips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;font-size:14px;cursor:pointer;white-space:nowrap;min-height:44px}
 .cchips button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .sec{margin:16px 0 4px}
@@ -422,10 +429,27 @@ const fmt=x=>p2(Math.floor(x/60))+':'+p2(x%60);
 const hhmm=x=>p2(Math.floor(x/60))+p2(x%60);
 const toMin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 const t0=ymd(new Date()),HORIZON=42;
-let legacy={},tid='admin',oc2={},t2=0,ag=null,taken=new Set(),svcIdx=0,selDay=null,selT=null,week=mondayOf(t0),filt='all',step=0,busy=false,booked=null,notice='',avail={};
+let legacy={},tid='admin',oc2={},t2=0,ag=null,agD=null,agT={},taken=new Set(),svcIdx=0,selDay=null,selT=null,week=mondayOf(t0),filt='all',step=0,busy=false,booked=null,notice='',avail={};
 const $=id=>document.getElementById(id);
-const TH=()=>{const l=(ag&&ag.terapeutas)||[];return l.length?l:[{id:'admin',n:'Daniela Velásquez',r:'Cosmetóloga y Masoterapeuta'}]};
+// Profesionales: Daniela (publico/agenda) y las terapeutas del equipo (publicoTer/<uid>), cada una con sus servicios,
+// horario, horas ocupadas y códigos de descuento. Las terapeutas también pueden ofrecer servicios de Daniela (dsv).
+const PRO0=String(new URLSearchParams(location.search).get('pro')||'').trim().slice(0,128);
+const terOk=t=>!!t&&t.on!==false&&t.n&&((Array.isArray(t.services)&&t.services.length)||(Array.isArray(t.dsv)&&t.dsv.length));
+const TH=()=>{const D=agD||{},l=[{id:'admin',n:D.tn||'Daniela Velásquez',r:D.tr||'Cosmetóloga y Masoterapeuta'}];
+  if(!GC_ON)Object.keys(agT).filter(k=>terOk(agT[k])).sort((a,b)=>String(agT[a].n).localeCompare(String(agT[b].n))).forEach(k=>l.push({id:k,n:String(agT[k].n).slice(0,60),r:String(agT[k].r||'').slice(0,60)}));
+  return l};
+// Agenda que usa la página: la de Daniela, o la de la terapeuta elegida (con lo común del local: fotos, dirección, política)
+function agMix(){
+  if(!agD){ag=null;return}
+  const t=tid!=='admin'?agT[tid]:null;
+  if(!terOk(t)){ag=agD;return}
+  const own=Array.isArray(t.services)?t.services:[],ds=Array.isArray(t.dsv)?t.dsv:[];
+  const dsv=(agD.services||[]).filter(x=>x&&ds.includes(x.n)&&!x.w&&!own.some(o=>o.n===x.n));
+  ag=Object.assign({},agD,{services:own.concat(dsv),horario:t.horario||agD.horario,ocupado:t.ocupado||{},dc:t.dc||{},gc:{},promos:[],duo:null,madera:null,av:[],
+    abono:t.abono!=null?t.abono:agD.abono,plazoMin:t.plazoMin||agD.plazoMin,datos:t.datos||agD.datos,wa:t.wa||agD.wa,mp:t.mp||'',mpMin:+t.mpMin||0,pol:t.pol||agD.pol})}
+function setTid(v){if(v===tid)return;tid=v;agMix();svcIdx=0;duo=false;mk=1;mq=0;dcV=null;dcMsg='';if(DCQ){dcAuto=true;dcTxt=DCQ}selT=null;selDay=null;notice='';catF='Todos';qTxt='';recompute()}
 const curTh=()=>TH().find(t=>t.id===tid)||TH()[0];
+if(PRO0&&!GC_ON)tid=PRO0;   // link directo de una terapeuta: reserva.html?pro=<uid>
 const H=()=>Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},ag&&ag.horario||{});
 // Servicios + promociones (las promociones se eligen en el panel: Menú → Crear promoción)
 const PROMO='Promociones';
@@ -441,7 +465,7 @@ const pD=x=>Math.max(0,(+x.v||0)-Math.max(0,+x.d||0));
 // Nombre corto que guarda la reserva (máx. 79 caracteres); debe ser igual al de panelcatarsis.html
 const duoCorto=n=>{n=String(n||'');const L=t=>new TextEncoder().encode(t).length;if(L(n)<=35)return n;const c=Array.from(n);while(c.length&&L(c.join('').trimEnd()+'…')>35)c.pop();return c.join('').trimEnd()+'…'};
 const duoCode=(a,b)=>'Dúo: '+duoCorto(a)+' + '+duoCorto(b);
-let duo=false,dA=0,dB=0,ptab='svc',catF=(P=>P.has('giftcard')?'Giftcard':(String(P.get('cat')||'').trim().slice(0,60)||'Todos'))(new URLSearchParams(location.search)),qTxt='',lastStep=-1;
+let ptLista=false,duo=false,dA=0,dB=0,ptab='svc',catF=(P=>P.has('giftcard')?'Giftcard':(String(P.get('cat')||'').trim().slice(0,60)||'Todos'))(new URLSearchParams(location.search)),qTxt='',lastStep=-1;
 const duoSvc=()=>{const L=DL(),a=L[dA],b=L[dB];if(!a||!b)return null;return{n:duoCode(a.n,b.n),nom:'Masaje dúo',txt:'Masaje dúo: '+a.n+' + '+b.n,m:DM(),v:pD(a)+pD(b),vo:(+a.v||0)+(+b.v||0),c:DUO,duo:1,a,b}};
 // Maderoterapia: sesión individual o pack (panel → Menú → Maderoterapia)
 let mk=1,mq=0;
@@ -511,7 +535,7 @@ const svc=()=>{const b=svc0();if(!b||!dcV||gcMode||!dcElig(b)||!dcSvOk(b))return
   return Object.assign({},b,{n:dcCode(b.n,dcV.c),nom:b.n,txt:b.n,v:dcValor(b.v,dcV.p),vo:Math.max(+b.vo||0,+b.v||0),dc:{c:dcV.c,p:dcV.p,t:dcV.t}})};
 function timesFor(d,sv){
   const h=H(),paso=Math.max(10,+h.paso||30),dur=Math.max(5,+sv.m||paso),wd=toD(d).getDay(),dh=sv.duo?DH():null;
-  const src=tid==='admin'?(ag.ocupado||{}):(oc2[tid]||{});const oc=(src[d]||[]).map(s=>s.split('-').map(Number));
+  const src=ag.ocupado||oc2[tid]||{};const oc=(src[d]||[]).map(s=>s.split('-').map(Number));
   const n=new Date(),lim=d===t0?n.getHours()*60+n.getMinutes()+(+h.adv||0)*60:-1;
   const libre=s=>{if(s<lim||oc.some(([x,y])=>s<y&&x<s+dur))return false;for(let b=s;b<s+dur;b+=paso)if(taken.has(tid+'_'+d+'_'+hhmm(b)))return false;return true};
   // Masajes dúo con horas específicas (panel → Descuentos dúo → Días y horas disponibles)
@@ -528,7 +552,8 @@ function recompute(){
   if(!selDay||!(avail[selDay]||[]).includes(selT))selT=null;
 }
 function onData(){
-  if(!TH().some(t=>t.id===tid))tid=TH()[0].id;
+  if(!TH().some(t=>t.id===tid)&&(tid!==PRO0||ptLista)){tid=TH()[0].id}
+  agMix();if(!ag)return;
   if(svcIdx>=SV().length)svcIdx=0;
   {const n=DL().length;if(duo&&!n)duo=false;if(dA>=n)dA=0;if(dB>=n)dB=0}
   if(busy)return;
@@ -547,11 +572,12 @@ const POL=()=>String((ag&&ag.pol)||'').trim().slice(0,600);  // política de cam
 const polHtml=()=>esc(POL()).replace(/\n/g,'<br>');
 const MPMIN=()=>Math.max(0,+(ag&&ag.mpMin)||0);  // solo en pagos desde este monto
 const mpPara=m=>!!MP()&&+m>0&&+m>=MPMIN();
-try{const c=JSON.parse(localStorage.getItem(AGK)||'null');if(c&&c.ag&&typeof c.ag==='object'&&Date.now()-c.at<30*864e5)ag=c.ag}catch(e){}
-try{fetch('https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FIREBASE_CONFIG.projectId)+'/databases/(default)/documents/publico/agenda?key='+encodeURIComponent(FIREBASE_CONFIG.apiKey)).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.fields||fresh)return;ag=restM(j.fields);fresh=true;agGuarda(ag);onData()}).catch(()=>{})}catch(e){}
+try{const c=JSON.parse(localStorage.getItem(AGK)||'null');if(c&&c.ag&&typeof c.ag==='object'&&Date.now()-c.at<30*864e5){agD=c.ag;agMix()}}catch(e){}
+try{fetch('https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FIREBASE_CONFIG.projectId)+'/databases/(default)/documents/publico/agenda?key='+encodeURIComponent(FIREBASE_CONFIG.apiKey)).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.fields||fresh)return;agD=restM(j.fields);fresh=true;agGuarda(agD);onData()}).catch(()=>{})}catch(e){}
 sdkP.then(()=>{
   db.collection('publico').doc('config').get().then(d=>{if(d.exists){legacy=d.data()||{};if(step===3)render()}}).catch(()=>{});
-  db.collection('publico').doc('agenda').onSnapshot(d=>{ag=d.exists?d.data():{};fresh=true;agGuarda(ag);onData()},()=>{if(!fresh)$('app').innerHTML='<p class="mut">No se pudo cargar la agenda. Intenta de nuevo más tarde.</p>'});
+  db.collection('publico').doc('agenda').onSnapshot(d=>{agD=d.exists?d.data():{};fresh=true;agGuarda(agD);onData()},()=>{if(!fresh)$('app').innerHTML='<p class="mut">No se pudo cargar la agenda. Intenta de nuevo más tarde.</p>'});
+  db.collection('publicoTer').onSnapshot(q=>{agT={};q.docs.forEach(d=>{agT[d.id]=d.data()||{}});ptLista=true;if(agD)onData()},()=>{ptLista=true});
   db.collection('ocupados').onSnapshot(q=>{oc2={};q.docs.forEach(d=>{oc2[d.id]=d.data().ocupado||{}});onData()},()=>{});
   db.collection('bloques').onSnapshot(q=>{taken=new Set(q.docs.map(d=>d.id));onData()},()=>{});
 }).catch(()=>{if(!ag)$('app').innerHTML='<p class="mut">No pudimos cargar la agenda. Revisa tu conexión a internet y vuelve a intentarlo en unos minutos.</p>'});
@@ -580,7 +606,7 @@ function stepper(){
 }
 function card(){
   const sv=svc(),th=curTh();
-  const thSel=step===1&&TH().length>1?`<label class="f" for="th">Profesional</label><select id="th">${TH().map(t=>`<option value="${esc(t.id)}" ${t.id===tid?'selected':''}>${esc(t.n)}</option>`).join('')}</select>`:'';
+  const thSel=false&&TH().length>1?`<label class="f" for="th">Profesional</label><select id="th">${TH().map(t=>`<option value="${esc(t.id)}" ${t.id===tid?'selected':''}>${esc(t.n)}</option>`).join('')}</select>`:'';
   const notes=!sv?'':sv.combo?'<p class="pnote">Pack con precio especial: masaje y limpieza facial en la misma hora</p>':sv.promo?'<p class="pnote">Precio especial de promoción</p>':sv.ev?'<p class="pnote">En la evaluación se define el valor del tratamiento. El abono se descuenta de ese valor.</p>':!sv.duo&&/^evaluaci/i.test(sv.n)?'<p class="pnote">En la evaluación se definen el tiempo y el valor del tratamiento. Lo que pagas por la evaluación se descuenta del tratamiento.</p>':'';
   const cuando=sv&&selT!==null&&selDay?`<dt>Fecha</dt><dd>${cap(fmtD(selDay))}</dd><dt>Hora</dt><dd>${fmt(selT)} a ${fmt(selT+sv.m)}</dd>`:'';
   let dl='';
@@ -850,6 +876,7 @@ function view0(app){
   <main class="cat-wrap"><div class="ptabs${GALX().length?' t3':''}" role="tablist" aria-label="Secciones"><button role="tab" id="pt-svc" aria-controls="pp-svc" tabindex="${ptab==='svc'?0:-1}" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button>${GALX().length?`<button role="tab" id="pt-ab" aria-controls="pp-ab" tabindex="${ptab==='ab'?0:-1}" data-pt="ab" aria-selected="${ptab==='ab'}" class="${ptab==='ab'?'on':''}">Antes y después</button>`:''}<button role="tab" id="pt-info" aria-controls="pp-info" tabindex="${ptab==='info'?0:-1}" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
   ${ptab==='ab'?`<div class="pane" role="tabpanel" id="pp-ab" aria-labelledby="pt-ab">${abHtml()}</div>`:''}
   <div class="pane" role="tabpanel" id="pp-svc" aria-labelledby="pt-svc" ${ptab==='svc'?'':'hidden'}>
+   ${TH().length>1?`<div class="prosel"><p class="prolbl" id="proL">¿Con quién quieres atenderte?</p><div class="prochips" role="group" aria-labelledby="proL">${TH().map(t=>`<button type="button" data-pro="${esc(t.id)}" class="${t.id===tid?'on':''}" aria-pressed="${t.id===tid}">${esc(t.n)}${t.r?`<small>${esc(t.r)}</small>`:''}</button>`).join('')}</div></div>`:''}
    <div class="srch"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="display:block"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span><input id="q" type="search" placeholder="Buscar servicio" autocomplete="off" aria-label="Buscar servicio" value="${esc(qTxt)}"></div>
    ${cats.length>1?`<div class="cchips">${['Todos',...cats].map(c=>`<button data-cf="${esc(c)}" class="${c===catF?'on':''}">${ic(c)}${esc(c)}</button>`).join('')}</div>`:''}
    ${secs||'<p class="mut">Pronto publicaremos nuestros servicios.</p>'}
@@ -972,6 +999,7 @@ document.addEventListener('click',e=>{
   else if(el=g('data-res')){gcMode=false;const v=el.dataset.res,art=el.closest('article'),r=art&&art.querySelector('.opts input:checked'),r2=art&&art.querySelector('.qopts input:checked');mk=r?+r.value:1;mq=r2?+r2.value:0;if(v==='duo')duo=true;else{duo=false;svcIdx=+v}step=1;selT=null;notice='';recompute()}
   else if(el=g('data-cf')){catF=el.dataset.cf;document.querySelectorAll('.cchips button').forEach(b=>b.classList.toggle('on',b===el));applyF();const s=document.querySelector('.srch');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({behavior:'smooth'});return}
   else if(el=g('data-pt'))ptab=el.dataset.pt;
+  else if(el=g('data-pro')){setTid(el.dataset.pro)}
   else if(el=g('data-day')){selDay=el.dataset.day;selT=null;notice=''}
   else if(el=g('data-wk')){week=addD(week,7*+el.dataset.wk);const d=Object.keys(avail).find(x=>x>=week&&x<=addD(week,6));if(d){selDay=d;selT=null}}
   else if(el=g('data-t')){selT=+el.dataset.t;notice=''}
@@ -1013,17 +1041,17 @@ document.addEventListener('submit',async e=>{
     $('send').disabled=false;$('send').textContent='Confirmar reserva'}
   busy=true;$('send').disabled=true;$('send').textContent='Enviando…';er.textContent='';
   const d=selDay,s0=selT,dur=Math.max(5,+sv.m),paso=Math.max(10,+H().paso||30),tel=(x=>x.length>9?x.slice(-9):x)(t.replace(/\D/g,''));
-  const rid=fsId(),cu=+fd.dia>=1&&+fd.mes>=1?String(+fd.mes).padStart(2,'0')+String(+fd.dia).padStart(2,'0'):'',nomR=cu?Array.from(n).slice(0,62).join('').trim()+' #N'+cu:n;  // cumpleaños: el panel lo saca del nombre y lo guarda en la ficha
+  const pid=tid==='admin'?tel:tid+'_'+tel,rid=fsId(),cu=+fd.dia>=1&&+fd.mes>=1?String(+fd.mes).padStart(2,'0')+String(+fd.dia).padStart(2,'0'):'',nomR=cu?Array.from(n).slice(0,62).join('').trim()+' #N'+cu:n;  // cumpleaños: el panel lo saca del nombre y lo guarda en la ficha
   const R={nombre:nomR,telefono:t,d,t:fmt(s0),s:sv.n,m:dur,tel,tid},BL=[];for(let x=s0;x<s0+dur;x+=paso)BL.push([tid+'_'+d+'_'+hhmm(x),{d,t:fmt(x),r:rid,tid}]);
   let ok=false;
   try{
     // 1) Directo por internet (no depende de la conexión en vivo de Firebase ni de que reCAPTCHA responda)
-    const W=[{update:{name:fsNom('reservas/'+rid),fields:fsCampos(R)},updateTransforms:[{fieldPath:'creada',setToServerValue:'REQUEST_TIME'}]},{update:{name:fsNom('pendientes/'+tel),fields:fsCampos({r:rid})}}];
+    const W=[{update:{name:fsNom('reservas/'+rid),fields:fsCampos(R)},updateTransforms:[{fieldPath:'creada',setToServerValue:'REQUEST_TIME'}]},{update:{name:fsNom('pendientes/'+pid),fields:fsCampos({r:rid,tid})}}];
     BL.forEach(([id,v])=>W.push({update:{name:fsNom('bloques/'+id),fields:fsCampos(v)}}));
     try{await fsCommit(W,20000)}
     catch(x){if(x.code!=='red')throw x;
       // 2) Si esa vía no conecta, se intenta por la conexión de Firebase
-      const b=db.batch();b.set(db.collection('reservas').doc(rid),Object.assign({creada:firebase.firestore.FieldValue.serverTimestamp()},R));b.set(db.collection('pendientes').doc(tel),{r:rid});
+      const b=db.batch();b.set(db.collection('reservas').doc(rid),Object.assign({creada:firebase.firestore.FieldValue.serverTimestamp()},R));b.set(db.collection('pendientes').doc(pid),{r:rid,tid});
       BL.forEach(([id,v])=>b.set(db.collection('bloques').doc(id),v));
       await Promise.race([b.commit(),new Promise((_,no)=>setTimeout(()=>no({code:'sin-respuesta'}),20000))])}
     ok=true;
@@ -1033,7 +1061,7 @@ document.addEventListener('submit',async e=>{
       try{const q=await fsLee('bloques/'+BL[0][0]);
         if(q&&q.r===rid)ok=true;  // sí quedó guardada (la respuesta anterior se perdió en el camino)
         else if(q)msg='Esa hora ya fue tomada por otra persona. Elige otra.';
-        else{const pq=await fsLee('pendientes/'+tel);msg=pq?'Ya tienes una solicitud pendiente de pago con este teléfono. Cuando pagues el abono podrás reservar otra, o escríbenos por WhatsApp.':'No se pudo registrar la reserva (permiso denegado). Escríbenos por WhatsApp para reservar.'}}
+        else{const pq=await fsLee('pendientes/'+pid);msg=pq?'Ya tienes una solicitud pendiente de pago con este teléfono. Cuando pagues el abono podrás reservar otra, o escríbenos por WhatsApp.':'No se pudo registrar la reserva (permiso denegado). Escríbenos por WhatsApp para reservar.'}}
       catch(y){msg='No se pudo registrar la reserva. Escríbenos por WhatsApp para reservar.'}
     }
     if(x.code==='sin-respuesta')msg='La conexión está muy lenta y no recibimos respuesta. Revisa tu internet y vuelve a intentarlo; si sigue igual, escríbenos por WhatsApp.';

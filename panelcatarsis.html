@@ -346,6 +346,13 @@ input[type=checkbox]{min-height:0;width:auto}
 .fstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
 .fstats div{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:8px 10px;min-width:0}
 .fstats small{display:block;color:var(--mut);font-size:12px}.fstats b{font-size:15px}
+.eqrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.eqi{min-width:0;flex:1}.eqi b{display:block}.eqi small{display:block;color:var(--mut);font-size:12.5px;word-break:break-all}
+.eqi small.eqok{color:var(--grn)}.eqi small.eqoff{color:var(--red)}
+.eqb{display:flex;gap:6px;align-items:center;flex:none}.eqb .pill{min-height:40px;padding:0 12px}
+.dsvo{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.dsvo input{margin-top:3px;flex:none}.dsvo b{display:block;font-weight:600}.dsvo small{display:block;color:var(--mut);font-size:12.5px}
+.tervis{display:none}body.ter .tervis{display:inline-flex}
 .clrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:52px}
 .clrow small{display:block;color:var(--mut);font-size:12.5px}
 .bkst{font-size:13px;margin-top:6px;font-weight:600}
@@ -475,7 +482,7 @@ window.__splOff=function(){};</script>
 <div id="noacc" role="alert" aria-live="polite"><div class="lbox" id="noaccBox"></div></div>
 <div class="top"><div class="brand"><img class="logo" alt="Catarsis" src="data:image/png;base64,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"><h1>Agenda Catarsis</h1></div><div style="display:flex;gap:8px;flex:none"><button class="pill" id="edBtn" aria-controls="edit">Menú</button><button class="pill hide" id="outBtn">Salir</button></div></div>
 <div class="sub cond">Bienestar y Estética</div>
-<div class="quick"><button class="pill finbtn" data-rcopen id="rcQuick" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Recordatorios</button></div>
+<div class="quick"><button class="pill finbtn tervis" type="button" data-daniopen><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Agenda de Daniela</button><button class="pill finbtn" data-rcopen id="rcQuick" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Recordatorios</button></div>
 <div id="denyBox" class="deny" role="alert" hidden></div>
 <div id="edit" class="box hide" style="margin-top:18px;padding:18px"></div>
 <main class="app"><section class="side">
@@ -759,6 +766,39 @@ window.__splOff=function(){};</script>
   <button class="btn" style="width:100%" type="button" data-baesave>Guardar</button><div class="mut" id="baeMsg" role="status" style="font-size:13.5px;min-height:18px;margin-top:6px"></div>
  </div>
 </div>
+<div id="daniModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="daniTitle">
+ <div class="mbox" style="max-width:480px">
+  <div class="mhead"><h3 id="daniTitle">Agenda de Daniela</h3><button type="button" class="x" data-daniclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:4px 0 6px">Solo para ver. Desde tu cuenta no se pueden editar ni eliminar estas horas.</p>
+  <div id="daniList"></div>
+  <button class="pill" style="width:100%;margin-top:12px" type="button" data-daniclose>Cerrar</button>
+ </div>
+</div>
+<div id="dsvModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="dsvTitle">
+ <div class="mbox" style="max-width:480px">
+  <div class="mhead"><h3 id="dsvTitle">Servicios de Daniela que ofreces</h3><button type="button" class="x" data-dsvclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:4px 0 6px">Marca los que también haces tú. En la página de reservas aparecen contigo, con el valor y la duración que define Daniela.</p>
+  <div id="dsvList"></div>
+  <div class="row" style="margin-top:12px"><button class="pill" type="button" data-dsvclose>Cancelar</button><button class="btn" type="button" data-dsvsave>Guardar</button></div>
+ </div>
+</div>
+<div id="eqModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="eqTitle">
+ <div class="mbox" style="max-width:500px">
+  <div class="mhead"><h3 id="eqTitle">Equipo</h3><button type="button" class="x" data-eqclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
+  <p class="mut" style="font-size:14px;margin:4px 0 8px">Cada terapeuta entra al panel con su cuenta de Google y tiene su propia agenda, servicios, clientas y códigos de descuento. Puede ver tus horas, pero no editarlas, y no ve tu balance, tus giftcards ni tus promociones.</p>
+  <div id="eqList"></div>
+  <form id="eqForm" novalidate style="margin-top:14px">
+   <div class="lbl" style="margin-top:0">Agregar terapeuta</div>
+   <label class="f" for="eqN">Nombre</label><input id="eqN" autocomplete="off" maxlength="60" placeholder="Nombre y apellido">
+   <label class="f" for="eqR">Especialidad</label><input id="eqR" autocomplete="off" maxlength="60" placeholder="Masoterapeuta">
+   <label class="f" for="eqM">Correo de Google</label><input id="eqM" type="email" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="nombre@gmail.com">
+   <div class="err" id="eqErr" role="alert"></div>
+   <button class="btn" id="eqAdd" type="submit" style="width:100%;margin-top:8px">Agregar al equipo</button>
+   <p class="mut" style="font-size:12.5px;margin:8px 0 0">Después envíale el link de este panel. Entra con «Continuar con Google» usando ese mismo correo.</p>
+  </form>
+  <button class="pill" style="width:100%;margin-top:12px" type="button" data-eqclose>Cerrar</button>
+ </div>
+</div>
 <div id="clModal" class="modal nobox" hidden role="dialog" aria-modal="true" aria-labelledby="clTitle">
  <div class="mbox" style="max-width:480px">
   <div class="mhead"><h3 id="clTitle">Clientas</h3><button type="button" class="x" data-clclose aria-label="Cerrar" style="flex:0 0 40px;height:40px;color:var(--ink)">✕</button></div>
@@ -825,6 +865,12 @@ const FIREBASE_CONFIG=(c=>c&&typeof c==='object'&&['apiKey','authDomain','projec
 const APPCHECK_KEY=window.APPCHECK_KEY||'';
 function acActivar(){if(!APPCHECK_KEY||!firebase.appCheck)return;try{const P=firebase.appCheck.ReCaptchaEnterpriseProvider;firebase.appCheck().activate(P?new P(APPCHECK_KEY):APPCHECK_KEY,false)}catch(e){console.warn('App Check',e)}}
 const KEY='masajes-v1',ROL='Cosmetóloga y Masoterapeuta';
+// Terapeutas del equipo: entran con su cuenta de Google (Daniela las agrega en Menú → Equipo).
+// TER = datos de la terapeuta que entró (null si es Daniela). Cada terapeuta trabaja sobre su propia agenda (ter/<uid>):
+// sus horas, clientas, servicios y códigos. De Daniela solo ve sus horas, sin valores ni teléfonos (compartido/agenda).
+let TER=null,TERC=false;   // TERC: el caché de este equipo es de una terapeuta
+const esTer=()=>!!TER||TERC;
+const ROLX=()=>TER?(TER.r||'Terapeuta'):ROL;
 const DEF=[{"n":"Masaje Relajante Cuerpo Completo","m":50,"v":26000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Mixto Cuerpo Completo (relajación + descontracturante)","m":50,"v":28000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Descontracturante Cuerpo Completo","m":50,"v":30000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Descontracturante + Ventosas Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje con Piedras Calientes Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje con Cannabis Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje para Embarazadas Cuerpo Completo","m":50,"v":30000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje para Fibromialgia Cuerpo Completo","m":50,"v":35000,"c":"Masoterapia","g":"Masajes cuerpo completo"},{"n":"Masaje Relajante de Espalda","m":30,"v":20000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Descontracturante de Espalda","m":30,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Cérvico-Craneal","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Cráneo-Facial","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Facial para Bruxismo","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje para Piernas Cansadas","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Podal","m":40,"v":25000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Masaje Abdominal / Colon","m":40,"v":27000,"c":"Masoterapia","g":"Masajes localizados"},{"n":"Drenaje Linfático Manual Cuerpo Completo","m":60,"v":40000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Drenaje Linfático de Piernas","m":40,"v":30000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Drenaje Linfático Rostro","m":40,"v":25000,"c":"Masoterapia","g":"Drenaje linfático"},{"n":"Limpieza Facial Profunda Purificante","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Men – Limpieza Profunda Masculina","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Piel Joven – Control de Impurezas","m":60,"v":30000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Limpieza Profunda + Fototerapia LED","m":60,"v":38000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Premium Reafirmante & Anti-Age","m":60,"v":45000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Facial Glow + Dermaplaning","m":60,"v":50000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Limpieza Profunda de Espalda","m":60,"v":38000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Dermaplaning Glow Express","m":30,"v":25000,"c":"Limpiezas faciales","g":"Limpiezas faciales"},{"n":"Extracción de Milium (1)","m":15,"v":5000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Extracción de Milium (2 – 3)","m":15,"v":10000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Extracción de Milium (4 – 5)","m":15,"v":15000,"c":"Limpiezas faciales","g":"Extracción de milium"},{"n":"Evaluación de acrocordones","m":15,"v":10000,"c":"Acrocordones","g":"","w":1},{"n":"Tratamiento de acrocordones","m":30,"v":0,"c":"Acrocordones","g":"","p":1}];
 const iso=d=>d.toISOString().slice(0,10);
 const today=new Date();today.setHours(12,0,0,0);
@@ -855,8 +901,21 @@ let S={branches:['Catarsis Osorno'],thers:['Daniela Velásquez'],services:DEF,ap
 let BASE=null,cacheUid='',curUid=''; // cacheUid: cuenta dueña del caché de este equipo · BASE: última versión de la nube que vio este equipo (ver «Sincronización segura»)
 try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o._b2&&typeof o._b2==='object')BASE=o._b2;
   else if(o&&o._b&&o._b.a){const b=o._b,P=x=>x?JSON.parse(x):undefined;BASE={branches:P(b.b),thers:P(b.t),services:P(b.s),cfg:b.c?Object.fromEntries(Object.entries(b.c).map(([k,v])=>[k,P(v)])):undefined,appts:Object.values(b.a).map(P)}}
-  if(o){cacheUid=String(o._u||'');delete o._b;delete o._b2;delete o._u}S=Object.assign(S,o)}}catch(e){BASE=null}
+  if(o){cacheUid=String(o._u||'');TERC=o._r==='t';delete o._b;delete o._b2;delete o._u;delete o._r;delete o._t}if(TERC)S.services=[];S=Object.assign(S,o)}}catch(e){BASE=null}
+// Agenda de una terapeuta: empieza vacía (sin los servicios, promociones ni packs de Daniela)
+function migrateTer(){
+  if(!Array.isArray(S.services))S.services=[];
+  S.services=S.services.filter(x=>x&&x.n);S.services.forEach(x=>{if(!x.c)x.c='Otros'});
+  S.cfg=Object.assign({abono:10000,plazo:24,plazoMin:15,datos:'',wa:'',mpMin:90000,mpOn:false},S.cfg||{});
+  S.cfg.promos=[];S.cfg.made1=S.cfg.made2=S.cfg.acro=S.cfg.acro2=S.cfg.acro3=S.cfg.lp1=1;
+  S.cfg.madera=Object.assign({},MAD_CFG,S.cfg.madera||{},{on:false});
+  S.cfg.duo=Object.assign({ab:20000,m:50,d:{}},S.cfg.duo||{},{on:false});if(!S.cfg.duo.d||typeof S.cfg.duo.d!=='object')S.cfg.duo.d={};delete S.cfg.duo.h;
+  if(!Array.isArray(S.cfg.dsv))S.cfg.dsv=[];
+  S.cfg.horario=Object.assign({dias:[1,2,3,4,5],desde:'10:00',hasta:'19:00',paso:30,adv:2},S.cfg.horario||{});
+  S.appts.forEach(a=>{a.e=a.e||'reservada';a.p=a.p||'pendiente';a.v=a.v||0;a.f=a.f||''});
+}
 function migrate(){
+  if(esTer()){migrateTer();return}
   S.branches=S.branches.map(b=>b==='Mi sucursal'?'Catarsis Osorno':b);
   S.thers=S.thers.map(t=>t==='Terapeuta 1'?'Daniela Velásquez':t);
   if(!S.services||!S.services.length||S.services.some(x=>!x.c))S.services=DEF.map(x=>({...x}));
@@ -887,7 +946,7 @@ let wkS=new Date(mon),sel=iso(today),editing=false,custom=false,ref=null,skip=fa
 let deniedRead=false;
 // Sin acceso: se borran de este equipo los datos de la agenda y se muestra solo esta pantalla
 function borraDatos(){if(unsub){unsub();unsub=null}if(unsubR){unsubR();unsubR=null}if(unsubF){unsubF();unsubF=null}
-  ref=null;cacheUid='';reservas=[];GIFTS={};gotMain=gotRes=false;
+  ref=null;cacheUid='';reservas=[];GIFTS={};gotMain=gotRes=false;terCorta();TER=null;TERC=false;DANI=null;document.body.classList.remove('ter');
   S={branches:['Catarsis Osorno'],thers:['Daniela Velásquez'],services:JSON.parse(JSON.stringify(DEF)),appts:[],branch:0,ther:0};migrate();BASE=cp(pick(S));
   try{localStorage.removeItem(KEY)}catch(e){}
   document.querySelectorAll('.modal').forEach(m=>m.hidden=true);list.innerHTML='';days.innerHTML=''}
@@ -899,6 +958,32 @@ function acceso(m,u){const b=document.body,logo=document.querySelector('.brand .
      +`<details><summary>¿Es tu cuenta de administradora?</summary><p class="mut" style="margin:6px 0 8px">Agrega este UID a la lista de <b>owner()</b> en las reglas de Firestore y toca Publicar:</p><code id="denyUid">${esc(u.uid)}</code><button class="pill" type="button" data-copyuid style="margin-top:8px;width:100%">Copiar UID</button></details>`;
   b.classList.add('noacc');window.scrollTo(0,0)}
 function showDeny(u){borraDatos();acceso('deny',u);deniedRead=true;sync.textContent='Sin acceso a la agenda'}
+// ── Terapeutas ──
+let unsubT=[],DANI=null,DSVL=[];   // DANI: horas de Daniela (solo lectura) · DSVL: servicios que Daniela publica en reservas
+function terCorta(){unsubT.forEach(f=>{try{f()}catch(_){}});unsubT=[]}
+// Ficha de la terapeuta (terapeutas/<correo>) o null. Si la cuenta es de Daniela, entra siempre como Daniela.
+async function fichaTer(db,u){const m=String(u.email||'').trim().toLowerCase();if(!m)return null;
+  let d=null;
+  try{const s=await db.collection('terapeutas').doc(m).get();if(!s.exists)return null;d=s.data()||{}}
+  catch(e){if(e&&e.code!=='permission-denied'&&TERC&&cacheUid===u.uid){try{const o=JSON.parse(localStorage.getItem(KEY)||'{}');if(o&&o._t&&o._t.mail===m)return Object.assign({},o._t,{sinRed:1})}catch(_){}}return null}
+  if(d.on===false)return null;
+  try{await db.collection('masajes').doc('ping').get();return null}catch(_){}
+  return Object.assign({},d,{mail:m})}
+function iniciaTer(db,u,ft){
+  const nueva=!(TERC&&cacheUid===u.uid);
+  TER={uid:u.uid,mail:ft.mail,n:String(ft.n||u.displayName||ft.mail).slice(0,60),r:String(ft.r||'Terapeuta').slice(0,60)};TERC=true;
+  try{const o=JSON.parse(localStorage.getItem(KEY)||'null');if(o&&o._u===u.uid){o._t=TER;o._r='t';localStorage.setItem(KEY,JSON.stringify(o))}}catch(_){}
+  document.body.classList.add('ter');document.body.classList.remove('ro');readOnly=false;
+  if(nueva){S={branches:['Catarsis Osorno'],thers:[TER.n],services:[],appts:[],branch:0,ther:0,cfg:{}};migrate();BASE=cp(pick(S))}
+  ref=db.collection('ter').doc(u.uid);
+  gotMain=false;gotRes=false;firstPub=true;lastPub={};lastCfg='';firstPend=true;lastPend=new Set();
+  gotFin=true;GIFTS={};bkIni=true;
+  if(!ft.sinRed&&ft.uid!==u.uid)db.collection('terapeutas').doc(ft.mail).update({uid:u.uid,visto:Date.now()}).catch(()=>{});
+  unsubR=db.collection('reservas').where('tid','==',u.uid).onSnapshot(q=>{reservas=q.docs.map(d=>({id:d.id,...d.data()}));gotRes=true;afterSync()},()=>{gotRes=true;afterSync()});
+  unsubT.push(db.collection('compartido').doc('agenda').onSnapshot(s=>{DANI=s.exists?(s.data()||{}):{l:[]};if(!daniModal.hidden)daniDraw()},()=>{DANI=DANI||{l:[],err:1};if(!daniModal.hidden)daniDraw()}));
+  unsubT.push(db.collection('publico').doc('agenda').onSnapshot(s=>{const d=s.exists?s.data():{};DSVL=Array.isArray(d.services)?d.services:[];if(!dsvModal.hidden&&!dsvList.querySelector('[data-dsv]'))dsvDraw();if(gotMain&&(S.cfg.dsv||[]).length)refrescar()},()=>{}));
+  render();escuchaRef(u);
+}
 const uidTag=u=>` Tu UID es: <code style="user-select:all;background:var(--tint);padding:2px 6px;border-radius:6px;word-break:break-all">${u.uid}</code> Pégalo en las reglas de Firestore.`;
 // ── Sincronización entre equipos (panel abierto en varios teléfonos / computadores a la vez) ──
 // · BASE = la última versión de la nube que vio este equipo (se guarda junto al caché).
@@ -937,7 +1022,7 @@ function rec(t,v){if(t===v)return t;
   return v}
 const pick=d=>{const o={};FLD.forEach(f=>{if(d&&d[f]!==undefined)o[f]=d[f]});return o};
 if(!BASE)BASE=cp(pick(S)); // sin copia base guardada: se toma el caché como punto de partida
-const guardaLocal=()=>{if(!curUid||cacheUid!==curUid)return;try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},S,{_b2:BASE,_u:curUid})))}catch(e){}};
+const guardaLocal=()=>{if(!curUid||cacheUid!==curUid)return;try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},S,{_b2:BASE,_u:curUid,_r:TER?'t':'',_t:TER||undefined})))}catch(e){}};
 function setBase(d){BASE=cp(pick(d));guardaLocal()}
 const cambiosLocales=()=>FLD.some(f=>cj(S[f])!==cj(BASE[f]));
 // toma los datos de la nube conservando los cambios locales que aún no se envían; true si cambió lo que se ve
@@ -979,7 +1064,7 @@ function avisoNuevo(r,sn){const x=`${String(sn||'Reserva')} · ${fmtD(r.d)}, ${r
 // id fijo para la hora de una reserva web (fecha de creación + reserva): dos equipos que la procesan a la vez crean la MISMA hora
 const ridNum=(r,i)=>{const c=r.creada,ms=typeof c==='number'?c:c&&typeof c.toMillis==='function'?c.toMillis():c&&+c.seconds?c.seconds*1000:0;let h=0;for(const x of String(r.id))h=(h*31+x.charCodeAt(0))%997;return ms?ms*1000+h:Date.now()+i};
 function processReservas(){
-  const db=firebase.firestore();let ch=false,aviso='';const items=reservas,later=[];reservas=[];
+  const db=firebase.firestore();let ch=false,aviso='';const items=TER?reservas:reservas.filter(r=>!r.tid||r.tid==='admin'),later=[];reservas=[];   // las reservas con una terapeuta las procesa su panel
   items.forEach((r,i)=>{
     if(!r.d||!r.t||S.appts.some(x=>x.rid===r.id))return;
     const gr=gcDeRes(r.s);
@@ -991,7 +1076,7 @@ function processReservas(){
       // reserva hecha con giftcard desde la página de reservas: queda pagada con la giftcard
       S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?+sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:ok?(sv?sv.n:gr.nm):String(r.s||'').slice(0,80),v:ok?(+gr.g.m||0):(sv?+sv.v:0),o:1,...(ok?{e:'confirmada',p:'pagado',sp:1,gc:1,gid:gr.g.id}:{e:'reservada',p:'pendiente'})});
       if(!ok)aviso=`Reserva online con la giftcard N° ${fmtN(gr.n)}, que ${gr.g?'ya fue cobrada':'no está registrada'}: revísala`;avisoNuevo(r,(ok?(sv?sv.n:gr.nm):String(r.s||''))+' (giftcard)');ch=true;return}
-    const dr=dcDeRes(r.s),sv=dr?dr.sv:S.services.find(x=>x.n===r.s)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s)||qtySvc(r.s);
+    const dr=dcDeRes(r.s),sv=dr?(dr.sv||(TER?dsvSvc(dr.nm):null)):S.services.find(x=>x.n===r.s)||(TER?dsvSvc(r.s):null)||promoSvc(r.s)||duoSvc(r.s)||packSvc(r.s)||qtySvc(r.s);
     const dx=dr?dcUsar(dr,r,nid):null;if(dx&&dx.dc.w)aviso=`Reserva de ${r.nombre||'una clienta'} con el código ${dr.c}: ${dx.dc.w}. Revísala.`;
     S.appts.push({id:nid,rid:r.id,k:k0,d:r.d,t:r.t,m:sv?sv.m:Math.max(15,Math.min(240,+r.m||60)),c:r.nombre,f:r.telefono,s:sv?sv.n:String(dr?dr.nm:r.s||'').slice(0,80),v:dx?dx.v:sv?(sv.ev&&!(+sv.v>0)?(+S.cfg.abono||0):sv.v):0,e:'reservada',p:'pendiente',o:1,...(dx?{dc:dx.dc}:{}),...(sv&&sv.pn?{pk:nid,ps:1,pn:sv.pn}:{}),...(sv&&sv.ev?{ev:1}:{})});avisoNuevo(r,sv?sv.n:String(r.s||''));ch=true;
   });
@@ -1006,23 +1091,97 @@ function processReservas(){
       db.collection('reservas').doc(r.id).delete().catch(()=>{});
     })});
 }
+// horas ocupadas por día ("inicio-fin" en minutos) para la página de reservas
+function ocupadoPub(){const t0=iso(today),oc={};
+  S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible'||a.e==='cancelada')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});return oc}
+const pubSvc=x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})});
 function syncPublic(){
-  const db=firebase.firestore(),t0=iso(today),oc={};
-  S.appts.forEach(a=>{if(a.d<t0||a.e==='disponible'||a.e==='cancelada')return;const x=toMin(a.t);(oc[a.d]=oc[a.d]||[]).push(x+'-'+(x+(+a.m||0)))});
-  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(x=>({n:x.n,m:+x.m,v:+x.v,c:x.c||'Otros',g:x.g||'',...(x.w?{w:1}:{}),...(Array.isArray(x.b)&&x.b.length?{b:x.b}:{}),...(Array.isArray(x.k)&&x.k.length?{k:x.k.map(q=>({s:+q.s,v:+q.v}))}:{}),...(x.ds?{ds:String(x.ds)}:{}),...(+x.vo>+x.v?{vo:+x.vo}:{}),...(x.ev?{ev:1}:{}),...(Array.isArray(x.q)&&x.q.length?{q:x.q.map(t=>({n:+t.n,v:+t.v}))}:{})})),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),pol:String(S.cfg.pol||'').trim().slice(0,600),gal:GALP().slice(0,12).map(x=>({id:String(x.id),t:String(x.t||'').slice(0,60),x:String(x.x||'').slice(0,60),s:String(x.s||'').slice(0,80)})),dc:dcPub(),ocupado:oc,av:(S.cfg.av||[]).filter(a=>a&&a.i&&a.at>Date.now()-3*864e5).map(a=>({i:a.i,x:a.x})),...(gotFin?{gc:gcPub()}:{})};
+  if(TER){syncPublicTer();return}
+  const db=firebase.firestore(),oc=ocupadoPub();
+  const doc={abono:S.cfg.abono,plazoMin:S.cfg.plazoMin,datos:S.cfg.datos,wa:S.cfg.wa,mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,services:S.services.filter(x=>!x.p&&!(esMadSvc(x)&&!S.cfg.madera.on)).map(pubSvc),madera:S.cfg.madera.on?(({c,sub,tags,desc,ev,full})=>({c,sub,tags,desc,ev,full:full!==false}))(S.cfg.madera):null,promos:(S.cfg.promos||[]).map(p=>({n:p.n,c:p.c||'',m:+p.m,v:+p.v,vo:+p.vo||0,...(p.combo?{combo:1,a:p.a||'',b:p.b||''}:{}),...(p.mad?{mad:1,ses:+p.ses,base:p.base||''}:{})})),duo:duoPub(),pol:String(S.cfg.pol||'').trim().slice(0,600),gal:GALP().slice(0,12).map(x=>({id:String(x.id),t:String(x.t||'').slice(0,60),x:String(x.x||'').slice(0,60),s:String(x.s||'').slice(0,80)})),dc:dcPub(),ocupado:oc,av:(S.cfg.av||[]).filter(a=>a&&a.i&&a.at>Date.now()-3*864e5).map(a=>({i:a.i,x:a.x})),...(gotFin?{gc:gcPub()}:{})};
   const j=JSON.stringify(doc);
   if(j!==lastCfg){lastCfg=j;const ra=db.collection('publico').doc('agenda');pubP=(gotFin?ra.set(doc):ra.set(doc,{mergeFields:Object.keys(doc)})).catch(e=>{if(e&&e.code==='permission-denied'&&doc.gc){const d2=Object.assign({},doc);delete d2.gc;return ra.set(d2,{mergeFields:Object.keys(d2)})}throw e}).then(()=>{pubInfo.textContent='Horario publicado para tus clientas ✓'+(S.cfg.wa?'':' · Falta tu WhatsApp (Menú → Reservas online): sin él tus clientas no ven el botón para enviar el comprobante.')}).catch(pubErr)}
   syncPend(db);
+  syncCompartido(db);
 }
 const nd=f=>{const d=String(f||'').replace(/\D/g,'');return d.length>9?d.slice(-9):d};
 function syncPend(db){
-  const t0=iso(today),want=new Set();
-  S.appts.forEach(a=>{if(a.d>=t0&&a.f&&!['disponible','bloqueado','cancelada'].includes(a.e)&&a.p==='pendiente'){const t=nd(a.f);if(t.length>=8)want.add(t)}});
+  const t0=iso(today),want=new Set(),pre=TER?TER.uid+'_':'';   // pendientes de una terapeuta: "<uid>_<teléfono>"
+  S.appts.forEach(a=>{if(a.d>=t0&&a.f&&!['disponible','bloqueado','cancelada'].includes(a.e)&&a.p==='pendiente'){const t=nd(a.f);if(t.length>=8)want.add(pre+t)}});
   const del=t=>db.collection('pendientes').doc(t).delete().catch(()=>{});
-  if(firstPend){firstPend=false;db.collection('pendientes').get().then(q=>q.forEach(d=>{if(!want.has(d.id))del(d.id)})).catch(()=>{})}
+  if(firstPend){firstPend=false;(TER?db.collection('pendientes').where('tid','==',TER.uid):db.collection('pendientes')).get().then(q=>q.forEach(d=>{const x=d.data()||{};if(!TER&&x.tid&&x.tid!=='admin')return;if(!want.has(d.id))del(d.id)})).catch(()=>{})}
   lastPend.forEach(t=>{if(!want.has(t))del(t)});
   lastPend=want;
 }
+// Agenda pública de la terapeuta (publicoTer/<uid>): sus servicios, los de Daniela que ofrece, horario, horas ocupadas y códigos
+function syncPublicTer(){
+  const db=firebase.firestore();
+  const doc={uid:TER.uid,n:TER.n,r:TER.r,on:true,abono:+S.cfg.abono||0,plazoMin:+S.cfg.plazoMin||15,datos:S.cfg.datos||'',wa:S.cfg.wa||'',mp:mpActivo()?S.cfg.mp:'',mpMin:+S.cfg.mpMin||0,horario:S.cfg.horario,
+    services:S.services.filter(x=>!x.p).map(pubSvc),dsv:(S.cfg.dsv||[]).slice(0,200),pol:String(S.cfg.pol||'').trim().slice(0,600),dc:dcPub(),ocupado:ocupadoPub()};
+  const j=JSON.stringify(doc);
+  if(j!==lastCfg){lastCfg=j;pubP=db.collection('publicoTer').doc(TER.uid).set(doc).then(()=>{pubInfo.textContent='Tu horario está publicado en la página de reservas ✓'+(S.services.length||(S.cfg.dsv||[]).length?'':' · Agrega tus servicios (Menú → Servicios) para que tus clientas puedan reservar contigo.')}).catch(e=>{lastCfg='';pubErr(e)})}
+  syncPend(db);
+}
+// Copia de las horas de Daniela para las terapeutas: solo fecha, hora, servicio, nombre y estado (sin valores, pagos ni teléfonos)
+let lastComp='',compOff=false;
+function syncCompartido(db){if(compOff||TER)return;
+  const desde=masDias(hoyIso(),-1),hasta=masDias(hoyIso(),120);
+  const l=S.appts.filter(a=>a&&a.d>=desde&&a.d<=hasta&&a.e!=='disponible'&&a.e!=='cancelada')
+    .map(a=>a.e==='bloqueado'?{d:a.d,t:a.t,m:+a.m||0,e:'bloqueado'}:{d:a.d,t:a.t,m:+a.m||0,e:a.e||'reservada',s:String(a.s||'').slice(0,80),c:String(a.c||'').slice(0,60)})
+    .sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));
+  const j=JSON.stringify(l);if(j===lastComp)return;lastComp=j;
+  db.collection('compartido').doc('agenda').set({l,at:Date.now()}).catch(e=>{lastComp='';if(e&&e.code==='permission-denied')compOff=true})}
+// ── Agenda de Daniela vista por la terapeuta (solo lectura) ──
+function daniDraw(){
+  if(!DANI){daniList.innerHTML='<p class="mut">Cargando…</p>';return}
+  if(DANI.err){daniList.innerHTML='<p class="mut">No se pudo cargar la agenda de Daniela. Revisa tu conexión.</p>';return}
+  const h=hoyIso(),L=(Array.isArray(DANI.l)?DANI.l:[]).filter(a=>a&&a.d>=h).sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));
+  if(!L.length){daniList.innerHTML='<p class="mut">Daniela no tiene horas agendadas desde hoy.</p>';return}
+  const by={};L.forEach(a=>(by[a.d]=by[a.d]||[]).push(a));
+  daniList.innerHTML=Object.keys(by).map(d=>`<div class="c30d"><div class="c30h ${d===h?'hoy':''}" style="cursor:default"><b>${d===h?'Hoy, '+fmtD(d):d===masDias(h,1)?'Mañana, '+fmtD(d):capi(fmtD(d))}</b><small>${by[d].length} hora${by[d].length==1?'':'s'}</small></div>`
+    +by[d].map(a=>`<div class="c30r s-${esc(a.e)}" style="cursor:default"><span class="t">${esc(a.t)}</span><span class="i"><b>${a.e==='bloqueado'?'Horario bloqueado':esc(a.c||'Clienta')}</b><small>${a.e==='bloqueado'?'':esc(a.s||'')+' · '}hasta ${end(a.t,+a.m||0)}</small></span><span class="c30e">${ESTN[a.e]||esc(a.e||'')}</span></div>`).join('')+'</div>').join('');
+}
+// ── Servicios de Daniela que ofrece la terapeuta: en reservas se ven con el valor y la duración que define Daniela ──
+const dsvSvc=n=>{n=String(n||'');const x=DSVL.find(x=>x&&(x.n===n||cortoL(x.n,60)===n));return x&&(S.cfg.dsv||[]).includes(x.n)?x:null};
+function dsvDraw(){
+  const sel=new Set(S.cfg.dsv||[]),L=DSVL.filter(x=>x&&x.n&&!x.w);
+  if(!L.length){dsvList.innerHTML='<p class="mut">Cargando los servicios de Daniela…</p>';return}
+  const by={};L.forEach(x=>(by[x.c||'Otros']=by[x.c||'Otros']||[]).push(x));
+  dsvList.innerHTML=Object.entries(by).map(([c,l])=>`<div class="lbl">${esc(c)}</div>`+l.map(x=>`<label class="dsvo"><input type="checkbox" data-dsv value="${esc(x.n)}" ${sel.has(x.n)?'checked':''}><span><b>${esc(x.n)}</b><small>${+x.m} min · ${x.ev?(+x.v>0?'desde '+money(+x.v):'según evaluación'):money(+x.v)}</small></span></label>`).join('')).join('');
+}
+function dsvGuarda(){
+  if(!dsvList.querySelector('[data-dsv]')){dsvModal.hidden=true;return}
+  S.cfg.dsv=[...dsvList.querySelectorAll('[data-dsv]:checked')].map(i=>i.value);dsvModal.hidden=true;render();
+  showToast(S.cfg.dsv.length?`Ofreces ${S.cfg.dsv.length} servicio${S.cfg.dsv.length==1?'':'s'} de Daniela ✓`:'Ya no ofreces servicios de Daniela')}
+// ── Equipo (solo Daniela): terapeutas que entran al panel con su cuenta de Google ──
+let EQ=[],eqBusy=false;
+async function eqCarga(){try{const q=await firebase.firestore().collection('terapeutas').get();EQ=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.n||a.id).localeCompare(String(b.n||b.id)))}catch(e){EQ=null}eqDraw()}
+function eqDraw(){
+  eqList.innerHTML=EQ===null?'<p class="mut">No se pudo cargar tu equipo. Revisa que hayas publicado las reglas nuevas de Firestore.</p>'
+    :!EQ.length?'<p class="mut">Aún no agregas terapeutas.</p>'
+    :EQ.map(t=>`<div class="eqrow"><span class="eqi"><b>${esc(t.n||t.id)}</b><small>${esc(t.id)}${t.r?' · '+esc(t.r):''}</small><small class="${t.on===false?'eqoff':t.uid?'eqok':''}">${t.on===false?'Acceso pausado':t.uid?'✓ Ya entró al panel':'Aún no entra al panel'}</small></span><span class="eqb"><button type="button" class="pill" data-eqon="${esc(t.id)}">${t.on===false?'Activar':'Pausar'}</button><button type="button" class="x" data-eqdel="${esc(t.id)}" aria-label="Quitar a ${esc(t.n||t.id)}">✕</button></span></div>`).join('');
+}
+async function eqAgrega(e){e.preventDefault();if(eqBusy)return;
+  const n=eqN.value.trim().replace(/\s+/g,' '),r=eqR.value.trim().replace(/\s+/g,' '),m=eqM.value.trim().toLowerCase();
+  if(n.length<2){eqErr.textContent='Escribe el nombre de la terapeuta.';eqN.focus();return}
+  if(!/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]{2,}$/.test(m)){eqErr.textContent='Escribe el correo de Google de la terapeuta, por ejemplo nombre@gmail.com.';eqM.focus();return}
+  const yo=String((firebase.auth().currentUser||{}).email||'').toLowerCase();
+  if(m===yo){eqErr.textContent='Ese es tu propio correo. Escribe el de la terapeuta.';return}
+  if((EQ||[]).some(t=>t.id===m)){eqErr.textContent='Esa terapeuta ya está en tu equipo.';return}
+  eqBusy=true;eqErr.textContent='';eqAdd.disabled=true;
+  try{await firebase.firestore().collection('terapeutas').doc(m).set({n:n.slice(0,60),r:(r||'Terapeuta').slice(0,60),on:true,creada:Date.now()});
+    eqN.value=eqR.value=eqM.value='';showToast('Terapeuta agregada ✓');await eqCarga()}
+  catch(x){eqErr.textContent=x&&x.code==='permission-denied'?'Firebase no permitió guardar. Publica primero las reglas nuevas de Firestore.':'No se pudo guardar. Revisa tu conexión.'}
+  eqBusy=false;eqAdd.disabled=false}
+async function eqPausa(id){const t=(EQ||[]).find(x=>x.id===id);if(!t)return;const on=t.on===false;
+  try{const db=firebase.firestore();await db.collection('terapeutas').doc(id).update({on});
+    if(!on&&t.uid)await db.collection('publicoTer').doc(t.uid).delete().catch(()=>{});
+    showToast(on?'Acceso activado ✓ Vuelve a aparecer en reservas cuando abra su panel':'Acceso pausado: no puede entrar al panel ni recibir reservas');await eqCarga()}
+  catch(e){showToast('No se pudo cambiar. Revisa tu conexión.')}}
+function eqQuita(id){const t=(EQ||[]).find(x=>x.id===id);if(!t)return;
+  askConfirm('Quitar terapeuta',`¿Quitar a ${t.n||t.id} del equipo? Ya no podrá entrar al panel y deja de aparecer en tu página de reservas. Sus horas y clientas quedan guardadas por si la vuelves a agregar con el mismo correo.`,async()=>{
+    try{const db=firebase.firestore();await db.collection('terapeutas').doc(id).delete();if(t.uid)await db.collection('publicoTer').doc(t.uid).delete().catch(()=>{});showToast('Terapeuta quitada');await eqCarga()}
+    catch(e){showToast('No se pudo quitar. Revisa tu conexión.')}},'Sí, quitar')}
 const catList=()=>[...new Set(['Masoterapia','Limpiezas faciales',...S.services.map(x=>x.c).filter(Boolean)])];
 let confFn=null,editSvc=-1;
 function askConfirm(title,msg,fn,yes){confTitle.textContent=title;confMsg.textContent=msg;confFn=fn;confYes.textContent=yes||'Sí, eliminar';confYes.hidden=!fn;confNo.textContent=fn?'Cancelar':'Entendido';confModal.hidden=false;confNo.focus()}
@@ -1137,26 +1296,36 @@ function initDB(){
   const auth=firebase.auth(),db=firebase.firestore();
   setupLogin(auth);
   outBtn.addEventListener('click',async()=>{try{localStorage.removeItem(KEY)}catch(e){} await auth.signOut();location.reload()});
-  auth.onAuthStateChanged(u=>{
+  auth.onAuthStateChanged(async u=>{
     if(window.__splOff)window.__splOff();
-    if(unsub){unsub();unsub=null}if(unsubR){unsubR();unsubR=null}if(unsubF){unsubF();unsubF=null}
-    if(!u){ref=null;readOnly=false;document.body.classList.remove('ro');acceso('');lock(true);outBtn.classList.add('hide');return}
+    if(unsub){unsub();unsub=null}if(unsubR){unsubR();unsubR=null}if(unsubF){unsubF();unsubF=null}terCorta();
+    if(!u){ref=null;readOnly=false;TER=null;document.body.classList.remove('ro','ter');acceso('');lock(true);outBtn.classList.add('hide');return}
     lock(false);deniedRead=false;denyBox.hidden=true;curUid=u.uid;
     if(cacheUid!==u.uid){borraDatos();acceso('check');render()}else acceso('');
+    // ¿Es una terapeuta del equipo? (Daniela la agrega con su correo de Google en Menú → Equipo)
+    const ft=await fichaTer(db,u);
+    if(firebase.auth().currentUser!==u)return;   // cambió la sesión mientras se revisaba
+    if(ft){iniciaTer(db,u,ft);return}
+    if(TER||TERC){TER=null;borraDatos();acceso('check');render()}   // este equipo tenía la agenda de una terapeuta
+    document.body.classList.remove('ter');
     ref=db.collection('masajes').doc('datos');
     db.collection('masajes').doc('ping').set({t:Date.now()}).then(()=>{readOnly=false;document.body.classList.remove('ro')}).catch(e=>{if(e.code==='permission-denied'){readOnly=true;document.body.classList.add('ro');if(!deniedRead)sync.textContent='Modo solo lectura ✓'}});
-    gotMain=false;gotRes=false;firstPub=true;lastPub={};lastCfg='';firstPend=true;lastPend=new Set();
+    gotMain=false;gotRes=false;firstPub=true;lastPub={};lastCfg='';firstPend=true;lastPend=new Set();lastComp='';
     unsubR=db.collection('reservas').onSnapshot(q=>{reservas=q.docs.map(d=>({id:d.id,...d.data()}));gotRes=true;afterSync()},()=>{});
     gotFin=false;gcIntentos=new Set();
     unsubF=db.collection('masajes').doc('finanzas').onSnapshot(s=>{GIFTS=(s.exists&&s.data().gifts)||{};gotFin=true;gcUpd();afterSync();gcAsegurarTodas()},()=>{gotFin=true;afterSync()});
-    unsub=ref.onSnapshot(s=>{
-      if(s.metadata.hasPendingWrites)return;
-      if(s.exists){adopta(s.data());needPush=true;
-        migrate();S.branch=Math.min(S.branch,S.branches.length-1);S.ther=Math.min(S.ther,S.thers.length-1);pintaRemoto();}
-      else if(!readOnly)push(true);
-      gotMain=true;if(cacheUid!==curUid){cacheUid=curUid;acceso('');render()}sync.textContent=readOnly?'Modo solo lectura ✓':'Sincronizado en la nube ✓';afterSync();
-    },err=>{if(err.code==='permission-denied')showDeny(u);else{sync.textContent='Sin conexión con la base de datos ('+(err.code||'error')+')';const m=document.getElementById('noaccMsg');if(m)m.textContent='No pudimos conectarnos para revisar el acceso ('+(err.code||'error')+'). Revisa tu internet y vuelve a abrir el panel.'}});
+    escuchaRef(u);
   });
+}
+// escucha la agenda en la nube (la de Daniela o la de la terapeuta que entró)
+function escuchaRef(u){
+  unsub=ref.onSnapshot(s=>{
+    if(s.metadata.hasPendingWrites)return;
+    if(s.exists){adopta(s.data());needPush=true;
+      migrate();S.branch=Math.min(S.branch,S.branches.length-1);S.ther=Math.min(S.ther,S.thers.length-1);pintaRemoto();}
+    else if(!readOnly)push(true);
+    gotMain=true;if(cacheUid!==curUid){cacheUid=curUid;acceso('');render()}sync.textContent=readOnly?'Modo solo lectura ✓':'Sincronizado en la nube ✓';afterSync();
+  },err=>{if(err.code==='permission-denied')showDeny(u);else{sync.textContent='Sin conexión con la base de datos ('+(err.code||'error')+')';const m=document.getElementById('noaccMsg');if(m)m.textContent='No pudimos conectarnos para revisar el acceso ('+(err.code||'error')+'). Revisa tu internet y vuelve a abrir el panel.'}});
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const key=()=>S.branches[S.branch]+'|'+S.thers[S.ther];
@@ -1687,7 +1856,7 @@ function pregunta(t,txt,si,ok){const f=document.createElement('div');f.className
   document.addEventListener('keydown',tecla);document.body.appendChild(f);f.querySelector('[data-no]').focus()}
 
 try{dayView=localStorage.getItem('masajes-view')==='linea'?'linea':'lista'}catch(e){}
-const LINK=()=>new URL('./',location.href).href;
+const LINK=()=>TER?new URL('reserva.html?pro='+encodeURIComponent(TER.uid),location.href).href:new URL('./',location.href).href;   // terapeuta: su página de reservas
 let toastT=null;
 function showToast(m){toastBox.textContent=m;toastBox.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>toastBox.classList.remove('on'),2400)}
 async function copyLink(){
@@ -1722,7 +1891,7 @@ function timelineHtml(all){
   return `<div class="tl"><div class="tlg" data-tlg data-a0="${a0}" data-base="${base}" data-paso="${paso}" style="height:${(a1-a0)*PXM}px">${lines}${blocks}${now}</div></div>
   <div class="tlhint nobox">Toca un espacio libre para ponerle hora a una cita nueva, o toca una cita para ver sus detalles.</div>`;
 }
-const freeTimes=()=>{const d=+dur.value||+(S.services[svc.value]||S.services[0]||{}).m||30,busy=mine().filter(a=>a.d===sel&&a.e!=='disponible'&&a.e!=='cancelada');
+const freeTimes=()=>{const d=+dur.value||+(SVF()[svc.value]||SVF()[0]||{}).m||30,busy=mine().filter(a=>a.d===sel&&a.e!=='disponible'&&a.e!=='cancelada');
   const base=cat.value===DUOC&&dhOn()?((S.cfg.duo.h.t[String(new Date(sel+'T12:00').getDay())])||[]).slice().sort():slotTimes();
   return base.filter(t=>{const x=toMin(t);return !busy.some(a=>toMin(a.t)<x+d&&x<toMin(a.t)+(+a.m||0))})};
 const getTime=()=>time.value==='__otra'?timeX.value:time.value;
@@ -1730,7 +1899,7 @@ function setTime(t){if(![...time.options].some(o=>o.value===t)){const o=new Opti
 function fillTimes(){
   const prev=getTime(),L=freeTimes();
   time.innerHTML=L.map(t=>`<option value="${t}">${t}</option>`).join('')+`<option value="__otra">Otra hora…</option>`;
-  timeHint.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} libre${L.length==1?'':'s'} el ${fmtD(sel)} para ${+dur.value||+(S.services[svc.value]||{}).m||30} min.`:cat.value===DUOC&&dhOn()?'Este día no tiene horas libres para masajes dúo. Usa "Otra hora…".':'No quedan horas libres este día con esa duración. Usa "Otra hora…".';
+  timeHint.textContent=L.length?`${L.length} hora${L.length==1?'':'s'} libre${L.length==1?'':'s'} el ${fmtD(sel)} para ${+dur.value||+(SVF()[svc.value]||{}).m||30} min.`:cat.value===DUOC&&dhOn()?'Este día no tiene horas libres para masajes dúo. Usa "Otra hora…".':'No quedan horas libres este día con esa duración. Usa "Otra hora…".';
   if(prev&&[...time.options].some(o=>o.value===prev))time.value=prev;else{time.selectedIndex=0;timeX.classList.toggle('hide',time.value!=='__otra')}
 }
 // --- promociones ---
@@ -1831,7 +2000,7 @@ function packList(){
   return P.sort((a,b)=>a.c.localeCompare(b.c,'es')||(a.d+a.t).localeCompare(b.d+b.t));
 }
 function madCliUpd(full){
-  const s=S.services[svc.value]||S.services[0],on=esMadSvc(s)&&cat.value!==GCC;
+  const s=SVF()[svc.value]||SVF()[0],on=esMadSvc(s)&&cat.value!==GCC;
   madBox.hidden=!on;
   if(!on){madCli=null;return}
   const L=packList().filter(p=>p.quedan>0);
@@ -2015,6 +2184,10 @@ document.addEventListener('input',e=>{const t=e.target;if(!t.dataset||t.dataset.
   const d=Math.max(0,Math.round(+t.value||0)),o=row.querySelector('.dp');o.innerHTML=duoTxt(x,d);o.classList.toggle('bad',d>+x.v);row.classList.toggle('on',d>0)});
 // Servicios "solo panel" con valor 0: la duración y el valor se escriben al agendar (ej. tratamiento de acrocordones tras la evaluación)
 const aDef=s=>!!(s&&s.p&&!(+s.v>0));
+// Servicios del formulario para agendar: los propios y, si es terapeuta, también los de Daniela que ofrece (al final, solo lectura)
+const dsvLista=()=>TER?(S.cfg.dsv||[]).map(n=>DSVL.find(x=>x&&x.n===n)).filter(Boolean):[];
+const SVF=()=>TER?S.services.concat(dsvLista()):S.services;
+const SV0={n:'Otro servicio',m:60,v:0,c:'Otros'};   // terapeuta sin servicios todavía
 const evalDe=s=>S.services.find(x=>x!==s&&(x.c||'')===(s.c||'')&&/^evaluaci/i.test(x.n||'')&&+x.v>0);
 function defHintTxt(s,err){if(!aDef(s))return '';const ev=evalDe(s);
   return (err?'<b style="color:var(--red)">Falta la duración o el valor.</b> ':'')+`Escribe la <b>duración</b> y el <b>valor</b> que definiste en la evaluación.${ev?` Recuerda descontar los <b>${money(ev.v)}</b> que ya pagó por la evaluación.`:''}`}
@@ -2023,7 +2196,7 @@ const DUOC='Masajes dúo';
 function duoFill(){const a=S.services[svc.value],b=S.services[svc2.value]||a;dur.value=duoMin();price.value=a&&b?(+a.v-duoDesc(a))+(+b.v-duoDesc(b)):'';
   pkBox.hidden=true;pk.innerHTML='';madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder='';defHint.hidden=true;
   duoHint.innerHTML=`Las dos personas se atienden al mismo tiempo · ${duoMin()} min · abono ${money(duoAbono())}`+(dhOn()?' · se muestran tus horas para masajes dúo':'');fillTimes()}
-const fill=()=>{if(cat.value===DUOC){duoFill();return}const s=S.services[svc.value]||S.services[0],df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.ev&&!(+s.v>0)?(+S.cfg.abono||0):s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
+const fill=()=>{if(cat.value===DUOC){duoFill();return}const s=SVF()[svc.value]||SVF()[0]||SV0,df=aDef(s);dur.value=df?'':s.m;price.value=df?'':s.ev&&!(+s.v>0)?(+S.cfg.abono||0):s.v;pkFill(s);madCliUpd(1);gcUpd(1);dur.placeholder=price.placeholder=df?'A definir':'';defHint.innerHTML=defHintTxt(s);defHint.hidden=!df;fillTimes()};
 
 // Agregar la hora a cualquier calendario (iPhone, Samsung, Google, Outlook…) con calendario.js
 function calEvento(a){return{titulo:(a.c||'Clienta')+' · '+a.s,fecha:a.d,hora:toMin(a.t),dur:+a.m||60,lugar:'Catarsis · Cochrane 450, Osorno',uid:'cat-'+a.id,resumen:`${a.c||'Clienta'} · ${fmtD(a.d)}, ${a.t}`,
@@ -2050,7 +2223,7 @@ function render(){
     +S.services.map((s,i)=>`<div class="svcard"><div class="svi"><b>${esc(s.n)}</b><div class="mut">${esc(s.c||'Otros')}${s.g?' · '+esc(s.g):''}</div><div class="svm">${aDef(s)?'Duración y valor según evaluación':s.m+' min · '+(s.ev?(+s.v>0?'desde '+money(s.v):'valor según evaluación'):(s.q||[]).length?'desde '+money(s.v):money(s.v))}${s.p?' <span class="sotag">Solo panel</span>':s.w?' <span class="sotag">Por WhatsApp</span>':''}${(s.q||[]).length?` <span class="sotag">Por cantidad · ${s.q.length} precios</span>`:''}${+s.vo>+s.v?` <span class="sotag">Antes ${money(s.vo)}</span>`:''}</div></div><div class="sva"><button class="pill" data-svcedit="${i}">Editar</button><button class="x" data-xs="${i}" aria-label="Eliminar servicio ${esc(s.n)}">✕</button></div></div>`).join('')
 ;
     pane.reservas=''
-    +`<div class="lbl">Reservas online</div><div class="mut" style="font-size:13px;margin-bottom:6px">Link para tus clientas: <b style="user-select:all;word-break:break-all">${esc(new URL('./',location.href).href)}</b></div>
+    +`<div class="lbl">Reservas online</div><div class="mut" style="font-size:13px;margin-bottom:6px">Link para tus clientas: <b style="user-select:all;word-break:break-all">${esc(LINK())}</b></div>
     <label class="f">Tu WhatsApp (con 56, sin +)</label><input data-c="wa" type="tel" placeholder="56912345678" value="${esc(S.cfg.wa)}">
     <div class="lbl" style="margin-top:14px">Política de cambios y cancelaciones</div>
     <textarea id="polTxt" rows="4" maxlength="600" aria-label="Política de cambios y cancelaciones">${esc(polDraft!=null?polDraft:S.cfg.pol?S.cfg.pol:POL_SUG)}</textarea>
@@ -2078,8 +2251,14 @@ function render(){
     const nPromo=S.cfg.promos.length,nMad=S.services.filter(esMadSvc).length,rcN=rcPend(),nCl=Object.keys(clientas()).length;
     const mt=(at,t,sub,cl)=>`<button type="button" class="mt finbtn${cl?' '+cl:''}" ${at}><span class="mtt">${t}</span><small>${sub}</small></button>`;
     const mg=(k,t,body,def)=>{const o=mgOpen(k,def);return `<section class="mg${o?' on':''}"><button type="button" class="mgh" data-mg="${k}" aria-expanded="${o}" aria-controls="mg-${k}"><span>${t}</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="mgb" id="mg-${k}"${o?'':' hidden'}>${body}</div></section>`};
-    edit.innerHTML=mg('ventas','Ventas y clientas',`<div class="mgrid"><a class="mt finbtn" href="balance.html"><span class="mtt">${ic('chart')}Balance y gastos</span><small>Ingresos, gastos y Excel</small></a>`
-    +mt('data-gcopen',ic('gift')+'Vender giftcard','Con número único')
+    // la terapeuta no ve balance, giftcards, promociones, packs ni la configuración de la página de Daniela
+    const EDX=TER?EDT.filter(([k])=>k!=='negocio'&&k!=='respaldo'):EDT;if(!EDX.some(([k])=>k===edTab))edTab='servicios';
+    edit.innerHTML=(TER?mg('daniela','Agenda de Daniela',`<div class="mgrid">`
+    +mt('data-daniopen',ic('cal')+'Ver horas de Daniela','Solo para ver, sin editar')
+    +mt('data-dsvopen',ic('leaf')+'Servicios de Daniela',(n=>n?`Ofreces ${n}`:'Elige los que también haces')((S.cfg.dsv||[]).length))
+    +`</div>`,true):'')
+    +mg('ventas',TER?'Tus clientas':'Ventas y clientas',`<div class="mgrid">`+(TER?'':`<a class="mt finbtn" href="balance.html"><span class="mtt">${ic('chart')}Balance y gastos</span><small>Ingresos, gastos y Excel</small></a>`
+    +mt('data-gcopen',ic('gift')+'Vender giftcard','Con número único'))
     +mt('data-clopen',ic('user')+'Clientas',nCl?`${nCl} · fichas y notas`:'Fichas y notas')
     +mt('data-rcopen',ic('bell')+'Recordatorios',rcN?`${rcN} por recordar mañana`:'Avisos del día siguiente',rcN?'dot':'')
     +((n=>mt('data-dcmodal',ic('heart')+'Códigos de descuento',n?`${n} cumpleaños esta semana`:'Cumpleaños, campañas, te extrañamos y más',n?'dot':''))(cumples(7).filter(x=>x.dias>=0).length))
@@ -2088,7 +2267,10 @@ function render(){
     +mt('data-copy',ic('link')+'Copiar enlace','Para pegarlo donde quieras')
     +mt('data-share',ic('chat')+'Enviar por WhatsApp','Comparte tu página de reservas')
     +`</div>`,true)
-    +mg('servicios','Servicios y promociones',`<div class="mgrid">`
+    +(TER?mg('servicios','Tus servicios',`<div class="mgrid">`
+    +mt('data-svcopen',ic('plus')+'Nuevo servicio','Agregar a tu lista')
+    +mt('data-edtab="servicios" data-mgo',ic('tag')+'Ver tus servicios',(n=>n?`${n} servicio${n==1?'':'s'}`:'Aún no agregas servicios')(S.services.length))
+    +`</div>`,true):mg('servicios','Servicios y promociones',`<div class="mgrid">`
     +mt('data-promoopen',ic('tag')+'Promociones',nPromo?`${nPromo} activa${nPromo==1?'':'s'}`:'Crear promoción o pack')
     +mt('data-madopen',ic('leaf')+'Maderoterapia',`${nMad} tratamiento${nMad==1?'':'s'}${S.cfg.madera.on===false?' · oculto':''}`)
     +mt('data-duoopen',ic('users')+'Descuentos dúo',S.cfg.duo.on?((n=>n?`${n} con descuento`:'Sin descuentos')(Object.keys(S.cfg.duo.d||{}).length))+(dhOn()?' · horas específicas':''):'Oculto en reservas')
@@ -2096,21 +2278,24 @@ function render(){
     +mt('data-pgopen',ic('image')+'Imágenes de la página','Portada, galería y cierre')
     +mt('data-rsopen',ic('image')+'Imágenes de reservas','Collage y giftcard')
     +mt('data-svcopen',ic('plus')+'Nuevo servicio','Agregar a tu lista')
-    +`</div>`,true)
-    +mg('config','Configuración',`<div class="tabsb" role="tablist">${EDT.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.servicios),false)
+    +`</div>`,true))
+    +(TER||readOnly?'':mg('equipo','Equipo',`<div class="mgrid">`
+    +mt('data-eqopen',ic('users')+'Terapeutas','Agregar con su cuenta de Google')
+    +`</div>`,true))
+    +mg('config','Configuración',`<div class="tabsb" role="tablist">${EDX.map(([k,l])=>`<button role="tab" aria-selected="${k===edTab}" class="${k===edTab?'on':''}" data-edtab="${k}">${l}</button>`).join('')}</div>`+(pane[edTab]||pane.servicios),false)
     +mg('cuenta','Cuenta',`<div class="mgrid"><button type="button" class="mt finbtn" data-logoutask><span class="mtt">${ic('out')}Cerrar sesión</span><small>${esc((()=>{try{return firebase.auth().currentUser.email}catch(_){return ''}})()||'Salir del panel')}</small></button></div>`,false);
   }
   const single=S.branches.length===1&&S.thers.length===1;
-  who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${ROL}</span></div>`:'';
+  who.innerHTML=single?`<div class="who"><b>${esc(S.branches[0])}</b><span>${esc(S.thers[0])} · ${esc(ROLX())}</span></div>`:'';
   selbox.classList.toggle('hide',single);
   branches.innerHTML=S.branches.map((b,i)=>`<button class="branch ${i==S.branch?'on':''}" data-sb="${i}">${esc(b)}</button>`).join('');
-  thers.innerHTML=S.thers.map((t,i)=>`<div class="ther ${i==S.ther?'on':''}" data-st="${i}"><b>${esc(t)}</b><span class="mut">${ROL}</span></div>`).join('');
-  const cats=(c=>{if(duoLista().length){const i=c.findIndex(x=>/maso|masaj/i.test(x));c.splice(i>=0?i+1:c.length,0,DUOC)}return[...c,GCC]})([...new Set(S.services.map(x=>x.c||'Otros'))]),cc=cats.includes(cat.value)?cat.value:cats[0];
+  thers.innerHTML=S.thers.map((t,i)=>`<div class="ther ${i==S.ther?'on':''}" data-st="${i}"><b>${esc(t)}</b><span class="mut">${esc(ROLX())}</span></div>`).join('');
+  const cats=(c=>{if(duoLista().length){const i=c.findIndex(x=>/maso|masaj/i.test(x));c.splice(i>=0?i+1:c.length,0,DUOC)}return TER?(c.length?c:['Otros']):[...c,GCC]})([...new Set(SVF().map(x=>x.c||'Otros'))]),cc=cats.includes(cat.value)?cat.value:cats[0];
   cat.innerHTML=cats.map(c=>`<option ${c===cc?'selected':''}>${esc(c)}</option>`).join('');
   const prev=svc.value,first=!svc.options.length,gr={};
   const dl=cc===DUOC?new Set(duoLista()):null;
   if(dl)S.services.forEach((x,i)=>{if(!dl.has(x))return;const dd=duoDesc(x);(gr[x.g||'']=gr[x.g||'']||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${money(+x.v-dd)}${dd?' (precio dúo)':''}</option>`)});
-  else S.services.forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+(x.ev?(+x.v>0?'desde '+money(x.v):'valor según evaluación'):(x.q||[]).length?'desde '+money(x.v):money(x.v))}</option>`)});
+  else SVF().forEach((x,i)=>{const gk=cc===GCC?(x.c||'Otros'):(x.g||'');if(cc===GCC?x.p:(x.c||'Otros')!==cc)return;(gr[gk]=gr[gk]||[]).push(`<option value="${i}" data-t="${esc(x.n)}">${esc(x.n)} · ${aDef(x)?'tiempo y valor a definir':x.m+' min · '+(x.ev?(+x.v>0?'desde '+money(x.v):'valor según evaluación'):(x.q||[]).length?'desde '+money(x.v):money(x.v))}</option>`)});
   svc.innerHTML=Object.entries(gr).map(([g,o])=>g?`<optgroup label="${esc(g)}">${o.join('')}</optgroup>`:o.join('')).join('');
   duoBox.hidden=!dl;svcLbl.textContent=dl?'Masaje persona 1':'Servicio';
   if(dl){const p2=svc2.value;svc2.innerHTML=svc.innerHTML;svc2.value=[...svc2.options].some(o=>o.value===p2)?p2:(svc.options[0]||{}).value||''}else svc2.innerHTML='';
@@ -2141,7 +2326,16 @@ document.addEventListener('click',e=>{
   else if(el=g('data-sb'))S.branch=+el.dataset.sb;
   else if(el=g('data-st'))S.ther=+el.dataset.st;
   else if(el=g('data-d')){sel=el.dataset.d;custom=false}
-  else if(el=g('data-edtab')){edTab=el.dataset.edtab}
+  else if(el=g('data-edtab')){edTab=el.dataset.edtab;if(el.hasAttribute('data-mgo'))MGS.config=true}
+  else if(el=g('data-daniopen')){if(!TER)return;daniDraw();daniModal.hidden=false;return}
+  else if(el=g('data-daniclose')){daniModal.hidden=true;return}
+  else if(el=g('data-dsvopen')){if(!TER)return;dsvDraw();dsvModal.hidden=false;return}
+  else if(el=g('data-dsvclose')){dsvModal.hidden=true;return}
+  else if(el=g('data-dsvsave')){dsvGuarda();return}
+  else if(el=g('data-eqopen')){if(TER||readOnly)return;eqErr.textContent='';eqList.innerHTML='<p class="mut">Cargando…</p>';eqModal.hidden=false;eqCarga();return}
+  else if(el=g('data-eqclose')){eqModal.hidden=true;return}
+  else if(el=g('data-eqon')){eqPausa(el.dataset.eqon);return}
+  else if(el=g('data-eqdel')){eqQuita(el.dataset.eqdel);return}
   else if(el=g('data-view')){dayView=el.dataset.view;try{localStorage.setItem('masajes-view',dayView)}catch(_){}}
   else if(el=g('data-full')){const a=S.appts.find(x=>x.id==el.dataset.full);if(a){a.p='pagado';a.sp=1;if(a.e!=='reagendada')a.e='confirmada';showToast('Pago completo registrado ✓')}}
   else if(el=g('data-undo')){const a=S.appts.find(x=>x.id==el.dataset.undo);if(a){if(a.sp){delete a.sp}else a.p='pendiente';showToast('Pago deshecho')}}
@@ -2252,7 +2446,7 @@ document.addEventListener('click',e=>{
     if(cat.value===DUOC){const a=S.services[svc.value],b=S.services[svc2.value];if(!a||!b){showToast('Elige el masaje de cada persona');return}
       S.appts.push({id:Date.now(),k:key(),d:sel,t:tv,m:+dur.value||duoMin(),c:client.value.trim(),f:phone.value.trim(),s:'Dúo: '+a.n+' + '+b.n,v:+price.value||0,e:estado.value,p:'pendiente'});
       client.value='';phone.value='';showToast('Masaje dúo agregado ✓')}
-    else{const s=S.services[svc.value]||S.services[0];
+    else{const s=SVF()[svc.value]||SVF()[0]||SV0;
     if(aDef(s)&&!(+dur.value>=5&&+price.value>0)){defHint.innerHTML=defHintTxt(s,1);defHint.hidden=false;(+dur.value>=5?price:dur).focus();return}
     let gcx={};if(cat.value===GCC){const gg=gcSel&&gcLista().find(x=>x.id===gcSel&&!x.usada);if(!gg){showToast('Elige la giftcard que se va a cobrar');gcBox.scrollIntoView({behavior:'smooth',block:'center'});return}
       gcx={gc:1,gid:gg.id,p:'pagado',sp:1,...(estado.value==='reservada'?{e:'confirmada'}:{})}}
@@ -2322,6 +2516,7 @@ document.addEventListener('click',e=>{
   render();
 });
 svcForm.addEventListener('submit',saveSvc);
+eqForm.addEventListener('submit',eqAgrega);
 // --- giftcards: cobrar (categoría «Giftcard» en Agregar hora). Vencen 30 días después de la venta ---
 var GIFTS={},unsubF=null,gcSel=null,gotFin=false,gcIntentos=new Set();
 const GCC='Giftcard',GC_DIAS=30;
@@ -2453,7 +2648,7 @@ document.addEventListener('click',e=>{const o=e.target.closest('.pk-o');
   const b=e.target.closest('[data-pko]');if(b){choosePick(+b.dataset.pko);return}
   if(e.target.closest('[data-pickclose]')||e.target.id==='pickModal')closePick()});
 pickQ.addEventListener('input',pickDraw);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!baeModal.hidden){baeModal.hidden=true;bae=null;return}if(!pickModal.hidden){closePick();return}if(!rgModal.hidden){rgModal.hidden=true;rgId=null;return}if(!c30Modal.hidden){c30Modal.hidden=true;return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!confModal.hidden){}else if(!eqModal.hidden){eqModal.hidden=true;return}else if(!dsvModal.hidden){dsvModal.hidden=true;return}else if(!daniModal.hidden){daniModal.hidden=true;return}if(!baeModal.hidden){baeModal.hidden=true;bae=null;return}if(!pickModal.hidden){closePick();return}if(!rgModal.hidden){rgModal.hidden=true;rgId=null;return}if(!c30Modal.hidden){c30Modal.hidden=true;return}if(!fiModal.hidden){fiModal.hidden=true;return}if(!dcModal.hidden){dcModal.hidden=true;return}if(!clModal.hidden){clModal.hidden=true;return}if(!rcModal.hidden){rcModal.hidden=true;return}if(!gpModal.hidden){gpModal.hidden=true;return}if(!dhModal.hidden){closeDH();return}if(!confModal.hidden)closeConf();else{blkModal.hidden=true;svcModal.hidden=true;promoModal.hidden=true;duoModal.hidden=true;horaModal.hidden=true;dhModal.hidden=true;madModal.hidden=true;gcModal.hidden=true}}});
 document.addEventListener('change',e=>{
   if(e.target&&e.target.id==='rsFile'){rsPicked(e.target);return}
   if(e.target&&e.target.dataset&&e.target.dataset.rscap!==undefined){const x=rsM&&rsM.gal.find(x=>x.id===e.target.dataset.rscap);if(x&&!readOnly){x.c=e.target.value.trim().slice(0,50);rsSaveM().then(()=>showToast('Nombre guardado ✓')).catch(()=>rsMsg('No se pudo guardar el nombre.'))}return}
@@ -2471,7 +2666,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='svc'||t.id==='svc2'){fill();return}
   else if(t.id==='gcSvc'){const x=S.services.find(s=>s.n===t.value);if(x)gcM.value=x.v;return}
   else if(t.id==='gcF'){gcMesDraw();return}
-  else if(t.id==='pk'){const s=S.services[svc.value]||S.services[0],v=t.value,k=(s.k||[]).find(q=>String(q.s)===v),qt=(s.q||[]).find(x=>'q'+x.n===v);price.value=v==='pp'||v==='use'?0:k?k.v:qt?qt.v:s.v;return}
+  else if(t.id==='pk'){const s=SVF()[svc.value]||SVF()[0]||SV0,v=t.value,k=(s.k||[]).find(q=>String(q.s)===v),qt=(s.q||[]).find(x=>'q'+x.n===v);price.value=v==='pp'||v==='use'?0:k?k.v:qt?qt.v:s.v;return}
   else if(d.pk!==undefined){t.closest('.prow').classList.toggle('on',t.checked);promoCuenta();return}
   else if(t.id==='ppA'||t.id==='ppB'){ppFill();return}
   else if(t.id==='mpS'){mpFill();return}
