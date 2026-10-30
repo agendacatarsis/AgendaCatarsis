@@ -439,7 +439,10 @@ const TH=()=>{const D=agD||{},l=[{id:'admin',n:D.tn||'Daniela Velásquez',r:D.tr
   if(!GC_ON)Object.keys(agT).filter(k=>terOk(agT[k])).sort((a,b)=>String(agT[a].n).localeCompare(String(agT[b].n))).forEach(k=>l.push({id:k,n:String(agT[k].n).slice(0,60),r:String(agT[k].r||'').slice(0,60)}));
   return l};
 // Agenda que usa la página: la de Daniela, o la de la terapeuta elegida (con lo común del local: fotos, dirección, política)
+// reserva.html?resena lleva directo al formulario de reseñas de Google (link configurado en el panel)
+const RESQ=new URLSearchParams(location.search).has('resena');let resIr=false;
 function agMix(){
+  if(RESQ&&!resIr&&agD&&RES()){resIr=true;location.replace(RES())}
   if(!agD){ag=null;return}
   const t=tid!=='admin'?agT[tid]:null;
   if(!terOk(t)){ag=agD;return}
@@ -564,6 +567,7 @@ function onData(){
 const WA=()=>{let d=String((ag&&ag.wa)||legacy.wa||'').replace(/\D/g,'');if(d.length===9)d='56'+d;return d.length>=10?d:''};
 const DATOS=()=>(ag&&ag.datos)||legacy.datos||'';
 // Link de pago de Mercado Pago (monto abierto) para pagar con tarjeta de crédito o débito (panel → Menú → Pagos)
+const RES=()=>{const u=String((agD&&agD.resena)||'').trim();return /^https:\/\/[^\s"<>]+$/i.test(u)?u:''};
 const MP=()=>{const u=String((ag&&ag.mp)||'').trim();return /^https:\/\/[^\s"<>]+$/i.test(u)?u:''};
 // Antes y después (panel → Menú → Antes y después). La lista viene en publico/agenda.gal; cada par de fotos está en publico/ga_<id>
 // y se descarga solo cuando la clienta abre la pestaña y la foto aparece en pantalla.
@@ -872,7 +876,7 @@ function view0(app){
   app.innerHTML=`<header class="hero">${galHtml()}<div class="hb"><div class="lgc"><img class="logo" data-keep="logo" alt="Catarsis" src="${LOGO}"></div>
   <h1>Catarsis <i>Estética y Bienestar</i></h1><p class="sub">${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
   <p class="inf"><a href="${MAPS}" target="_blank" rel="noopener">${ADDR}</a>${horarioTxt()?`<br>${horarioTxt()}`:''}</p>
-  <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">Cómo llegar</a></div>${DCQ&&!GC_ON?`<p class="dcban">Tienes el código <b>${esc(DCQ)}</b>. Elige tu servicio: el descuento se aplica al confirmar tu reserva.</p>`:''}</div></header>
+  <div class="hacts">${WA()?`<a class="hbtn" href="${waLink()}" target="_blank" rel="noopener">WhatsApp</a>`:''}<a class="hbtn" href="${IG}" target="_blank" rel="noopener">Instagram</a><a class="hbtn" href="${MAPS}" target="_blank" rel="noopener">Cómo llegar</a>${RES()?`<a class="hbtn" href="${esc(RES())}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.570-.15-3.090-.38-4.550H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.570-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Reseñas</a>`:''}</div>${DCQ&&!GC_ON?`<p class="dcban">Tienes el código <b>${esc(DCQ)}</b>. Elige tu servicio: el descuento se aplica al confirmar tu reserva.</p>`:''}</div></header>
   <main class="cat-wrap"><div class="ptabs${GALX().length?' t3':''}" role="tablist" aria-label="Secciones"><button role="tab" id="pt-svc" aria-controls="pp-svc" tabindex="${ptab==='svc'?0:-1}" data-pt="svc" aria-selected="${ptab==='svc'}" class="${ptab==='svc'?'on':''}">Servicios</button>${GALX().length?`<button role="tab" id="pt-ab" aria-controls="pp-ab" tabindex="${ptab==='ab'?0:-1}" data-pt="ab" aria-selected="${ptab==='ab'}" class="${ptab==='ab'?'on':''}">Antes y después</button>`:''}<button role="tab" id="pt-info" aria-controls="pp-info" tabindex="${ptab==='info'?0:-1}" data-pt="info" aria-selected="${ptab==='info'}" class="${ptab==='info'?'on':''}">Información</button></div>
   ${ptab==='ab'?`<div class="pane" role="tabpanel" id="pp-ab" aria-labelledby="pt-ab">${abHtml()}</div>`:''}
   <div class="pane" role="tabpanel" id="pp-svc" aria-labelledby="pt-svc" ${ptab==='svc'?'':'hidden'}>
@@ -887,6 +891,7 @@ function view0(app){
    ${horarioTxt()?`<h2>Horario de atención</h2><p>${horarioTxt()}</p>`:''}${DL().length&&duoHorTxt()?`<p style="margin-top:4px">Masajes dúo: ${duoHorTxt()}</p>`:''}
    <h2>Atiende</h2><p>${esc(curTh().n)} · ${esc(curTh().r||'')}</p>
    <h2>Contacto</h2><p>${WA()?`<a href="${waLink()}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a><br>`:''}<a href="${IG}" target="_blank" rel="noopener">Síguenos en Instagram</a></p>
+   ${RES()?`<h2>Tu opinión</h2><p>¿Ya nos visitaste? Nos ayuda mucho que cuentes tu experiencia: <a href="${esc(RES())}" target="_blank" rel="noopener">déjanos tu reseña en Google</a> <svg width="15" height="15" viewBox="0 0 48 48" aria-hidden="true" style="vertical-align:-2px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.570-.15-3.090-.38-4.550H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.570-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></p>`:''}
    ${WA()?`<h2>Giftcards</h2><p>Regala un masaje o tratamiento: <a href="${waLink(GC_VENTA)}" target="_blank" rel="noopener">compra tu giftcard por WhatsApp</a>.</p>`:''}
    ${POL()?`<h2>Cambios y cancelaciones</h2><p>${polHtml()}</p>`:''}
    <h2>Cómo reservar</h2><p>Elige tu servicio, el día y la hora, y deja tus datos. Para confirmar la hora se paga un abono${A?` de <b>${ab}</b>`:''}, que se descuenta del valor del servicio${DL().length?` (masajes dúo: <b>${money(ABD())}</b>)`:''}. Tienes ${plz(ag&&ag.plazoMin)} para transferirlo${MP()?` o pagarlo con tarjeta de crédito o débito (Mercado Pago${MPMIN()>0?`, en pagos desde ${money(MPMIN())}`:''})`:''}.${MADX()&&MADX().full!==false?` En ${esc(MADC().toLowerCase())} se paga el valor completo de la sesión o pack.`:''}</p>
